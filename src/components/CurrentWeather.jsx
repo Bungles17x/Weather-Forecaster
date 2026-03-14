@@ -323,7 +323,7 @@ const CurrentWeather = ({ data }) => {
                 <div className="detail-value">{humidity}%</div>
                 <div className="detail-label">Humidity</div>
               </div>
-            </div>
+         \   </div>
             
             <div className="detail-item">
               <div className="detail-icon">💨</div>
