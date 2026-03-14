@@ -1,0 +1,152 @@
+/* Weather Map Styles */
+.weather-map-section {
+  padding: 30px 0;
+}
+
+.map-container {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.map-placeholder {
+  text-align: center;
+  color: white;
+}
+
+.map-icon {
+  font-size: 4rem;
+  margin-bottom: 20px;
+  opacity: 0.7;
+}
+
+.map-placeholder h3 {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+  color: white;
+}
+
+.map-placeholder p {
+  color: rgba(255, 255, 255, 0.8);
+  margin: 8px 0;
+  font-size: 1rem;
+}
+
+.map-controls {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}
+
+.map-controls .btn {
+  padding: 8px 16px;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-icon {
+  font-size: 1rem;
+}
+
+.map-info {
+  margin-top: 20px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.map-info p {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .weather-map-section {
+    padding: 20px 0;
+  }
+  
+  .map-container {
+    padding: 16px;
+    min-height: 300px;
+  }
+  
+  .map-icon {
+    font-size: 3rem;
+  }
+  
+  .map-placeholder h3 {
+    font-size: 1.25rem;
+  }
+  
+  .map-placeholder p {
+    font-size: 0.875rem;
+  }
+  
+  .map-controls {
+    gap: 8px;
+  }
+  
+  .map-controls .btn {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+  }
+  
+  .map-info {
+    padding: 12px;
+    margin-top: 16px;
+  }
+  
+  .map-info p {
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .map-container {
+    padding: 12px;
+    min-height: 250px;
+  }
+  
+  .map-icon {
+    font-size: 2.5rem;
+  }
+  
+  .map-placeholder h3 {
+    font-size: 1.125rem;
+  }
+  
+  .map-placeholder p {
+    font-size: 0.8rem;
+  }
+  
+  .map-controls {
+    gap: 6px;
+  }
+  
+  .map-controls .btn {
+    padding: 5px 10px;
+    font-size: 0.75rem;
+  }
+  
+  .map-info {
+    padding: 10px;
+    margin-top: 12px;
+  }
+  
+  .map-info p {
+    font-size: 0.8rem;
+  }
+}
