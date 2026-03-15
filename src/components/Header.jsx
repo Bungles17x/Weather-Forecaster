@@ -19,6 +19,7 @@ const Header = ({ onLocationChange }) => {
     if (path === '/home') return 'home'
     if (path === '/forecast') return 'forecast'
     if (path === '/map') return 'map'
+    if (path === '/alerts') return 'alerts'
     if (path === '/settings') return 'settings'
     return 'weather'
   }
@@ -181,6 +182,10 @@ const Header = ({ onLocationChange }) => {
               <span className="app-nav-icon">🗺️</span>
               <span className="app-nav-label">Map</span>
             </Link>
+            <Link to="/alerts" className={`app-nav-item ${currentPage === 'alerts' ? 'active' : ''}`}>
+              <span className="app-nav-icon">🚨</span>
+              <span className="app-nav-label">Alerts</span>
+            </Link>
             <Link to="/settings" className={`app-nav-item ${currentPage === 'settings' ? 'active' : ''}`}>
               <span className="app-nav-icon">⚙️</span>
               <span className="app-nav-label">Settings</span>
@@ -212,6 +217,12 @@ const Header = ({ onLocationChange }) => {
               <div className="glow"></div>
               <span className="desktop-nav-icon">🗺️</span>
               <span className="desktop-nav-label">Map</span>
+            </Link>
+            <Link to="/alerts" className={`desktop-nav-item ${currentPage === 'alerts' ? 'active' : ''}`}>
+              <div className="shimmer"></div>
+              <div className="glow"></div>
+              <span className="desktop-nav-icon">🚨</span>
+              <span className="desktop-nav-label">Alerts</span>
             </Link>
             <Link to="/settings" className={`desktop-nav-item ${currentPage === 'settings' ? 'active' : ''}`}>
               <div className="shimmer"></div>
@@ -261,6 +272,10 @@ const Header = ({ onLocationChange }) => {
                 <Link to="/map" className="menu-item" onClick={handleMenuClose}>
                   <span className="menu-icon">🗺️</span>
                   <span>Map</span>
+                </Link>
+                <Link to="/alerts" className="menu-item" onClick={handleMenuClose}>
+                  <span className="menu-icon">🚨</span>
+                  <span>Alerts</span>
                 </Link>
                 <Link to="/settings" className="menu-item" onClick={handleMenuClose}>
                   <span className="menu-icon">⚙️</span>

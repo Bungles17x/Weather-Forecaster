@@ -5,6 +5,7 @@ import HourlyForecast from './HourlyForecast'
 import TenDayForecast from './TenDayForecast'
 import WeatherMap from './WeatherMap'
 import WeatherIndicators from './WeatherIndicators'
+import WeatherAlerts from './WeatherAlerts'
 import './WeatherApp.css'
 
 const WeatherApp = () => {
@@ -720,6 +721,7 @@ const WeatherApp = () => {
         {/* Weather Components */}
         {!shouldShowLoading && weatherData && (
           <>
+            <WeatherAlerts />
             <CurrentWeather data={weatherData} />
             <HourlyForecast data={forecastData.slice(0, 8)} />
             <TenDayForecast data={forecastData} />
