@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import './WeatherMapRadar.css'
 
-const WeatherMapRadar = ({ weatherData, coordinates }) => {
+const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
   const [mapCenter, setMapCenter] = useState({ lat: 40.7128, lng: -74.0060 })
   const [zoom, setZoom] = useState(10)
   const [mapStyle, setMapStyle] = useState('roadmap')
@@ -500,8 +500,14 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
                     window.currentLocationMarker.setLatLng([center.lat, center.lng])
                   }
                   
+                  // Update location throughout the entire app
+                  if (onLocationChange) {
+                    const locationString = `${center.lat.toFixed(4)},${center.lng.toFixed(4)}`
+                    onLocationChange(locationString)
+                    console.log(`� Updated app location to: ${locationString}`)
+                  }
+                  
                   console.log(`🚨 Centered map and updated location to alert: ${event} at [${center.lat.toFixed(4)}, ${center.lng.toFixed(4)}]`)
-                  console.log(`📍 Updated current location to:`, newLocation)
                 })
 
                 console.log(`🚨 Added polygon for ${event}`)
@@ -562,6 +568,13 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
                     
                     if (window.currentLocationMarker) {
                       window.currentLocationMarker.setLatLng([center.lat, center.lng])
+                    }
+                    
+                    // Update location throughout the entire app
+                    if (onLocationChange) {
+                      const locationString = `${center.lat.toFixed(4)},${center.lng.toFixed(4)}`
+                      onLocationChange(locationString)
+                      console.log(`🚨 Updated app location to: ${locationString}`)
                     }
                     
                     console.log(`🚨 Centered map and updated location to multi-polygon alert: ${event} at [${center.lat.toFixed(4)}, ${center.lng.toFixed(4)}]`)
@@ -628,6 +641,13 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
                     window.currentLocationMarker.setLatLng([lat, lng])
                   }
                   
+                  // Update location throughout the entire app
+                  if (onLocationChange) {
+                    const locationString = `${lat.toFixed(4)},${lng.toFixed(4)}`
+                    onLocationChange(locationString)
+                    console.log(`🚨 Updated app location to: ${locationString}`)
+                  }
+                  
                   console.log(`🚨 Centered map and updated location to point alert: ${event} at [${lat.toFixed(4)}, ${lng.toFixed(4)}]`)
                 })
 
@@ -682,6 +702,13 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
                   
                   if (window.currentLocationMarker) {
                     window.currentLocationMarker.setLatLng([center.lat, center.lng])
+                  }
+                  
+                  // Update location throughout the entire app
+                  if (onLocationChange) {
+                    const locationString = `${center.lat.toFixed(4)},${center.lng.toFixed(4)}`
+                    onLocationChange(locationString)
+                    console.log(`🚨 Updated app location to: ${locationString}`)
                   }
                   
                   console.log(`🚨 Centered map and updated location to line alert: ${event} at [${center.lat.toFixed(4)}, ${center.lng.toFixed(4)}]`)
@@ -788,6 +815,13 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
           
           if (window.currentLocationMarker) {
             window.currentLocationMarker.setLatLng([center.lat, center.lng])
+          }
+          
+          // Update location throughout the entire app
+          if (onLocationChange) {
+            const locationString = `${center.lat.toFixed(4)},${center.lng.toFixed(4)}`
+            onLocationChange(locationString)
+            console.log(`🚨 Updated app location to: ${locationString}`)
           }
           
           console.log(`🚨 Centered map and updated location to test alert: ${testAlert.properties.event} at [${center.lat.toFixed(4)}, ${center.lng.toFixed(4)}]`)

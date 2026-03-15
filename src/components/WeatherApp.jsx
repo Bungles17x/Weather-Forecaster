@@ -731,7 +731,7 @@ const WeatherApp = () => {
             <CurrentWeather data={weatherData} />
             <HourlyForecast data={forecastData.slice(0, 8)} />
             <TenDayForecast data={forecastData} />
-            <WeatherMap data={weatherData} />
+            <WeatherMap data={weatherData} onLocationChange={handleLocationChange} />
             <WeatherIndicators data={weatherData} />
           </>
         )}

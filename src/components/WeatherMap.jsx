@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import WeatherMapRadar from './WeatherMapRadar'
 import './WeatherMap.css'
 
-const WeatherMap = ({ data }) => {
+const WeatherMap = ({ data, onLocationChange }) => {
   const [activeMap, setActiveMap] = useState('nexrad')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -206,6 +206,7 @@ const WeatherMap = ({ data }) => {
             <WeatherMapRadar 
               weatherData={data} 
               coordinates={currentLocation}
+              onLocationChange={onLocationChange}
             />
           </div>
         )}
