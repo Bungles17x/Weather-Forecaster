@@ -3,6 +3,8 @@ import './CurrentWeather.css'
 import { WeatherIcon } from './WeatherIcons'
 import WeatherAlerts from './WeatherAlerts'
 
+// Fixed getUVIndex function - cache refresh
+
 const CurrentWeather = ({ data }) => {
   const [selectedAlert, setSelectedAlert] = useState(null)
 
