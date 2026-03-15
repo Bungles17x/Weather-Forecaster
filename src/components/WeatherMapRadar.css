@@ -2,40 +2,34 @@
 .weather-map-radar {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  width: 100vw;
+  height: 90vh;
+  width: 95vw;
   background: #1a1a1a;
-  border-radius: 0;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 1;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  position: relative;
+  margin: 2.5vh auto;
+  max-height: 90vh;
+  max-width: 95vw;
 }
 
 .map-container {
   flex: 1;
   position: relative;
-  height: 100vh;
-  width: 100vw;
-  min-height: 100vh;
-  max-height: 100vh;
+  height: 100%;
+  width: 100%;
+  min-height: 600px;
+  max-height: 90vh;
 }
 
 .map-canvas {
-  width: 100vw;
-  height: 100vh;
-  border-radius: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
   overflow: hidden;
   background: #1a1a1a;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  position: relative;
 }
 
 .map-loading {
@@ -43,16 +37,13 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  width: 100vw;
+  height: 100%;
+  width: 100%;
   background: #1a1a1a;
   color: white;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  position: relative;
+  min-height: 600px;
 }
 
 .loading-spinner {
@@ -151,13 +142,17 @@
 /* Responsive Design */
 @media (max-width: 768px) {
   .weather-map-radar {
-    height: 100vh;
-    width: 100vw;
+    height: 95vh;
+    width: 98vw;
+    margin: 2.5vh 1vw;
+    border-radius: 8px;
   }
 
   .map-container {
-    height: 100vh;
-    width: 100vw;
+    height: 100%;
+    width: 100%;
+    min-height: 400px;
+    max-height: 95vh;
   }
 
   .map-loading p {
@@ -166,9 +161,17 @@
 }
 
 @media (max-width: 480px) {
+  .weather-map-radar {
+    height: 98vh;
+    width: 99vw;
+    margin: 1vh 0.5vw;
+    border-radius: 0;
+  }
+
   .map-container {
-    height: 100vh;
-    width: 100vw;
+    height: 100%;
+    width: 100%;
+    min-height: 300px;
   }
 
   .map-loading p {
@@ -198,9 +201,36 @@
   color: white;
 }
 
-/* Full screen map fix */
-body, html {
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
+/* Large screen optimizations */
+@media (min-width: 1200px) {
+  .weather-map-radar {
+    max-width: 1400px;
+    height: 85vh;
+  }
+  
+  .map-container {
+    min-height: 700px;
+  }
+}
+
+@media (min-width: 1600px) {
+  .weather-map-radar {
+    max-width: 1600px;
+    height: 80vh;
+  }
+  
+  .map-container {
+    min-height: 800px;
+  }
+}
+
+@media (min-width: 2000px) {
+  .weather-map-radar {
+    max-width: 1800px;
+    height: 75vh;
+  }
+  
+  .map-container {
+    min-height: 900px;
+  }
 }
