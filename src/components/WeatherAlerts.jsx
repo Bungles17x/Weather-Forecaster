@@ -1,32 +1,27 @@
 import React, { useState, useEffect } from 'react'
 import './WeatherAlerts.css'
 
-const WeatherAlerts = () => {
+const WeatherAlerts = ({ coordinates }) => {
   const [alerts, setAlerts] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [selectedAlert, setSelectedAlert] = useState(null)
 
   useEffect(() => {
-    fetchWeatherAlerts()
-  }, [])
+    if (coordinates) {
+      fetchWeatherAlerts()
+    }
+  }, [coordinates])
 
   const fetchWeatherAlerts = async () => {
     try {
       setLoading(true)
       setError(null)
       
-      // Get user's location for accurate alerts
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords
-          await fetchAlertsByLocation(latitude, longitude)
-        },
-        async () => {
-          // Fallback to default location if geolocation fails
-          await fetchAlertsByLocation(40.7128, -74.0060) // New York
-        }
-      )
+      // Use provided coordinates for accurate alerts
+      const { latitude, longitude } = coordinates
+      
+      await fetchAlertsByLocation(latitude, longitude)
     } catch (err) {
       console.error('Error fetching weather alerts:', err)
       setError('Failed to load weather alerts')

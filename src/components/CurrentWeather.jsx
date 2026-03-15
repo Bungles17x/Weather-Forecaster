@@ -180,7 +180,7 @@ const CurrentWeather = ({ data }) => {
           </div>
 
           {/* Weather Alerts */}
-          <WeatherAlerts />
+          <WeatherAlerts coordinates={data?.coord ? { latitude: data.coord.lat, longitude: data.coord.lon } : null} />
 
           {/* Alert Details Modal */}
           {selectedAlert && (

@@ -42,6 +42,15 @@ const WeatherApp = () => {
     }
   }, [searchHistory])
 
+  // Load persisted location on initial load
+  useEffect(() => {
+    const cachedLocation = localStorage.getItem('weatherLastLocation')
+    if (cachedLocation) {
+      console.log('📍 Loading cached location:', cachedLocation)
+      setLocation(cachedLocation)
+    }
+  }, [])
+
   // Clear any cached location on initial load to ensure default location
   useEffect(() => {
     const cachedLocation = localStorage.getItem('weatherLastLocation')
@@ -170,7 +179,7 @@ const WeatherApp = () => {
       setDataQuality('real')
       setConnectionStatus('connected')
       
-      // Save current location
+      // Save current location to localStorage for persistence
       localStorage.setItem('weatherLastLocation', locationParam)
       
       // Reset retry count on success
