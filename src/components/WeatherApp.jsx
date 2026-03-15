@@ -347,6 +347,30 @@ const WeatherApp = () => {
     fetchWeatherData()
   }, [fetchWeatherData])
 
+  // Enhanced auto-refresh functionality
+  const toggleAutoRefresh = useCallback(() => {
+    setAutoRefresh(prev => {
+      const newAutoRefresh = !prev
+      
+      if (newAutoRefresh) {
+        // Set up auto-refresh timer
+        autoRefreshTimer.current = setInterval(() => {
+          fetchWeatherData()
+        }, 300000) // Refresh every 5 minutes
+        console.log('🔄 Auto-refresh enabled (5 minute intervals)')
+      } else {
+        // Clear auto-refresh timer
+        if (autoRefreshTimer.current) {
+          clearInterval(autoRefreshTimer.current)
+          autoRefreshTimer.current = null
+        }
+        console.log('⏸️ Auto-refresh disabled')
+      }
+      
+      return newAutoRefresh
+    })
+  }, [fetchWeatherData])
+
   const handleLocationChange = useCallback((newLocation) => {
     if (newLocation && newLocation !== location) {
       setLocation(newLocation)
