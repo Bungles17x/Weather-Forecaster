@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react'
+import WeatherMapRadar from './WeatherMapRadar'
 import './WeatherMap.css'
 
-const WeatherMap = () => {
+const WeatherMap = ({ data }) => {
   const [activeMap, setActiveMap] = useState('nexrad')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -167,69 +168,23 @@ const WeatherMap = () => {
   useEffect(() => {
     // Initialize map with default layer
     setTimeout(() => {
-      updateMapLayer('nexrad')
+      setLoading(false)
     }, 1000)
   }, [])
 
   return (
-    <section id="weather-map-section" className="weather-map-section">
+    <section className="weather-map-section">
       <div className="container">
-        <h2 className="section-title">Weather Radar & Maps</h2>
-        
-        <div className="map-container" ref={mapRef}>
-          <div className="map-display">
-            {loading && (
-              <div className="map-loading">
-                <div className="loading-spinner"></div>
-                <p>Loading {mapLayers[activeMap]?.name || 'map'}...</p>
-              </div>
-            )}
-            
-            {error && (
-              <div className="map-error">
-                <div className="error-icon">⚠️</div>
-                <p>{error}</p>
-                <button onClick={() => updateMapLayer(activeMap)} className="retry-btn">
-                  Retry
-                </button>
-              </div>
-            )}
-            
-            {!loading && !error && (
-              <div className="map-overlay">
-                <div className="map-info">
-                  <span className="map-type">{mapLayers[activeMap]?.icon} {mapLayers[activeMap]?.name}</span>
-                  <span className="map-update">Live Data</span>
-                </div>
-                <div className="map-debug">
-                  <span className="debug-text">Loading {mapLayers[activeMap]?.name}...</span>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-        
-        <div className="map-controls">
-          <div className="map-buttons">
-            {Object.entries(mapLayers).map(([key, layer]) => (
-              <button
-                key={key}
-                className={`map-btn ${activeMap === key ? 'active' : ''}`}
-                onClick={() => handleMapChange(key)}
-                title={`View ${layer.name}`}
-              >
-                <span className="btn-icon">{layer.icon}</span>
-                <span className="btn-text">{layer.name}</span>
-              </button>
-            ))}
-          </div>
-          
-          <div className="location-controls">
-            <button
-              onClick={handleLocateMe}
+        <div className="map-header">
+          <h2 className="section-title">
+            <span className="map-icon">🗺️</span>
+            Weather Map & Radar
+          </h2>
+          <div className="map-controls">
+            <button 
+              onClick={handleLocateMe} 
               className={`locate-btn ${locating ? 'locating' : ''}`}
               disabled={locating}
-              title="Find my current location"
             >
               <span className="locate-icon">{locating ? '🔄' : '📍'}</span>
               <span className="locate-text">
@@ -238,7 +193,34 @@ const WeatherMap = () => {
             </button>
           </div>
         </div>
-        
+
+        {loading && (
+          <div className="map-loading">
+            <div className="loading-spinner"></div>
+            <p>Loading weather map...</p>
+          </div>
+        )}
+
+        {!loading && !error && (
+          <div className="map-container">
+            <WeatherMapRadar 
+              weatherData={data} 
+              coordinates={currentLocation}
+            />
+          </div>
+        )}
+
+        {error && (
+          <div className="map-error">
+            <div className="error-icon">⚠️</div>
+            <h3>Map Loading Error</h3>
+            <p>{error}</p>
+            <button onClick={() => setError(null)} className="retry-btn">
+              Retry
+            </button>
+          </div>
+        )}
+
         <div className="map-info-panel">
           <div className="info-grid">
             <div className="info-item">
@@ -251,7 +233,7 @@ const WeatherMap = () => {
             </div>
             <div className="info-item">
               <span className="info-label">Data Source:</span>
-              <span className="info-value">OpenWeatherMap</span>
+              <span className="info-value">OpenWeatherMap & NWS</span>
             </div>
             <div className="info-item">
               <span className="info-label">Resolution:</span>
