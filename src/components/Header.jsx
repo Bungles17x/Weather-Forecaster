@@ -64,6 +64,16 @@ const Header = ({ onLocationChange }) => {
     }
   }
 
+  const handleSearchSubmit = (e) => {
+    e.preventDefault()
+    if (searchInput.trim()) {
+      onLocationChange && onLocationChange(searchInput)
+      setSearchInput('')
+      setSearchSuggestions([])
+      setShowSuggestions(false)
+    }
+  }
+
   const handleSuggestionClick = (suggestion) => {
     setLocationInput(suggestion)
     setSearchSuggestions([])
