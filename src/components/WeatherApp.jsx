@@ -354,6 +354,17 @@ const WeatherApp = () => {
     }
   }, [location, fetchWeatherData])
 
+  // Debounced location change handler
+  const handleLocationChangeDebounced = useCallback((newLocation) => {
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current)
+    }
+    
+    debounceTimer.current = setTimeout(() => {
+      handleLocationChange(newLocation)
+    }, 500)
+  }, [handleLocationChange])
+
   // Memoized values for performance
   const shouldShowLoading = useMemo(() => loading || changingLocation || gettingLocation, [loading, changingLocation, gettingLocation])
   const isUsingSimulatedData = useMemo(() => 
