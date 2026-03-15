@@ -500,11 +500,51 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
                     window.currentLocationMarker.setLatLng([center.lat, center.lng])
                   }
                   
-                  // Update location throughout the entire app
+                  // Update location throughout the entire app with reverse geocoding
                   if (onLocationChange) {
-                    const locationString = `${center.lat.toFixed(4)},${center.lng.toFixed(4)}`
-                    onLocationChange(locationString)
-                    console.log(`� Updated app location to: ${locationString}`)
+                    // First try to get city name from alert properties
+                    let locationName = null
+                    if (alert.properties.areaDesc) {
+                      // Extract city/town name from area description
+                      const areas = alert.properties.areaDesc.split(';')
+                      const firstArea = areas[0].trim()
+                      // Remove county/state info, keep just the city name
+                      locationName = firstArea.split(',')[0].trim()
+                    }
+                    
+                    // If no city name from alert, do reverse geocoding
+                    if (!locationName) {
+                      const reverseGeocode = async () => {
+                        try {
+                          const apiKey = '01c50e8c663fe1d38db9f79fbedb3136'
+                          const response = await fetch(
+                            `https://api.openweathermap.org/geo/1.0/reverse?lat=${center.lat}&lon=${center.lng}&limit=1&appid=${apiKey}`
+                          )
+                          
+                          if (response.ok) {
+                            const data = await response.json()
+                            const cityName = data[0]?.name || 'Your Location'
+                            console.log('🏙️ Reverse geocoded alert area:', cityName)
+                            onLocationChange(cityName)
+                          } else {
+                            // Fallback to coordinates if reverse geocoding fails
+                            const locationString = `${center.lat.toFixed(4)},${center.lng.toFixed(4)}`
+                            onLocationChange(locationString)
+                          }
+                        } catch (error) {
+                          console.error('❌ Reverse geocoding failed for alert:', error)
+                          // Fallback to coordinates
+                          const locationString = `${center.lat.toFixed(4)},${center.lng.toFixed(4)}`
+                          onLocationChange(locationString)
+                        }
+                      }
+                      
+                      reverseGeocode()
+                    } else {
+                      // Use city name from alert properties
+                      console.log(`🏙️ Using alert area name: ${locationName}`)
+                      onLocationChange(locationName)
+                    }
                   }
                   
                   console.log(`🚨 Centered map and updated location to alert: ${event} at [${center.lat.toFixed(4)}, ${center.lng.toFixed(4)}]`)
@@ -734,7 +774,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
             urgency: 'Expected',
             headline: 'Winter Weather Advisory in Effect Until Tomorrow Morning',
             description: 'Snow accumulations of 3 to 6 inches expected. Travel could be difficult during the evening commute. Hazardous conditions could impact travel Tuesday morning and evening commutes.',
-            areaDesc: 'Test County, Test Region',
+            areaDesc: 'Mount Union; Huntingdon County',
             effective: new Date().toISOString(),
             expires: new Date(Date.now() + 7200000).toISOString(), // 2 hours from now
             web: 'https://www.weather.gov',
@@ -817,11 +857,51 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
             window.currentLocationMarker.setLatLng([center.lat, center.lng])
           }
           
-          // Update location throughout the entire app
+          // Update location throughout the entire app with reverse geocoding
           if (onLocationChange) {
-            const locationString = `${center.lat.toFixed(4)},${center.lng.toFixed(4)}`
-            onLocationChange(locationString)
-            console.log(`🚨 Updated app location to: ${locationString}`)
+            // First try to get city name from alert properties
+            let locationName = null
+            if (testAlert.properties.areaDesc) {
+              // Extract city/town name from area description
+              const areas = testAlert.properties.areaDesc.split(';')
+              const firstArea = areas[0].trim()
+              // Remove county/state info, keep just the city name
+              locationName = firstArea.split(',')[0].trim()
+            }
+            
+            // If no city name from alert, do reverse geocoding
+            if (!locationName) {
+              const reverseGeocode = async () => {
+                try {
+                  const apiKey = '01c50e8c663fe1d38db9f79fbedb3136'
+                  const response = await fetch(
+                    `https://api.openweathermap.org/geo/1.0/reverse?lat=${center.lat}&lon=${center.lng}&limit=1&appid=${apiKey}`
+                  )
+                  
+                  if (response.ok) {
+                    const data = await response.json()
+                    const cityName = data[0]?.name || 'Your Location'
+                    console.log('🏙️ Reverse geocoded test alert area:', cityName)
+                    onLocationChange(cityName)
+                  } else {
+                    // Fallback to coordinates if reverse geocoding fails
+                    const locationString = `${center.lat.toFixed(4)},${center.lng.toFixed(4)}`
+                    onLocationChange(locationString)
+                  }
+                } catch (error) {
+                  console.error('❌ Reverse geocoding failed for test alert:', error)
+                  // Fallback to coordinates
+                  const locationString = `${center.lat.toFixed(4)},${center.lng.toFixed(4)}`
+                  onLocationChange(locationString)
+                }
+              }
+              
+              reverseGeocode()
+            } else {
+              // Use city name from alert properties
+              console.log(`🏙️ Using test alert area name: ${locationName}`)
+              onLocationChange(locationName)
+            }
           }
           
           console.log(`🚨 Centered map and updated location to test alert: ${testAlert.properties.event} at [${center.lat.toFixed(4)}, ${center.lng.toFixed(4)}]`)
