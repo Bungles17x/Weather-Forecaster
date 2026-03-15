@@ -42,6 +42,15 @@ const WeatherApp = () => {
     }
   }, [searchHistory])
 
+  // Clear any cached location on initial load to ensure default location
+  useEffect(() => {
+    const cachedLocation = localStorage.getItem('weatherLastLocation')
+    if (cachedLocation && cachedLocation !== 'New York, NY') {
+      localStorage.removeItem('weatherLastLocation')
+      setLocation('New York, NY')
+    }
+  }, [])
+
   // Weather alerts generation function
   const generateWeatherAlerts = useCallback((currentData, forecastList) => {
     const alerts = []
@@ -209,6 +218,9 @@ const WeatherApp = () => {
       setLastUpdate(new Date())
       setDataQuality('real')
       setConnectionStatus('connected')
+      
+      // Save current location
+      localStorage.setItem('weatherLastLocation', locationParam)
       
       // Generate weather alerts if needed
       const alerts = generateWeatherAlerts(currentData, forecastData.list)
