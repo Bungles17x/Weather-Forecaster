@@ -180,29 +180,46 @@ const WeatherApp = () => {
   // Get current weather from NWS
   const getCurrentWeather = useCallback(async (office, gridX, gridY) => {
     try {
+      console.log('🔍 Attempting to get current weather for office:', office, 'grid:', gridX, gridY)
+      
       // Try to get stations first
       const stationsUrl = `${NWS_BASE_URL}/gridpoints/${office}/${gridX},${gridY}/stations`
+      console.log('📡 Fetching stations from:', stationsUrl)
+      
       const stationsResponse = await fetch(stationsUrl)
       
       if (!stationsResponse.ok) {
+        console.log('⚠️ Stations API failed, using forecast fallback')
         throw new Error('Failed to get weather stations')
       }
       
       const stationsData = await stationsResponse.json()
+      console.log('📡 Stations data received:', stationsData)
       
-      // Check if stations data is available
-      if (!stationsData.features || stationsData.features.length === 0) {
+      // Check if stations data is available and has features
+      if (!stationsData || !stationsData.features || !Array.isArray(stationsData.features) || stationsData.features.length === 0) {
         console.log('⚠️ No weather stations found, using grid point forecast for current conditions')
         // Fallback: use the latest forecast period as "current" weather
         const forecastUrl = `${NWS_BASE_URL}/gridpoints/${office}/${gridX},${gridY}/forecast`
+        console.log('🌤️ Using forecast fallback from:', forecastUrl)
+        
         const forecastResponse = await fetch(forecastUrl)
         
         if (!forecastResponse.ok) {
+          console.log('⚠️ Forecast API failed, using ultimate fallback')
           throw new Error('Failed to get forecast data')
         }
         
         const forecastData = await forecastResponse.json()
+        console.log('📅 Forecast data received:', forecastData)
+        
+        if (!forecastData.properties || !forecastData.properties.periods || !Array.isArray(forecastData.properties.periods) || forecastData.properties.periods.length === 0) {
+          console.log('⚠️ No forecast periods available, using ultimate fallback')
+          throw new Error('No forecast periods available')
+        }
+        
         const currentPeriod = forecastData.properties.periods[0]
+        console.log('🌤️ Using current period:', currentPeriod)
         
         // Convert forecast data to observation-like format
         return {
@@ -223,30 +240,49 @@ const WeatherApp = () => {
       }
       
       // Use the first available station
-      const stationId = stationsData.features[0].properties.stationIdentifier
+      const firstStation = stationsData.features[0]
+      if (!firstStation || !firstStation.properties || !firstStation.properties.stationIdentifier) {
+        console.log('⚠️ Invalid station data, using forecast fallback')
+        throw new Error('Invalid station data')
+      }
+      
+      const stationId = firstStation.properties.stationIdentifier
+      console.log('📡 Using station:', stationId)
       
       // Get latest observations from the station
       const observationsUrl = `${NWS_BASE_URL}/stations/${stationId}/observations/latest`
+      console.log('🔍 Fetching observations from:', observationsUrl)
+      
       const obsResponse = await fetch(observationsUrl)
       
       if (!obsResponse.ok) {
+        console.log('⚠️ Observations API failed, using fallback')
         throw new Error('Failed to get weather observations')
       }
       
       const obsData = await obsResponse.json()
+      console.log('🔍 Observations data received:', obsData)
       
       // Check if observations data is available
-      if (!obsData.features || obsData.features.length === 0) {
+      if (!obsData || !obsData.features || !Array.isArray(obsData.features) || obsData.features.length === 0) {
         console.log('⚠️ No observations found, using fallback data')
         throw new Error('No observations available')
       }
       
-      return obsData.features[0].properties
+      const firstObservation = obsData.features[0]
+      if (!firstObservation || !firstObservation.properties) {
+        console.log('⚠️ Invalid observation data, using fallback')
+        throw new Error('Invalid observation data')
+      }
+      
+      console.log('🌡️ Successfully got observation data')
+      return firstObservation.properties
       
     } catch (error) {
       console.error('Current weather error:', error)
       
       // Return fallback data if all else fails
+      console.log('🛡️ Using ultimate fallback data')
       return {
         temperature: { value: null },
         textDescription: 'Weather data temporarily unavailable',
