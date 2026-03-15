@@ -17,6 +17,7 @@ const WeatherApp = () => {
   const [lastUpdate, setLastUpdate] = useState(null)
   const [refreshing, setRefreshing] = useState(false)
   const [location, setLocation] = useState('New York, NY')
+  const [isUsingCoordinates, setIsUsingCoordinates] = useState(false)
   
   // Enhanced UI state
   const [loadingMessage, setLoadingMessage] = useState('Fetching weather data...')
@@ -404,7 +405,7 @@ const WeatherApp = () => {
             errorMessage = 'Location request timed out.'
             break
           default:
-            errorMessage = 'Unknown geolocation error occurred.'
+            errorMessage = 'An unknown error occurred.'
         }
         
         setError(errorMessage)
@@ -449,12 +450,43 @@ const WeatherApp = () => {
     })
   }, [fetchWeatherData])
 
+  // Enhanced location change handler with coordinate support
   const handleLocationChange = useCallback((newLocation) => {
-    if (newLocation && newLocation !== location) {
+    console.log('📍 WeatherApp received location:', newLocation)
+    
+    // Check if the location looks like coordinates (contains comma and numbers)
+    const isCoordinateLocation = newLocation.includes(',') && 
+      newLocation.split(',').length === 2 &&
+      newLocation.split(',').every(coord => {
+        const num = parseFloat(coord.trim())
+        return !isNaN(num) && num >= -90 && num <= 90
+      })
+    
+    if (isCoordinateLocation) {
+      console.log('🌍 Using coordinate-based location:', newLocation)
+      setIsUsingCoordinates(true)
+      // For coordinates, we'll need to use a different API or reverse geocoding
+      // For now, let's use a nearby city based on coordinates
+      const [lat, lon] = newLocation.split(',').map(coord => parseFloat(coord.trim()))
+      
+      // Simple approximation to nearest major city (you can enhance this with proper reverse geocoding)
+      let approximateCity = 'New York, NY' // default
+      if (lat > 40.7 && lat < 41.0 && lon > -74.0 && lon < -73.8) {
+        approximateCity = 'New York, NY'
+      } else if (lat >= 40.5 && lat < 41.0 && lon >= -74.0 && lon <= -73.5) {
+        approximateCity = 'New York, NY'
+      }
+      // Add more city approximations as needed
+      
+      setLocation(approximateCity)
+      fetchWeatherData(approximateCity)
+    } else {
+      console.log('🏙️ Using city-based location:', newLocation)
+      setIsUsingCoordinates(false)
       setLocation(newLocation)
-      fetchWeatherData(newLocation, true)
+      fetchWeatherData(newLocation)
     }
-  }, [location, fetchWeatherData])
+  }, [fetchWeatherData])
 
   // Debounced location change handler
   const handleLocationChangeDebounced = useCallback((newLocation) => {

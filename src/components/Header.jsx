@@ -11,6 +11,7 @@ const Header = ({ onLocationChange }) => {
   const [searchSuggestions, setSearchSuggestions] = useState([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [locating, setLocating] = useState(false)
+  const [currentCoordinates, setCurrentCoordinates] = useState(null)
   const location = useLocation()
 
   // Get current page for active navigation
@@ -42,11 +43,18 @@ const Header = ({ onLocationChange }) => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords
+        const coordinates = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`
         console.log('📍 Navbar location found:', { latitude, longitude })
         
-        // You can update the app's location state here
+        // Store coordinates
+        setCurrentCoordinates(coordinates)
+        
+        // Update location display
+        setLocationInput(`Lat: ${latitude.toFixed(4)}, Lon: ${longitude.toFixed(4)}`)
+        
+        // Pass coordinates to parent
         if (onLocationChange) {
-          onLocationChange(`${latitude.toFixed(4)}, ${longitude.toFixed(4)}`)
+          onLocationChange(coordinates)
         }
         
         setLocating(false)
