@@ -111,6 +111,20 @@ const CurrentWeather = ({ data }) => {
     return 'Very Poor'
   }
 
+  const getAirQuality = () => {
+    // Simplified air quality based on weather conditions
+    let aqi = 50 // Base moderate
+    
+    if (humidity > 80) aqi += 20
+    if (visibility < 5000) aqi += 30
+    if (pressure < 1000) aqi += 10
+    
+    if (aqi <= 50) return { level: 'Good', color: '#00e400' }
+    if (aqi <= 100) return { level: 'Moderate', color: '#ffff00' }
+    if (aqi <= 150) return { level: 'Unhealthy for Sensitive', color: '#ff7e00' }
+    return { level: 'Unhealthy', color: '#ff0000' }
+  }
+
   const uvIndex = getUVIndex()
   const uvLevel = getUVLevel(uvIndex)
   const comfortIndex = getComfortIndex()
