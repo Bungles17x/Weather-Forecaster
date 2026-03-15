@@ -2,59 +2,18 @@
 .weather-map-radar {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  background: #f0f2f5;
-}
-
-.map-controls {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
+  height: 100%;
+  background: #1a1a1a;
   border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
-  max-width: 300px;
-}
-
-.control-group {
-  margin-bottom: 1rem;
-}
-
-.control-group label {
-  display: block;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 0.5rem;
-  font-size: 0.875rem;
-}
-
-.control-group select {
-  width: 100%;
-  padding: 0.5rem;
-  border: 2px solid #e9ecef;
-  border-radius: 6px;
-  background: white;
-  font-size: 0.875rem;
-  color: #333;
-}
-
-.control-group input[type="range"] {
-  width: 100%;
-  margin-bottom: 0.5rem;
-}
-
-.control-group input[type="checkbox"] {
-  margin-right: 0.5rem;
-  transform: scale(1.2);
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
 .map-container {
   flex: 1;
   position: relative;
   height: 100%;
+  min-height: 400px;
 }
 
 .map-canvas {
@@ -62,41 +21,7 @@
   height: 100%;
   border-radius: 12px;
   overflow: hidden;
-}
-
-.map-legend {
-  position: absolute;
-  bottom: 20px;
-  left: 20px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
-  max-width: 250px;
-}
-
-.map-legend h4 {
-  margin: 0 0 1rem 0;
-  font-weight: 600;
-  color: #333;
-  font-size: 1rem;
-  border-bottom: 2px solid #e9ecef;
-  padding-bottom: 0.5rem;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  margin-bottom: 0.75rem;
-  font-size: 0.875rem;
-  color: #333;
-}
-
-.legend-icon {
-  margin-right: 0.5rem;
-  font-size: 1.2rem;
+  background: #1a1a1a;
 }
 
 .map-loading {
@@ -104,15 +29,17 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  background: #f0f2f5;
+  height: 100%;
+  background: #1a1a1a;
+  color: white;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .loading-spinner {
   width: 50px;
   height: 50px;
-  border: 4px solid #e9ecef;
-  border-top: 4px solid #007bff;
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  border-top: 4px solid #3498db;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 1rem;
@@ -124,7 +51,7 @@
 }
 
 .map-loading p {
-  color: #333;
+  color: rgba(255, 255, 255, 0.8);
   font-size: 1.125rem;
   font-weight: 500;
 }
@@ -133,19 +60,22 @@
 .weather-info-window {
   padding: 1rem;
   max-width: 250px;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  border-radius: 8px;
 }
 
 .weather-info-window h3 {
   margin: 0 0 0.5rem 0;
-  color: #333;
+  color: white;
   font-size: 1.125rem;
   font-weight: 600;
 }
 
 .weather-info-window p {
   margin: 0.25rem 0;
-  color: #666;
+  color: rgba(255, 255, 255, 0.8);
   font-size: 0.875rem;
   line-height: 1.4;
 }
@@ -154,19 +84,22 @@
 .station-info-window {
   padding: 1rem;
   max-width: 200px;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  border-radius: 8px;
 }
 
 .station-info-window h4 {
   margin: 0 0 0.5rem 0;
-  color: #333;
+  color: white;
   font-size: 1rem;
   font-weight: 600;
 }
 
 .station-info-window p {
   margin: 0.25rem 0;
-  color: #666;
+  color: rgba(255, 255, 255, 0.8);
   font-size: 0.875rem;
   line-height: 1.4;
 }
@@ -175,148 +108,70 @@
 .location-info-window {
   padding: 1rem;
   max-width: 200px;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  border-radius: 8px;
 }
 
 .location-info-window h4 {
   margin: 0 0 0.5rem 0;
-  color: #333;
+  color: white;
   font-size: 1rem;
   font-weight: 600;
 }
 
 .location-info-window p {
   margin: 0.25rem 0;
-  color: #666;
+  color: rgba(255, 255, 255, 0.8);
   font-size: 0.875rem;
   line-height: 1.4;
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .map-controls {
-    position: relative;
-    top: auto;
-    right: auto;
-    margin-bottom: 1rem;
-    max-width: none;
-  }
-
-  .map-legend {
-    position: relative;
-    bottom: auto;
-    left: auto;
-    margin-top: 1rem;
-    max-width: none;
-  }
-
   .weather-map-radar {
-    flex-direction: column;
+    margin: 0;
+    border-radius: 0;
   }
 
   .map-container {
     height: 400px;
   }
 
-  .control-group {
-    margin-bottom: 0.75rem;
-  }
-
-  .control-group label {
-    font-size: 0.8rem;
-  }
-
-  .legend-item {
-    font-size: 0.8rem;
+  .map-loading p {
+    font-size: 1rem;
   }
 }
 
 @media (max-width: 480px) {
-  .map-controls {
-    padding: 1rem;
-  }
-
-  .map-legend {
-    padding: 1rem;
-  }
-
-  .control-group label {
-    font-size: 0.75rem;
-  }
-
-  .legend-item {
-    font-size: 0.75rem;
-    margin-bottom: 0.5rem;
-  }
-
   .map-container {
     height: 300px;
   }
+
+  .map-loading p {
+    font-size: 0.875rem;
+  }
 }
 
-/* Animation for map controls */
-.control-group {
+/* Animation for map container */
+.map-container {
   transition: all 0.3s ease;
 }
 
-.control-group:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
-}
-
-/* Custom scrollbar for map container */
-.map-canvas::-webkit-scrollbar {
-  width: 8px;
-}
-
-.map-canvas::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
-.map-canvas::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 4px;
-}
-
-.map-canvas::-webkit-scrollbar-thumb:hover {
-  background: #555;
+.map-container:hover {
+  transform: scale(1.01);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
 }
 
 /* Focus styles */
-.control-group select:focus {
-  outline: 2px solid #007bff;
+.map-canvas:focus {
+  outline: 2px solid #3498db;
   outline-offset: 2px;
 }
 
-.control-group input[type="checkbox"]:focus {
-  outline: 2px solid #007bff;
-  outline-offset: 2px;
-}
-
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .map-controls,
-  .map-legend {
-    background: rgba(0, 0, 0, 0.95);
-    color: #fff;
-  }
-
-  .control-group label {
-    color: #fff;
-  }
-
-  .control-group select {
-    background: #333;
-    color: #fff;
-    border-color: #555;
-  }
-
-  .map-legend h4 {
-    color: #fff;
-    border-color: #555;
-  }
-
-  .legend-item {
-    color: #fff;
-  }
+/* Dark mode support (already dark) */
+.weather-map-radar {
+  background: #1a1a1a;
+  color: white;
 }
