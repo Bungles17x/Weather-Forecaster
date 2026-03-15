@@ -211,7 +211,10 @@ const WeatherApp = () => {
             currentPeriod.temperature * 9/5 + 32 }, // Convert C to F if needed
           textDescription: currentPeriod.shortForecast || currentPeriod.detailedForecast || 'No data available',
           relativeHumidity: { value: null }, // Not available in forecast
-          windSpeed: { value: currentPeriod.windSpeed ? parseInt(currentPeriod.windSpeed) || null : null },
+          windSpeed: { value: currentPeriod.windSpeed ? 
+            typeof currentPeriod.windSpeed === 'string' ? 
+              parseInt(currentPeriod.windSpeed.match(/\d+/)?.[0]) || null : 
+              currentPeriod.windSpeed : null },
           windDirection: currentPeriod.windDirection || null,
           visibility: { value: null }, // Not available in forecast
           barometricPressure: { value: null }, // Not available in forecast
@@ -231,6 +234,13 @@ const WeatherApp = () => {
       }
       
       const obsData = await obsResponse.json()
+      
+      // Check if observations data is available
+      if (!obsData.features || obsData.features.length === 0) {
+        console.log('⚠️ No observations found, using fallback data')
+        throw new Error('No observations available')
+      }
+      
       return obsData.features[0].properties
       
     } catch (error) {
