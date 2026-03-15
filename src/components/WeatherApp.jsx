@@ -270,8 +270,50 @@ const WeatherApp = () => {
       
       // Check if observations data is available
       if (!obsData || !obsData.features || !Array.isArray(obsData.features) || obsData.features.length === 0) {
-        console.log('⚠️ No observations found, using fallback data')
-        throw new Error('No observations available')
+        console.log('⚠️ No observations found, using forecast fallback data')
+        // Fallback to forecast data instead of ultimate fallback
+        try {
+          const forecastUrl = `${NWS_BASE_URL}/gridpoints/${office}/${gridX},${gridY}/forecast`
+          console.log('🌤️ Using forecast fallback from:', forecastUrl)
+          
+          const forecastResponse = await fetch(forecastUrl)
+          
+          if (!forecastResponse.ok) {
+            console.log('⚠️ Forecast API failed, using ultimate fallback')
+            throw new Error('Failed to get forecast data')
+          }
+          
+          const forecastData = await forecastResponse.json()
+          console.log('📅 Forecast data received:', forecastData)
+          
+          if (!forecastData.properties || !forecastData.properties.periods || !Array.isArray(forecastData.properties.periods) || forecastData.properties.periods.length === 0) {
+            console.log('⚠️ No forecast periods available, using ultimate fallback')
+            throw new Error('No forecast periods available')
+          }
+          
+          const currentPeriod = forecastData.properties.periods[0]
+          console.log('🌤️ Using current period for current weather:', currentPeriod)
+          
+          // Convert forecast data to observation-like format
+          return {
+            temperature: { value: currentPeriod.temperature === null ? null : 
+              currentPeriod.temperatureUnit === 'F' ? currentPeriod.temperature : 
+              currentPeriod.temperature * 9/5 + 32 }, // Convert C to F if needed
+            textDescription: currentPeriod.shortForecast || currentPeriod.detailedForecast || 'No data available',
+            relativeHumidity: { value: null }, // Not available in forecast
+            windSpeed: { value: currentPeriod.windSpeed ? 
+              typeof currentPeriod.windSpeed === 'string' ? 
+                parseInt(currentPeriod.windSpeed.match(/\d+/)?.[0]) || null : 
+                currentPeriod.windSpeed : null },
+            windDirection: currentPeriod.windDirection || null,
+            visibility: { value: null }, // Not available in forecast
+            barometricPressure: { value: null }, // Not available in forecast
+            timestamp: new Date().toISOString()
+          }
+        } catch (forecastError) {
+          console.log('⚠️ Forecast fallback failed:', forecastError)
+          throw new Error('No observations available and forecast fallback failed')
+        }
       }
       
       const firstObservation = obsData.features[0]
