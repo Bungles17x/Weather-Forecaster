@@ -200,42 +200,76 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
 
   }, [mapCenter, zoom, radarOverlay, weatherData, coordinates])
 
-  const initializeOpenStreetMap = useCallback(() => {
-    if (!window.L) {
-      console.error('Leaflet not loaded')
+  // Initialize map
+  useEffect(() => {
+    if (!mapRef.current || !window.L) return
+
+    // Check if map is already initialized
+    if (mapRef.current._leaflet_id) {
+      console.log('🗺️ Map already initialized, skipping')
       return
     }
 
-    const map = window.L.map(mapRef.current, {
-      center: [mapCenter.lat, mapCenter.lng],
-      zoom: zoom,
-      zoomControl: true
-    })
-
-    // Add OpenStreetMap tiles
-    window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors',
-      maxZoom: 19
-    }).addTo(map)
-
-    // Add NOAA/NWS radar layers
-    addRadarLayersOSM(map)
-    
-    // Add weather markers
-    if (weatherData) {
-      addWeatherMarkersOSM(map, weatherData)
-    }
-
-    // Add location marker
-    if (coordinates) {
-      console.log('📍 Adding location marker for:', coordinates)
-      addLocationMarkerOSM(map, coordinates)
-    } else {
-      console.log('📍 No coordinates provided, adding default location marker')
-      // Add a default location marker if no coordinates
-      addLocationMarkerOSM(map, { latitude: mapCenter.lat, longitude: mapCenter.lng })
-    }
+    // Initialize OpenStreetMap with Leaflet
+    initializeOpenStreetMap()
   }, [mapCenter, zoom, weatherData, coordinates])
+
+  const initializeOpenStreetMap = () => {
+    try {
+      console.log('🗺️ Initializing OpenStreetMap with Leaflet...')
+      
+      // Check if container exists
+      const container = mapRef.current
+      if (!container) {
+        console.error('🗺️ Map container not found')
+        setLoading(false)
+        return
+      }
+
+      // Initialize Leaflet map
+      const map = window.L.map(container, {
+        center: [mapCenter.lat, mapCenter.lng],
+        zoom: zoom,
+        zoomControl: true,
+        attributionControl: false
+      })
+
+      console.log('🗺️ Leaflet map created')
+
+      // Add OpenStreetMap tiles
+      const osmLayer = window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 19
+      }).addTo(map)
+
+      console.log('🗺️ OpenStreetMap tiles added')
+
+      // Add NOAA/NWS radar layers
+      addRadarLayersOSM(map)
+      
+      // Add weather markers
+      if (weatherData) {
+        addWeatherMarkersOSM(map, weatherData)
+      }
+
+      // Add location marker
+      if (coordinates) {
+        console.log('📍 Adding location marker for:', coordinates)
+        addLocationMarkerOSM(map, coordinates)
+      } else {
+        console.log('📍 No coordinates provided, adding default location marker')
+        // Add a default location marker if no coordinates
+        addLocationMarkerOSM(map, { latitude: mapCenter.lat, longitude: mapCenter.lng })
+      }
+
+      setLoading(false)
+      console.log('🗺️ OpenStreetMap initialization complete')
+
+    } catch (error) {
+      console.error('🗺️ Error initializing OpenStreetMap:', error)
+      setLoading(false)
+    }
+  }
 
   const addRadarLayersOSM = (map) => {
     // Real NEXRAD radar from NOAA
@@ -815,7 +849,13 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
   const addLocationMarkerOSM = (map, coords) => {
     console.log('📍 addLocationMarkerOSM called with coords:', coords)
     
-    const locationMarker = window.L.marker([coords.latitude, coords.longitude], {
+    // Ensure we have valid coordinates
+    const lat = coords.latitude || coords.lat || mapCenter.lat
+    const lng = coords.longitude || coords.lng || mapCenter.lng
+    
+    console.log('📍 Using coordinates:', { lat, lng })
+    
+    const locationMarker = window.L.marker([lat, lng], {
       title: 'Your Location',
       icon: window.L.divIcon({
         html: '<div style="background: #dc2626; color: white; padding: 8px; border-radius: 50%; font-size: 16px; font-weight: bold; box-shadow: 0 2px 8px rgba(220, 38, 38, 0.4); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">📍</div>',
@@ -828,7 +868,7 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
     console.log('📍 Location marker added to map')
 
     // Add pulsing circle around location
-    const pulsingCircle = window.L.circleMarker([coords.latitude, coords.longitude], {
+    const pulsingCircle = window.L.circleMarker([lat, lng], {
       radius: 30,
       fillColor: '#dc2626',
       color: '#dc2626',
@@ -873,8 +913,8 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
         </div>
         <div style="padding: 8px;">
           <div style="font-size: 12px; line-height: 1.4;">
-            <div><strong>Latitude:</strong> ${coords.latitude.toFixed(6)}</div>
-            <div><strong>Longitude:</strong> ${coords.longitude.toFixed(6)}</div>
+            <div><strong>Latitude:</strong> ${lat.toFixed(6)}</div>
+            <div><strong>Longitude:</strong> ${lng.toFixed(6)}</div>
             <div><strong>Accuracy:</strong> ${coords.accuracy ? `${coords.accuracy.toFixed(0)} meters` : 'Unknown'}</div>
             <div><strong>Timestamp:</strong> ${new Date().toLocaleString()}</div>
           </div>
