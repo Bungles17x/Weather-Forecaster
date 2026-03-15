@@ -320,13 +320,16 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
       minZoom: 4
     })
 
-    // Working Pressure Layer using OSM Pressure
+  // Working Pressure Layer using OSM Pressure
     const pressureLayer = window.L.tileLayer('https://tile.openweathermap.org/map/pressure_new/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136', {
       attribution: '© OpenWeatherMap',
       opacity: 0.7,
       maxZoom: 12,
       minZoom: 4
     })
+
+    // Add active alerts markers
+    const alertsLayerGroup = addActiveAlertsMarkers(map)
 
     // Create base maps
     const baseMaps = {
@@ -356,7 +359,8 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
       '💧 Precipitation': precipLayer,
       '☁️ Cloud Coverage': cloudsLayer,
       '🌡 Temperature': tempLayer,
-      '🔵 Pressure': pressureLayer
+      '🔵 Pressure': pressureLayer,
+      '🚨 Alerts': alertsLayerGroup
     }
 
     // Add layer control
@@ -364,9 +368,6 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
       position: 'topright',
       collapsed: false
     }).addTo(map)
-
-    // Add active alerts markers
-    addActiveAlertsMarkers(map)
 
     return {
       nexrad: nexradLayer,
@@ -655,6 +656,9 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
         
         console.log('🚨 Test alert added to map')
       })
+
+    // Return the layer group for control
+    return alertsLayerGroup
   }
 
   const createEnhancedAlertPopup = (alert, color) => {
