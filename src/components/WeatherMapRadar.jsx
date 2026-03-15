@@ -249,46 +249,6 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
       minZoom: 4
     }).addTo(map)
 
-    // NOAA Wind Radar
-    const noaaLayer = window.L.tileLayer('https://tile.openweathermap.org/weather/v2/wind/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136&size=2x', {
-      attribution: '© OpenWeatherMap',
-      opacity: 0.8,
-      maxZoom: 12,
-      minZoom: 4
-    })
-
-    // NWS Precipitation Radar
-    const precipLayer = window.L.tileLayer('https://tile.openweathermap.org/weather/v2/rain/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136&size=2x', {
-      attribution: '© OpenWeatherMap',
-      opacity: 0.7,
-      maxZoom: 12,
-      minZoom: 4
-    })
-
-    // NWS Clouds Radar
-    const cloudsLayer = window.L.tileLayer('https://tile.openweathermap.org/weather/v2/clouds/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136&size=2x', {
-      attribution: '© OpenWeatherMap',
-      opacity: 0.6,
-      maxZoom: 12,
-      minZoom: 4
-    })
-
-    // NWS Temperature Radar
-    const tempLayer = window.L.tileLayer('https://tile.openweathermap.org/weather/v2/temp/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136&size=2x', {
-      attribution: '© OpenWeatherMap',
-      opacity: 0.7,
-      maxZoom: 12,
-      minZoom: 4
-    })
-
-    // Active Weather Alerts Layer
-    const alertsLayer = window.L.tileLayer('https://api.weather.gov/alerts/active/area/{z}/{x}/{y}', {
-      attribution: '© NOAA NWS',
-      opacity: 0.8,
-      maxZoom: 12,
-      minZoom: 4
-    })
-
     // Create base maps
     const baseMaps = {
       'OpenStreetMap': window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -305,15 +265,10 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
       })
     }
 
-    // Create overlay maps
+    // Create overlay maps - only working layers
     const overlayMaps = {
       '🛡️ NEXRAD Radar': nexradTilesLayer,
-      '🛡️ NEXRAD Loop': nexradLayer,
-      '💨 Wind Speed': noaaLayer,
-      '💧 Precipitation': precipLayer,
-      '☁️ Cloud Coverage': cloudsLayer,
-      '🌡 Temperature': tempLayer,
-      '🚨 Active Alerts': alertsLayer
+      '🛡️ NEXRAD Loop': nexradLayer
     }
 
     // Add layer control
@@ -328,11 +283,6 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
     return {
       nexrad: nexradLayer,
       nexradTiles: nexradTilesLayer,
-      noaa: noaaLayer,
-      precipitation: precipLayer,
-      clouds: cloudsLayer,
-      temperature: tempLayer,
-      alerts: alertsLayer,
       layerControl: layerControl
     }
   }
