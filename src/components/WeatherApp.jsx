@@ -337,68 +337,97 @@ const WeatherApp = () => {
           deg: Math.random() * 360
         },
         dt_txt: new Date(time * 1000).toISOString()
+      })
+    }
     
-    {/* Error Banner */}
-    {!shouldShowLoading && error && (
-      <div className="error-notification notification-error">
-        <div className="error-icon">⚠️</div>
-        <div className="error-content">
-          <h4>Weather Data Error</h4>
-          <p>{error}</p>
-          <button 
-            onClick={handleRetry} 
-            className="btn btn-primary btn-sm"
-          >
-            Try Real Data
-          </button>
-        </div>
-        <button 
-          onClick={() => setError(null)} 
-          className="notification-close"
-        >
-          ×
-        </button>
-      </div>
-    )}
-    
-    <main className="weather-content">
-      {!shouldShowLoading && refreshing && (
-        <div className="refresh-indicator">
-          <div className="refresh-spinner"></div>
-          <span>Updating weather data...</span>
+    return forecast
+  }
+
+  return (
+    <div className="weather-app">
+      <Header onLocationChange={handleLocationChange} />
+      
+      {/* Loading Overlay */}
+      {shouldShowLoading && (
+        <div className="loading-overlay">
+          <div className="loading-content">
+            <div className="loading-spinner"></div>
+            <h2 className="loading-title">Loading Weather Data</h2>
+            <p className="loading-message">{loadingMessage}</p>
+            <div className="loading-progress">
+              <div 
+                className="progress-bar" 
+                style={{ width: `${loadingProgress}%` }}
+              ></div>
+            </div>
+          </div>
         </div>
       )}
       
-      {!shouldShowLoading && weatherData && (
-        <>
-          {/* Show banner if using simulated data */}
-          {weatherData.name === 'Kansas City' && weatherData.main?.temp === 72 && (
-            <div className="simulated-data-banner">
-              <div className="banner-content">
-                <span className="banner-icon">📊</span>
-                <span className="banner-text">Showing simulated weather data</span>
-                <button 
-                  className="banner-retry-btn"
-                  onClick={() => {
-                    setError('Attempting to get real weather data...')
-                    setTimeout(() => {
-                      handleRetry()
-                    }, 1000)
-                  }}
-                >
-                  Try Real Data
-                </button>
-              </div>
-            </div>
-          )}
-          
-          <CurrentWeather data={weatherData} />
-          <HourlyForecast data={forecastData.slice(0, 8)} />
-          <TenDayForecast data={forecastData} />
-          <WeatherMap data={weatherData} />
-          <WeatherIndicators data={weatherData} />
-        </>
+      {/* Error Banner */}
+      {!shouldShowLoading && error && (
+        <div className="error-notification notification-error">
+          <div className="error-icon">⚠️</div>
+          <div className="error-content">
+            <h4>Weather Data Error</h4>
+            <p>{error}</p>
+            <button 
+              onClick={handleRetry} 
+              className="btn btn-primary btn-sm"
+            >
+              Try Real Data
+            </button>
+          </div>
+          <button 
+            onClick={() => setError(null)} 
+            className="notification-close"
+          >
+            ×
+          </button>
+        </div>
       )}
-    </main>
-  </div>
-)
+      
+      <main className="weather-content">
+        {!shouldShowLoading && refreshing && (
+          <div className="refresh-indicator">
+            <div className="refresh-spinner"></div>
+            <span>Updating weather data...</span>
+          </div>
+        )}
+        
+        {!shouldShowLoading && weatherData && (
+          <>
+            {/* Show banner if using simulated data */}
+            {weatherData.name === 'Kansas City' && weatherData.main?.temp === 72 && (
+              <div className="simulated-data-banner">
+                <div className="banner-content">
+                  <span className="banner-icon">📊</span>
+                  <span className="banner-text">Showing simulated weather data</span>
+                  <button 
+                    className="banner-retry-btn"
+                    onClick={() => {
+                      setError('Attempting to get real weather data...')
+                      setTimeout(() => {
+                        handleRetry()
+                      }, 1000)
+                    }}
+                  >
+                    Try Real Data
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            <CurrentWeather data={weatherData} />
+            <HourlyForecast data={forecastData.slice(0, 8)} />
+            <TenDayForecast data={forecastData} />
+            <WeatherMap data={weatherData} />
+            <WeatherIndicators data={weatherData} />
+          </>
+        )}
+      </main>
+    </div>
+  )
+}
+
+export default WeatherApp
