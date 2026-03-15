@@ -6,6 +6,7 @@ const WeatherAlerts = ({ coordinates }) => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [selectedAlert, setSelectedAlert] = useState(null)
+  const [showModal, setShowModal] = useState(false)
 
   useEffect(() => {
     if (coordinates) {
@@ -134,13 +135,39 @@ const WeatherAlerts = ({ coordinates }) => {
       case 'extreme': return '🚨'
       case 'severe': return '⚠️'
       case 'moderate': return '⚡'
-      case 'minor': return '📢'
-      default: return 'ℹ️'
+      case 'minor': return 'ℹ️'
+      default: return '📢'
+    }
+  }
+
+  const getSeverityColor = (severity) => {
+    switch (severity?.toLowerCase()) {
+      case 'extreme': return '#dc2626'  // Red
+      case 'severe': return '#f59e0b'  // Orange
+      case 'moderate': return '#eab308'  // Yellow
+      case 'minor': return '#3b82f6'   // Blue
+      default: return '#6c757d'     // Gray
+    }
+  }
+
+  const getUrgencyColor = (urgency) => {
+    switch (urgency?.toLowerCase()) {
+      case 'immediate': return '#dc2626'  // Red
+      case 'expected': return '#f59e0b'   // Orange
+      case 'future': return '#3b82f6'      // Blue
+      case 'past': return '#6c757d'        // Gray
+      default: return '#6c757d'           // Gray
     }
   }
 
   const handleAlertClick = (alert) => {
-    setSelectedAlert(selectedAlert?.id === alert.id ? null : alert)
+    setSelectedAlert(alert)
+    setShowModal(true)
+  }
+
+  const handleCloseModal = () => {
+    setShowModal(false)
+    setTimeout(() => setSelectedAlert(null), 300)
   }
 
   const refreshAlerts = () => {
@@ -205,15 +232,36 @@ const WeatherAlerts = ({ coordinates }) => {
                   >
                     <div className="alert-header">
                       <div className="alert-title-row">
-                        <span className="alert-severity-icon">
+                        <span className="alert-severity-icon" style={{ color: getSeverityColor(alert.severity) }}>
                           {getSeverityIcon(alert.severity)}
                         </span>
                         <h3 className="alert-title">{alert.title}</h3>
-                        <span className="alert-severity">{alert.severity}</span>
+                        <span 
+                          className="alert-severity" 
+                          style={{ 
+                            backgroundColor: getSeverityColor(alert.severity),
+                            color: '#fff'
+                          }}
+                        >
+                          {alert.severity?.toUpperCase()}
+                        </span>
                       </div>
                       <div className="alert-meta">
-                        <span className="alert-event">{alert.event}</span>
-                        <span className="alert-urgency">{alert.urgency}</span>
+                        <span 
+                          className="alert-event" 
+                          style={{ color: getUrgencyColor(alert.urgency) }}
+                        >
+                          {alert.event}
+                        </span>
+                        <span 
+                          className="alert-urgency"
+                          style={{ 
+                            backgroundColor: getUrgencyColor(alert.urgency),
+                            color: '#fff'
+                          }}
+                        >
+                          {alert.urgency?.toUpperCase()}
+                        </span>
                       </div>
                     </div>
 
@@ -282,6 +330,105 @@ const WeatherAlerts = ({ coordinates }) => {
           </div>
         )}
       </div>
+
+      {/* Alert Modal - Center Screen Display */}
+      {showModal && selectedAlert && (
+        <div className="alert-modal-overlay" onClick={handleCloseModal}>
+          <div className="alert-modal-container" onClick={(e) => e.stopPropagation()}>
+            <div className="alert-modal-header" style={{ backgroundColor: getSeverityColor(selectedAlert.severity) }}>
+              <div className="modal-header-content">
+                <span className="modal-alert-icon">{getSeverityIcon(selectedAlert.severity)}</span>
+                <h2 className="modal-alert-title">{selectedAlert.title}</h2>
+                <span className="modal-alert-severity">
+                  {selectedAlert.severity?.toUpperCase()}
+                </span>
+              </div>
+              <button className="modal-close-btn" onClick={handleCloseModal}>
+                ✕
+              </button>
+            </div>
+
+            <div className="alert-modal-body">
+              <div className="modal-alert-meta">
+                <div className="meta-item">
+                  <span className="meta-label">Event:</span>
+                  <span className="meta-value" style={{ color: getUrgencyColor(selectedAlert.urgency) }}>
+                    {selectedAlert.event}
+                  </span>
+                </div>
+                <div className="meta-item">
+                  <span className="meta-label">Urgency:</span>
+                  <span 
+                    className="meta-value urgency-badge"
+                    style={{ 
+                      backgroundColor: getUrgencyColor(selectedAlert.urgency),
+                      color: '#fff'
+                    }}
+                  >
+                    {selectedAlert.urgency?.toUpperCase()}
+                  </span>
+                </div>
+                <div className="meta-item">
+                  <span className="meta-label">Severity:</span>
+                  <span 
+                    className="meta-value severity-badge"
+                    style={{ 
+                      backgroundColor: getSeverityColor(selectedAlert.severity),
+                      color: '#fff'
+                    }}
+                  >
+                    {selectedAlert.severity?.toUpperCase()}
+                  </span>
+                </div>
+                <div className="meta-item">
+                  <span className="meta-label">Areas:</span>
+                  <span className="meta-value">{selectedAlert.areas}</span>
+                </div>
+                <div className="meta-item">
+                  <span className="meta-label">Effective:</span>
+                  <span className="meta-value">{formatDateTime(selectedAlert.effective)}</span>
+                </div>
+                <div className="meta-item">
+                  <span className="meta-label">Expires:</span>
+                  <span className="meta-value">{formatDateTime(selectedAlert.expires)}</span>
+                </div>
+                <div className="meta-item">
+                  <span className="meta-label">Issued By:</span>
+                  <span className="meta-value">{selectedAlert.sender}</span>
+                </div>
+              </div>
+
+              <div className="modal-alert-description">
+                <h3>Description</h3>
+                <p>{selectedAlert.description}</p>
+              </div>
+
+              {selectedAlert.instruction && (
+                <div className="modal-alert-instructions">
+                  <h3>Safety Instructions</h3>
+                  <p>{selectedAlert.instruction}</p>
+                </div>
+              )}
+
+              <div className="modal-alert-actions">
+                {selectedAlert.web && (
+                  <a 
+                    href={selectedAlert.web} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="modal-alert-link"
+                  >
+                    View Full Details on NWS.gov
+                  </a>
+                )}
+                <button className="modal-dismiss-btn" onClick={handleCloseModal}>
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   )
 }
