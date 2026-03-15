@@ -2,16 +2,16 @@
 .weather-map-radar {
   display: flex;
   flex-direction: column;
-  height: 90vh;
-  width: 95vw;
+  height: 98vh;
+  width: 98vw;
   background: #1a1a1a;
-  border-radius: 12px;
+  border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   position: relative;
-  margin: 2.5vh auto;
-  max-height: 90vh;
-  max-width: 95vw;
+  margin: 1vh auto;
+  max-height: 98vh;
+  max-width: 98vw;
 }
 
 .map-container {
@@ -19,14 +19,14 @@
   position: relative;
   height: 100%;
   width: 100%;
-  min-height: 600px;
-  max-height: 90vh;
+  min-height: 700px;
+  max-height: 98vh;
 }
 
 .map-canvas {
   width: 100%;
   height: 100%;
-  border-radius: 12px;
+  border-radius: 8px;
   overflow: hidden;
   background: #1a1a1a;
   position: relative;
@@ -43,7 +43,7 @@
   color: white;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   position: relative;
-  min-height: 600px;
+  min-height: 700px;
 }
 
 .loading-spinner {
@@ -142,17 +142,17 @@
 /* Responsive Design */
 @media (max-width: 768px) {
   .weather-map-radar {
-    height: 95vh;
-    width: 98vw;
-    margin: 2.5vh 1vw;
-    border-radius: 8px;
+    height: 98vh;
+    width: 99vw;
+    margin: 1vh 0.5vw;
+    border-radius: 4px;
   }
 
   .map-container {
     height: 100%;
     width: 100%;
-    min-height: 400px;
-    max-height: 95vh;
+    min-height: 500px;
+    max-height: 98vh;
   }
 
   .map-loading p {
@@ -162,16 +162,16 @@
 
 @media (max-width: 480px) {
   .weather-map-radar {
-    height: 98vh;
-    width: 99vw;
-    margin: 1vh 0.5vw;
+    height: 99vh;
+    width: 100vw;
+    margin: 0.5vh 0;
     border-radius: 0;
   }
 
   .map-container {
     height: 100%;
     width: 100%;
-    min-height: 300px;
+    min-height: 400px;
   }
 
   .map-loading p {
@@ -204,19 +204,8 @@
 /* Large screen optimizations */
 @media (min-width: 1200px) {
   .weather-map-radar {
-    max-width: 1400px;
-    height: 85vh;
-  }
-  
-  .map-container {
-    min-height: 700px;
-  }
-}
-
-@media (min-width: 1600px) {
-  .weather-map-radar {
-    max-width: 1600px;
-    height: 80vh;
+    max-width: 1800px;
+    height: 95vh;
   }
   
   .map-container {
@@ -224,13 +213,35 @@
   }
 }
 
-@media (min-width: 2000px) {
+@media (min-width: 1600px) {
   .weather-map-radar {
-    max-width: 1800px;
-    height: 75vh;
+    max-width: 2000px;
+    height: 92vh;
   }
   
   .map-container {
     min-height: 900px;
+  }
+}
+
+@media (min-width: 2000px) {
+  .weather-map-radar {
+    max-width: 2200px;
+    height: 88vh;
+  }
+  
+  .map-container {
+    min-height: 1000px;
+  }
+}
+
+@media (min-width: 2400px) {
+  .weather-map-radar {
+    max-width: 2400px;
+    height: 85vh;
+  }
+  
+  .map-container {
+    min-height: 1100px;
   }
 }
