@@ -79,18 +79,24 @@
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
-/* Enhanced Button Styles */
+/* Unified Button Styles - Same on PC and Mobile */
 .btn-sm {
-  padding: 8px 16px;
-  font-size: 12px;
-  border-radius: 20px;
+  padding: 10px 20px;
+  font-size: 13px;
+  border-radius: 25px;
   transition: all 0.3s ease;
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: white;
-  font-weight: 500;
+  font-weight: 600;
   position: relative;
   overflow: hidden;
+  min-height: 48px;
+  min-width: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
 }
 
 .btn-sm::before {
@@ -120,21 +126,21 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
-/* Enhanced Navigation Buttons */
+/* Enhanced Navigation Buttons - Unified Design */
 .nav-btn {
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: white;
-  padding: 10px 20px;
+  padding: 12px 24px;
   border-radius: 25px;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
-  min-width: 44px;
-  min-height: 44px;
+  min-height: 48px;
+  min-width: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -181,7 +187,42 @@
   box-shadow: 0 0 20px rgba(52, 152, 219, 0.5);
 }
 
-/* Enhanced Refresh Button */
+/* Enhanced Refresh Button - Unified Design */
+.refresh-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 25px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  min-height: 48px;
+  min-width: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.refresh-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.refresh-btn:hover::before {
+  left: 100%;
+}
+
 .refresh-btn:hover {
   animation: spin 0.5s ease;
   background: rgba(46, 204, 113, 0.2);
@@ -195,13 +236,25 @@
   100% { transform: rotate(360deg); }
 }
 
-/* Enhanced Location Button */
+/* Enhanced Location Button - Unified Design */
 .location-btn {
   background: rgba(52, 152, 219, 0.2);
   border: 1px solid rgba(52, 152, 219, 0.4);
   color: #3498db;
+  padding: 12px 24px;
+  border-radius: 25px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+  min-height: 48px;
+  min-width: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
 }
 
 .location-btn::before {
@@ -227,55 +280,25 @@
   box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
 }
 
-/* Enhanced Menu Close Button */
-.menu-close-btn {
-  background: none;
-  border: none;
-  color: white;
-  font-size: 1.5rem;
-  cursor: pointer;
-  padding: 8px 12px;
-  border-radius: 20px;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.menu-close-btn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(231, 76, 60, 0.2), transparent);
-  transition: left 0.5s ease;
-}
-
-.menu-close-btn:hover::before {
-  left: 100%;
-}
-
-.menu-close-btn:hover {
-  background: rgba(231, 76, 60, 0.2);
-  transform: scale(1.1);
-  color: #e74c3c;
-}
-
-/* Enhanced Search Button */
+/* Enhanced Search Button - Unified Design */
 .search-btn {
-  background: none;
-  border: none;
-  padding: 12px 15px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   color: rgba(255, 255, 255, 0.8);
+  padding: 14px 18px;
+  border-radius: 25px;
+  font-size: 16px;
+  font-weight: 600;
   cursor: pointer;
-  border-radius: 20px;
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+  min-height: 48px;
+  min-width: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
+  text-decoration: none;
 }
 
 .search-btn::before {
@@ -295,25 +318,31 @@
 
 .search-btn:hover {
   color: white;
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.2);
   transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
-/* Enhanced Mobile Menu Button */
+/* Enhanced Mobile Menu Button - Unified Design */
 .mobile-menu-btn {
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: white;
-  padding: 8px 12px;
-  border-radius: 20px;
+  padding: 12px 24px;
+  border-radius: 25px;
+  font-size: 16px;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+  min-height: 48px;
+  min-width: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
+  text-decoration: none;
 }
 
 .mobile-menu-btn::before {
@@ -342,13 +371,25 @@
   transform: translateY(0);
 }
 
-/* Enhanced Locate Me Button */
+/* Enhanced Locate Me Button - Unified Design */
 .locate-me-btn {
   background: rgba(46, 204, 113, 0.2);
   border: 1px solid rgba(46, 204, 113, 0.4);
   color: #2ecc71;
+  padding: 12px 24px;
+  border-radius: 25px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+  min-height: 48px;
+  min-width: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
 }
 
 .locate-me-btn::before {
@@ -852,7 +893,7 @@
   }
 }
 
-/* Enhanced Mobile Styles - Consolidated */
+/* Enhanced Mobile Styles - Layout Only */
 @media (max-width: 768px) {
   .weather-header {
     padding: 12px 0;
@@ -876,102 +917,24 @@
   
   .search-container {
     width: 100%;
-    max-width: 300px;
+    max-width: 250px;
   }
   
   .search-suggestions {
-    max-height: 200px;
+    max-height: 150px;
   }
   
   .location-display {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
+    padding: 6px 10px;
   }
   
-  /* Enhanced Mobile Buttons */
-  .btn-sm {
-    padding: 10px 14px;
-    font-size: 13px;
-    border-radius: 22px;
-    min-height: 44px;
-    min-width: 44px;
-    font-weight: 600;
+  .logo-text {
+    font-size: 1.125rem;
   }
   
-  .nav-btn {
-    padding: 12px 16px;
-    font-size: 13px;
-    border-radius: 22px;
-    min-height: 44px;
-    min-width: 44px;
-    font-weight: 600;
-  }
-  
-  .search-btn {
-    padding: 14px 16px;
-    font-size: 16px;
-    min-height: 44px;
-    min-width: 44px;
-  }
-  
-  .mobile-menu-btn {
-    padding: 10px 14px;
-    font-size: 16px;
-    min-height: 44px;
-    min-width: 44px;
-  }
-  
-  .location-btn {
-    padding: 10px 14px;
-    font-size: 13px;
-    min-height: 44px;
-    min-width: 44px;
-  }
-  
-  .locate-me-btn {
-    padding: 10px 14px;
-    font-size: 13px;
-    min-height: 44px;
-    min-width: 44px;
-  }
-  
-  /* Enhanced Mobile Hover Effects */
-  .btn-sm:hover,
-  .nav-btn:hover,
-  .search-btn:hover,
-  .mobile-menu-btn:hover,
-  .location-btn:hover,
-  .locate-me-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
-  }
-  
-  .btn-sm:active,
-  .nav-btn:active,
-  .search-btn:active,
-  .mobile-menu-btn:active,
-  .location-btn:active,
-  .locate-me-btn:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  }
-  
-  /* Enhanced Mobile Shimmer Effects */
-  .btn-sm::before,
-  .nav-btn::before,
-  .search-btn::before,
-  .mobile-menu-btn::before,
-  .location-btn::before,
-  .locate-me-btn::before {
-    transition: left 0.3s ease;
-  }
-  
-  .btn-sm:hover::before,
-  .nav-btn:hover::before,
-  .search-btn:hover::before,
-  .mobile-menu-btn:hover::before,
-  .location-btn:hover::before,
-  .locate-me-btn:hover::before {
-    left: 100%;
+  .location-icon {
+    font-size: 1rem;
   }
   
   /* Mobile Menu Enhancements */
@@ -1000,76 +963,29 @@
     gap: 6px;
   }
   
-  .logo-text {
-    font-size: 1.125rem;
+  .header-right {
+    gap: 6px;
+  }
+  
+  .search-container {
+    max-width: 250px;
+  }
+  
+  .search-suggestions {
+    max-height: 150px;
   }
   
   .location-display {
     font-size: 0.8rem;
-    padding: 5px 8px;
-    gap: 6px;
+    padding: 6px 10px;
+  }
+  
+  .logo-text {
+    font-size: 1.125rem;
   }
   
   .location-icon {
     font-size: 1rem;
-  }
-  
-  /* Enhanced Small Mobile Buttons */
-  .btn-sm {
-    padding: 8px 12px;
-    font-size: 12px;
-    border-radius: 20px;
-    min-height: 40px;
-    min-width: 40px;
-    font-weight: 600;
-  }
-  
-  .nav-btn {
-    padding: 10px 14px;
-    font-size: 12px;
-    border-radius: 20px;
-    min-height: 40px;
-    min-width: 40px;
-    font-weight: 600;
-  }
-  
-  .search-btn {
-    padding: 12px 14px;
-    font-size: 14px;
-    min-height: 40px;
-    min-width: 40px;
-  }
-  
-  .mobile-menu-btn {
-    padding: 8px 12px;
-    font-size: 14px;
-    min-height: 40px;
-    min-width: 40px;
-  }
-  
-  .location-btn {
-    padding: 8px 12px;
-    font-size: 12px;
-    min-height: 40px;
-    min-width: 40px;
-  }
-  
-  .locate-me-btn {
-    padding: 8px 12px;
-    font-size: 12px;
-    min-height: 40px;
-    min-width: 40px;
-  }
-  
-  /* Enhanced Small Mobile Hover Effects */
-  .btn-sm:hover,
-  .nav-btn:hover,
-  .search-btn:hover,
-  .mobile-menu-btn:hover,
-  .location-btn:hover,
-  .locate-me-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   }
   
   /* Small Mobile Menu Enhancements */
