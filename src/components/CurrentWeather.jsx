@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import './CurrentWeather.css'
 import { WeatherIcon } from './WeatherIcons'
-import nwsService from '../services/nwsService'
+// import nwsService from '../services/nwsService'
 
 const CurrentWeather = ({ data }) => {
   const [nwsAlerts, setNwsAlerts] = useState([])
@@ -10,13 +10,15 @@ const CurrentWeather = ({ data }) => {
   useEffect(() => {
     const fetchNWSData = async () => {
       try {
-          // Use fixed coordinates for Mount Union, PA
-          const lat = 40.79
-          const lon = -77.85
+          // NWS alerts temporarily disabled due to API issues
+          // const lat = 40.79
+          // const lon = -77.85
           
-          // Fetch NWS alerts
-          const alerts = await nwsService.getActiveAlerts(lat, lon)
-          setNwsAlerts(alerts)
+          // // Fetch NWS alerts
+          // const alerts = await nwsService.getActiveAlerts(lat, lon)
+          // setNwsAlerts(alerts)
+          
+          console.log('NWS alerts temporarily disabled')
         } catch (error) {
           console.error('Error fetching NWS data:', error)
         }

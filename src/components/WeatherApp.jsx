@@ -230,7 +230,7 @@ const WeatherApp = () => {
   }, [location, searchHistory])
 
   useEffect(() => {
-    if (!hasFetched.current) {
+    if (!hasFetched.current && !loading) {
       console.log('🚀 Initial data fetch useEffect triggered')
       hasFetched.current = true
       
@@ -241,7 +241,7 @@ const WeatherApp = () => {
       
       return () => clearTimeout(timer)
     }
-  }, [fetchWeatherData])
+  }, [fetchWeatherData, loading])
   
   // Cleanup timers on unmount
   useEffect(() => {
