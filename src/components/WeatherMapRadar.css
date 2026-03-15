@@ -2,26 +2,34 @@
 .weather-map-radar {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: 100vh;
+  width: 100%;
   background: #1a1a1a;
-  border-radius: 12px;
+  border-radius: 0;
   overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  box-shadow: none;
+  position: relative;
 }
 
 .map-container {
   flex: 1;
   position: relative;
   height: 100%;
-  min-height: 400px;
+  width: 100%;
+  min-height: 100vh;
 }
 
 .map-canvas {
   width: 100%;
   height: 100%;
-  border-radius: 12px;
+  border-radius: 0;
   overflow: hidden;
   background: #1a1a1a;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 
 .map-loading {
@@ -29,10 +37,16 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: 100%;
+  height: 100vh;
+  width: 100%;
   background: #1a1a1a;
   color: white;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 
 .loading-spinner {
@@ -131,12 +145,13 @@
 /* Responsive Design */
 @media (max-width: 768px) {
   .weather-map-radar {
-    margin: 0;
-    border-radius: 0;
+    height: 100vh;
+    width: 100%;
   }
 
   .map-container {
-    height: 400px;
+    height: 100vh;
+    width: 100%;
   }
 
   .map-loading p {
@@ -146,7 +161,8 @@
 
 @media (max-width: 480px) {
   .map-container {
-    height: 300px;
+    height: 100vh;
+    width: 100%;
   }
 
   .map-loading p {
@@ -174,4 +190,21 @@
 .weather-map-radar {
   background: #1a1a1a;
   color: white;
+}
+
+/* Full screen map fix */
+body, html {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Ensure map takes full viewport */
+.weather-map-radar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
 }
