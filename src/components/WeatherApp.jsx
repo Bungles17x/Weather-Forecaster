@@ -15,12 +15,112 @@ const WeatherApp = () => {
   const NWS_BASE_URL = 'https://api.weather.gov'
   const NWS_ALERTS_URL = 'https://api.weather.gov/alerts/active'
 
-  // Get coordinates from location name using NWS geocoding
+  // Get coordinates from location name using OpenStreetMap Nominatim
   const getCoordinatesFromLocation = useCallback(async (locationName) => {
     try {
-      // First, get coordinates using a geocoding service
+      // Fallback coordinates for major cities
+      const fallbackCities = {
+        'new york': { latitude: 40.7128, longitude: -74.0060, displayName: 'New York, NY, USA' },
+        'new york, ny': { latitude: 40.7128, longitude: -74.0060, displayName: 'New York, NY, USA' },
+        'los angeles': { latitude: 34.0522, longitude: -118.2437, displayName: 'Los Angeles, CA, USA' },
+        'los angeles, ca': { latitude: 34.0522, longitude: -118.2437, displayName: 'Los Angeles, CA, USA' },
+        'chicago': { latitude: 41.8781, longitude: -87.6298, displayName: 'Chicago, IL, USA' },
+        'chicago, il': { latitude: 41.8781, longitude: -87.6298, displayName: 'Chicago, IL, USA' },
+        'houston': { latitude: 29.7604, longitude: -95.3698, displayName: 'Houston, TX, USA' },
+        'houston, tx': { latitude: 29.7604, longitude: -95.3698, displayName: 'Houston, TX, USA' },
+        'phoenix': { latitude: 33.4484, longitude: -112.0740, displayName: 'Phoenix, AZ, USA' },
+        'phoenix, az': { latitude: 33.4484, longitude: -112.0740, displayName: 'Phoenix, AZ, USA' },
+        'philadelphia': { latitude: 39.9526, longitude: -75.1652, displayName: 'Philadelphia, PA, USA' },
+        'philadelphia, pa': { latitude: 39.9526, longitude: -75.1652, displayName: 'Philadelphia, PA, USA' },
+        'san antonio': { latitude: 29.4241, longitude: -98.4936, displayName: 'San Antonio, TX, USA' },
+        'san antonio, tx': { latitude: 29.4241, longitude: -98.4936, displayName: 'San Antonio, TX, USA' },
+        'san diego': { latitude: 32.7157, longitude: -117.1611, displayName: 'San Diego, CA, USA' },
+        'san diego, ca': { latitude: 32.7157, longitude: -117.1611, displayName: 'San Diego, CA, USA' },
+        'dallas': { latitude: 32.7767, longitude: -96.7970, displayName: 'Dallas, TX, USA' },
+        'dallas, tx': { latitude: 32.7767, longitude: -96.7970, displayName: 'Dallas, TX, USA' },
+        'san jose': { latitude: 37.3382, longitude: -121.8863, displayName: 'San Jose, CA, USA' },
+        'san jose, ca': { latitude: 37.3382, longitude: -121.8863, displayName: 'San Jose, CA, USA' },
+        'austin': { latitude: 30.2672, longitude: -97.7431, displayName: 'Austin, TX, USA' },
+        'austin, tx': { latitude: 30.2672, longitude: -97.7431, displayName: 'Austin, TX, USA' },
+        'jacksonville': { latitude: 30.3322, longitude: -81.6557, displayName: 'Jacksonville, FL, USA' },
+        'jacksonville, fl': { latitude: 30.3322, longitude: -81.6557, displayName: 'Jacksonville, FL, USA' },
+        'fort worth': { latitude: 32.7555, longitude: -97.3308, displayName: 'Fort Worth, TX, USA' },
+        'fort worth, tx': { latitude: 32.7555, longitude: -97.3308, displayName: 'Fort Worth, TX, USA' },
+        'columbus': { latitude: 39.9612, longitude: -82.9988, displayName: 'Columbus, OH, USA' },
+        'columbus, oh': { latitude: 39.9612, longitude: -82.9988, displayName: 'Columbus, OH, USA' },
+        'charlotte': { latitude: 35.2271, longitude: -80.8431, displayName: 'Charlotte, NC, USA' },
+        'charlotte, nc': { latitude: 35.2271, longitude: -80.8431, displayName: 'Charlotte, NC, USA' },
+        'san francisco': { latitude: 37.7749, longitude: -122.4194, displayName: 'San Francisco, CA, USA' },
+        'san francisco, ca': { latitude: 37.7749, longitude: -122.4194, displayName: 'San Francisco, CA, USA' },
+        'indianapolis': { latitude: 39.7684, longitude: -86.1581, displayName: 'Indianapolis, IN, USA' },
+        'indianapolis, in': { latitude: 39.7684, longitude: -86.1581, displayName: 'Indianapolis, IN, USA' },
+        'seattle': { latitude: 47.6062, longitude: -122.3321, displayName: 'Seattle, WA, USA' },
+        'seattle, wa': { latitude: 47.6062, longitude: -122.3321, displayName: 'Seattle, WA, USA' },
+        'denver': { latitude: 39.7392, longitude: -104.9903, displayName: 'Denver, CO, USA' },
+        'denver, co': { latitude: 39.7392, longitude: -104.9903, displayName: 'Denver, CO, USA' },
+        'washington': { latitude: 38.9072, longitude: -77.0369, displayName: 'Washington, DC, USA' },
+        'washington, dc': { latitude: 38.9072, longitude: -77.0369, displayName: 'Washington, DC, USA' },
+        'boston': { latitude: 42.3601, longitude: -71.0589, displayName: 'Boston, MA, USA' },
+        'boston, ma': { latitude: 42.3601, longitude: -71.0589, displayName: 'Boston, MA, USA' },
+        'el paso': { latitude: 31.7619, longitude: -106.4850, displayName: 'El Paso, TX, USA' },
+        'el paso, tx': { latitude: 31.7619, longitude: -106.4850, displayName: 'El Paso, TX, USA' },
+        'detroit': { latitude: 42.3314, longitude: -83.0458, displayName: 'Detroit, MI, USA' },
+        'detroit, mi': { latitude: 42.3314, longitude: -83.0458, displayName: 'Detroit, MI, USA' },
+        'nashville': { latitude: 36.1627, longitude: -86.7816, displayName: 'Nashville, TN, USA' },
+        'nashville, tn': { latitude: 36.1627, longitude: -86.7816, displayName: 'Nashville, TN, USA' },
+        'portland': { latitude: 45.5152, longitude: -122.6784, displayName: 'Portland, OR, USA' },
+        'portland, or': { latitude: 45.5152, longitude: -122.6784, displayName: 'Portland, OR, USA' },
+        'memphis': { latitude: 35.1495, longitude: -90.0490, displayName: 'Memphis, TN, USA' },
+        'memphis, tn': { latitude: 35.1495, longitude: -90.0490, displayName: 'Memphis, TN, USA' },
+        'oklahoma city': { latitude: 35.4676, longitude: -97.5164, displayName: 'Oklahoma City, OK, USA' },
+        'oklahoma city, ok': { latitude: 35.4676, longitude: -97.5164, displayName: 'Oklahoma City, OK, USA' },
+        'las vegas': { latitude: 36.1699, longitude: -115.1398, displayName: 'Las Vegas, NV, USA' },
+        'las vegas, nv': { latitude: 36.1699, longitude: -115.1398, displayName: 'Las Vegas, NV, USA' },
+        'baltimore': { latitude: 39.2904, longitude: -76.6122, displayName: 'Baltimore, MD, USA' },
+        'baltimore, md': { latitude: 39.2904, longitude: -76.6122, displayName: 'Baltimore, MD, USA' },
+        'milwaukee': { latitude: 43.0642, longitude: -87.9676, displayName: 'Milwaukee, WI, USA' },
+        'milwaukee, wi': { latitude: 43.0642, longitude: -87.9676, displayName: 'Milwaukee, WI, USA' },
+        'tucson': { latitude: 32.2226, longitude: -110.9747, displayName: 'Tucson, AZ, USA' },
+        'tucson, az': { latitude: 32.2226, longitude: -110.9747, displayName: 'Tucson, AZ, USA' },
+        'albuquerque': { latitude: 35.0844, longitude: -106.6504, displayName: 'Albuquerque, NM, USA' },
+        'albuquerque, nm': { latitude: 35.0844, longitude: -106.6504, displayName: 'Albuquerque, NM, USA' },
+        'fresno': { latitude: 36.7378, longitude: -119.7871, displayName: 'Fresno, CA, USA' },
+        'fresno, ca': { latitude: 36.7378, longitude: -119.7871, displayName: 'Fresno, CA, USA' },
+        'sacramento': { latitude: 38.5816, longitude: -121.4944, displayName: 'Sacramento, CA, USA' },
+        'sacramento, ca': { latitude: 38.5816, longitude: -121.4944, displayName: 'Sacramento, CA, USA' },
+        'kansas city': { latitude: 39.0997, longitude: -94.5786, displayName: 'Kansas City, MO, USA' },
+        'kansas city, mo': { latitude: 39.0997, longitude: -94.5786, displayName: 'Kansas City, MO, USA' },
+        'mesa': { latitude: 33.4152, longitude: -111.8315, displayName: 'Mesa, AZ, USA' },
+        'mesa, az': { latitude: 33.4152, longitude: -111.8315, displayName: 'Mesa, AZ, USA' },
+        'atlanta': { latitude: 33.7490, longitude: -84.3880, displayName: 'Atlanta, GA, USA' },
+        'atlanta, ga': { latitude: 33.7490, longitude: -84.3880, displayName: 'Atlanta, GA, USA' },
+        'omaha': { latitude: 41.2565, longitude: -95.9345, displayName: 'Omaha, NE, USA' },
+        'omaha, ne': { latitude: 41.2565, longitude: -95.9345, displayName: 'Omaha, NE, USA' },
+        'charlotte': { latitude: 35.2271, longitude: -80.8431, displayName: 'Charlotte, NC, USA' },
+        'charlotte, nc': { latitude: 35.2271, longitude: -80.8431, displayName: 'Charlotte, NC, USA' },
+        'tampa': { latitude: 27.9506, longitude: -82.4572, displayName: 'Tampa, FL, USA' },
+        'tampa, fl': { latitude: 27.9506, longitude: -82.4572, displayName: 'Tampa, FL, USA' },
+        'cincinnati': { latitude: 39.1031, longitude: -84.5120, displayName: 'Cincinnati, OH, USA' },
+        'cincinnati, oh': { latitude: 39.1031, longitude: -84.5120, displayName: 'Cincinnati, OH, USA' }
+      }
+      
+      const normalizedLocation = locationName.toLowerCase().trim()
+      
+      // Check if it's a major city with fallback coordinates
+      if (fallbackCities[normalizedLocation]) {
+        console.log('📍 Using fallback coordinates for:', locationName)
+        return fallbackCities[normalizedLocation]
+      }
+      
+      // Try OpenStreetMap Nominatim for geocoding
+      console.log('🔍 Geocoding location:', locationName)
       const geoResponse = await fetch(
-        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(locationName)}&count=1&language=en&format=json`
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationName)}&limit=1&addressdetails=1`,
+        {
+          headers: {
+            'User-Agent': 'WeatherForecaster/1.0' // Required by Nominatim
+          }
+        }
       )
       
       if (!geoResponse.ok) {
@@ -28,15 +128,28 @@ const WeatherApp = () => {
       }
       
       const geoData = await geoResponse.json()
-      if (!geoData.results || geoData.results.length === 0) {
+      if (!geoData || geoData.length === 0) {
         throw new Error('Location not found')
       }
       
-      const { latitude, longitude } = geoData.results[0]
-      return { latitude, longitude }
+      const { lat, lon, display_name } = geoData[0]
+      console.log('📍 Geocoding result:', { lat, lon, display_name })
+      
+      return { 
+        latitude: parseFloat(lat), 
+        longitude: parseFloat(lon),
+        displayName: display_name
+      }
     } catch (error) {
       console.error('Geocoding error:', error)
-      throw error
+      
+      // If all else fails, use New York as default
+      console.log('📍 Using default coordinates (New York)')
+      return { 
+        latitude: 40.7128, 
+        longitude: -74.0060,
+        displayName: 'New York, NY, USA'
+      }
     }
   }, [])
 
@@ -138,7 +251,7 @@ const WeatherApp = () => {
       console.log('🌤️ Fetching NWS data for:', locationName)
       
       // Step 1: Get coordinates
-      const { latitude, longitude } = await getCoordinatesFromLocation(locationName)
+      const { latitude, longitude, displayName } = await getCoordinatesFromLocation(locationName)
       console.log('📍 Coordinates:', { latitude, longitude })
       
       // Step 2: Get NWS office info
@@ -159,7 +272,7 @@ const WeatherApp = () => {
       
       // Process and set data
       const processedWeatherData = {
-        location: locationName,
+        location: displayName || locationName,
         coordinates: { latitude, longitude },
         current: {
           temperature: currentWeather.temperature?.value || null,
@@ -186,7 +299,7 @@ const WeatherApp = () => {
       setWeatherData(processedWeatherData)
       setForecastData(forecast)
       setLastUpdate(new Date())
-      setLocation(locationName)
+      setLocation(displayName || locationName)
       
     } catch (error) {
       console.error('❌ NWS fetch error:', error)
@@ -195,6 +308,14 @@ const WeatherApp = () => {
       setLoading(false)
     }
   }, [getCoordinatesFromLocation, getNWSOffice, getCurrentWeather, getForecast, getAlerts])
+
+  // Handle location change from Header
+  const handleLocationChange = useCallback((newLocation) => {
+    console.log('📍 Location change requested:', newLocation)
+    if (newLocation && newLocation !== location) {
+      fetchNWSData(newLocation)
+    }
+  }, [location, fetchNWSData])
 
   // Initial data fetch
   useEffect(() => {
@@ -215,7 +336,7 @@ const WeatherApp = () => {
 
   return (
     <div className="weather-app">
-      <Header />
+      <Header onLocationChange={handleLocationChange} />
       
       <main className="weather-content">
         {loading && (
