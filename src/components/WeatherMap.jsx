@@ -59,6 +59,8 @@ const WeatherMap = () => {
     const layer = mapLayers[mapType]
     if (!layer) return
 
+    console.log('🗺️ Loading map layer:', mapType, layer.url)
+
     // Remove existing layers
     const existingLayers = mapRef.current.querySelectorAll('.weather-layer')
     existingLayers.forEach(layer => layer.remove())
@@ -80,17 +82,23 @@ const WeatherMap = () => {
         opacity: 0.8;
       `
       
+      console.log('🖼️ Setting image src:', img.src)
+      
       img.onload = () => {
+        console.log('✅ Map layer loaded successfully')
         setLoading(false)
         setError(null)
       }
       
-      img.onerror = () => {
+      img.onerror = (error) => {
+        console.log('❌ Map layer failed to load:', error)
         setError(`Failed to load ${layer.name} map`)
         setLoading(false)
       }
       
       mapContainer.appendChild(img)
+    } else {
+      console.log('❌ Map container not found')
     }
   }
 
