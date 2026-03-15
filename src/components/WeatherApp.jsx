@@ -459,13 +459,31 @@ const WeatherApp = () => {
     fetchNWSData(location)
   }, [])
 
-  // Format temperature display
+  // Enhanced formatters with better data handling
   const formatTemp = (temp) => {
     if (temp === null || temp === undefined) return '--°F'
     return `${Math.round(temp)}°F`
   }
 
-  // Format wind speed
+  const formatTempWithUnit = (temp, showUnit = true) => {
+    if (temp === null || temp === undefined) return '--°'
+    const rounded = Math.round(temp)
+    return showUnit ? `${rounded}°F` : `${rounded}°`
+  }
+
+  const getWindDirection = (direction) => {
+    if (!direction) return ''
+    const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW']
+    const index = Math.round(((direction % 360) / 22.5)) % 16
+    return directions[index]
+  }
+
+  const getWindSpeedWithDirection = (speed, direction) => {
+    const speedStr = formatWindSpeed(speed)
+    const dirStr = getWindDirection(direction)
+    return dirStr ? `${speedStr} ${dirStr}` : speedStr
+  }
+
   const formatWindSpeed = (speed) => {
     if (speed === null || speed === undefined) return '-- mph'
     
@@ -480,6 +498,84 @@ const WeatherApp = () => {
     }
     
     return `${Math.round(speed)} mph`
+  }
+
+  const formatVisibility = (visibility) => {
+    if (visibility === null || visibility === undefined) return '--'
+    if (visibility >= 10) return '10+ miles'
+    return `${visibility} miles`
+  }
+
+  const formatPressure = (pressure) => {
+    if (pressure === null || pressure === undefined) return '--'
+    return `${Math.round(pressure)} mb`
+  }
+
+  const formatHumidity = (humidity) => {
+    if (humidity === null || humidity === undefined) return '--%'
+    return `${Math.round(humidity)}%`
+  }
+
+  const getSeverityColor = (severity) => {
+    const colors = {
+      'Extreme': '#dc2626',
+      'Severe': '#ea580c', 
+      'Moderate': '#f59e0b',
+      'Minor': '#3b82f6',
+      'Unknown': '#6b7280'
+    }
+    return colors[severity] || colors.Unknown
+  }
+
+  const getAlertIcon = (event) => {
+    const lowerEvent = event.toLowerCase()
+    if (lowerEvent.includes('tornado')) return '🌪️'
+    if (lowerEvent.includes('thunderstorm') || lowerEvent.includes('storm')) return '⛈️'
+    if (lowerEvent.includes('flood')) return '🌊'
+    if (lowerEvent.includes('wind')) return '💨'
+    if (lowerEvent.includes('snow') || lowerEvent.includes('blizzard')) return '❄️'
+    if (lowerEvent.includes('ice') || lowerEvent.includes('freezing')) return '🧊'
+    if (lowerEvent.includes('heat')) return '🔥'
+    if (lowerEvent.includes('cold') || lowerEvent.includes('freeze')) return '🥶'
+    if (lowerEvent.includes('fog')) return '🌫️'
+    if (lowerEvent.includes('fire') || lowerEvent.includes('red flag')) return '🔥'
+    return '⚠️'
+  }
+
+  const formatAlertTime = (expires) => {
+    if (!expires) return ''
+    const date = new Date(expires)
+    return date.toLocaleString('en-US', {
+      weekday: 'short',
+      month: 'short', 
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit'
+    })
+  }
+
+  const getWeatherIcon = (description) => {
+    const lowerDesc = description.toLowerCase()
+    if (lowerDesc.includes('thunderstorm') || lowerDesc.includes('storm')) return '⛈️'
+    if (lowerDesc.includes('rain') || lowerDesc.includes('shower')) return '🌧️'
+    if (lowerDesc.includes('snow')) return '❄️'
+    if (lowerDesc.includes('fog') || lowerDesc.includes('mist')) return '🌫️'
+    if (lowerDesc.includes('cloud')) return '☁️'
+    if (lowerDesc.includes('sun') || lowerDesc.includes('clear')) return '☀️'
+    if (lowerDesc.includes('wind')) return '💨'
+    return '🌤️'
+  }
+
+  const getTemperatureColor = (temp) => {
+    if (temp === null || temp === undefined) return '#ffffff'
+    if (temp >= 90) return '#dc2626'
+    if (temp >= 80) return '#ea580c'
+    if (temp >= 70) return '#f59e0b'
+    if (temp >= 60) return '#3b82f6'
+    if (temp >= 50) return '#06b6d4'
+    if (temp >= 40) return '#10b981'
+    if (temp >= 32) return '#6366f1'
+    return '#8b5cf6'
   }
 
   return (
@@ -523,39 +619,49 @@ const WeatherApp = () => {
             </div>
             
             <div className="current-weather">
-              <h3>Current Conditions in {weatherData.location}</h3>
+              <div className="current-weather-header">
+                <h3>Current Conditions in {weatherData.location}</h3>
+                <div className="weather-icon-large">
+                  {getWeatherIcon(weatherData.current.description)}
+                </div>
+              </div>
               <div className="weather-main">
                 <div className="temperature">
-                  <span className="temp-value">{formatTemp(weatherData.current.temperature)}</span>
+                  <span 
+                    className="temp-value" 
+                    style={{ color: getTemperatureColor(weatherData.current.temperature) }}
+                  >
+                    {formatTempWithUnit(weatherData.current.temperature)}
+                  </span>
                   <span className="temp-desc">{weatherData.current.description}</span>
                 </div>
                 
                 <div className="weather-details">
                   <div className="detail-item">
-                    <span className="detail-label">Humidity:</span>
+                    <span className="detail-label">💧 Humidity:</span>
                     <span className="detail-value">
-                      {weatherData.current.humidity !== null ? `${weatherData.current.humidity}%` : '--'}
+                      {formatHumidity(weatherData.current.humidity)}
                     </span>
                   </div>
                   
                   <div className="detail-item">
-                    <span className="detail-label">Wind:</span>
+                    <span className="detail-label">💨 Wind:</span>
                     <span className="detail-value">
-                      {formatWindSpeed(weatherData.current.windSpeed)} {weatherData.current.windDirection || ''}
+                      {getWindSpeedWithDirection(weatherData.current.windSpeed, weatherData.current.windDirection)}
                     </span>
                   </div>
                   
                   <div className="detail-item">
-                    <span className="detail-label">Visibility:</span>
+                    <span className="detail-label">👁️ Visibility:</span>
                     <span className="detail-value">
-                      {weatherData.current.visibility !== null ? `${weatherData.current.visibility} miles` : '--'}
+                      {formatVisibility(weatherData.current.visibility)}
                     </span>
                   </div>
                   
                   <div className="detail-item">
-                    <span className="detail-label">Pressure:</span>
+                    <span className="detail-label">🌡️ Pressure:</span>
                     <span className="detail-value">
-                      {weatherData.current.pressure !== null ? `${weatherData.current.pressure} mb` : '--'}
+                      {formatPressure(weatherData.current.pressure)}
                     </span>
                   </div>
                 </div>
@@ -563,53 +669,122 @@ const WeatherApp = () => {
             </div>
             
             <div className="nws-info">
-              <h4>NWS Office Information</h4>
+              <h4>🏢 NWS Office Information</h4>
               <div className="office-details">
                 <div className="office-item">
-                  <span className="office-label">Office:</span>
+                  <span className="office-label">📍 Office:</span>
                   <span className="office-value">{weatherData.nwsInfo.office}</span>
                 </div>
                 <div className="office-item">
-                  <span className="office-label">Grid:</span>
+                  <span className="office-label">📊 Grid:</span>
                   <span className="office-value">{weatherData.nwsInfo.gridX}, {weatherData.nwsInfo.gridY}</span>
                 </div>
                 <div className="office-item">
-                  <span className="office-label">Zone:</span>
-                  <span className="office-value">{weatherData.nwsInfo.forecastZone}</span>
+                  <span className="office-label">🗺️ Zone:</span>
+                  <span className="office-value">{weatherData.nwsInfo.forecastZone.split('/').pop()}</span>
                 </div>
                 <div className="office-item">
-                  <span className="office-label">County:</span>
-                  <span className="office-value">{weatherData.nwsInfo.county}</span>
+                  <span className="office-label">🏛️ County:</span>
+                  <span className="office-value">{weatherData.nwsInfo.county.split('/').pop()}</span>
                 </div>
               </div>
             </div>
             
-            {weatherData.alerts.length > 0 && (
-              <div className="alerts-section">
-                <h4>Active Alerts ({weatherData.alerts.length})</h4>
-                <div className="alerts-list">
-                  {weatherData.alerts.map((alert, index) => (
-                    <div key={index} className="alert-item">
-                      <div className="alert-header">
-                        <span className="alert-event">{alert.properties.event}</span>
-                        <span className="alert-severity">{alert.properties.severity}</span>
+            {/* Add forecast display */}
+            {forecastData.length > 0 && (
+              <div className="forecast-section">
+                <h4>📅 Extended Forecast</h4>
+                <div className="forecast-grid">
+                  {forecastData.slice(0, 7).map((period, index) => (
+                    <div key={index} className="forecast-item">
+                      <div className="forecast-period">{period.name}</div>
+                      <div className="forecast-icon">{getWeatherIcon(period.shortForecast)}</div>
+                      <div className="forecast-temp">
+                        <span className="forecast-high">{period.temperature || '--'}°</span>
+                        {period.temperatureUnit && (
+                          <span className="forecast-unit">{period.temperatureUnit}</span>
+                        )}
                       </div>
-                      <div className="alert-description">
-                        {alert.properties.description}
-                      </div>
-                      <div className="alert-areas">
-                        <strong>Affected Areas:</strong> {alert.properties.areaDesc}
-                      </div>
+                      <div className="forecast-desc">{period.shortForecast}</div>
                     </div>
                   ))}
                 </div>
               </div>
             )}
             
+            {weatherData.alerts.length > 0 && (
+              <div className="alerts-section">
+                <h4>
+                  🚨 Active Alerts ({weatherData.alerts.length})
+                  {weatherData.alerts.some(alert => alert.properties.severity === 'Extreme') && 
+                    <span className="extreme-alert-indicator">⚠️ EXTREME WEATHER</span>
+                  }
+                </h4>
+                <div className="alerts-list">
+                  {weatherData.alerts.map((alert, index) => {
+                    const severityColor = getSeverityColor(alert.properties.severity)
+                    const alertIcon = getAlertIcon(alert.properties.event)
+                    const expires = formatAlertTime(alert.properties.expires)
+                    
+                    return (
+                      <div 
+                        key={index} 
+                        className="alert-item"
+                        style={{ 
+                          borderLeft: `4px solid ${severityColor}`,
+                          backgroundColor: `${severityColor}10`
+                        }}
+                      >
+                        <div className="alert-header">
+                          <div className="alert-title">
+                            <span className="alert-icon">{alertIcon}</span>
+                            <span className="alert-event">{alert.properties.event}</span>
+                          </div>
+                          <div className="alert-meta">
+                            <span 
+                              className="alert-severity"
+                              style={{ backgroundColor: severityColor }}
+                            >
+                              {alert.properties.severity}
+                            </span>
+                            {expires && (
+                              <span className="alert-expires">Until {expires}</span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="alert-description">
+                          {alert.properties.description}
+                        </div>
+                        <div className="alert-areas">
+                          <strong>📍 Affected Areas:</strong> {alert.properties.areaDesc}
+                        </div>
+                        {alert.properties.instruction && (
+                          <div className="alert-instructions">
+                            <strong>🛡️ Safety Instructions:</strong> {alert.properties.instruction}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+            
             {lastUpdate && (
               <div className="update-info">
-                <p>Last updated: {lastUpdate.toLocaleString()}</p>
-                <p>Data source: {weatherData.dataSource}</p>
+                <div className="update-header">
+                  <span className="update-time">🕐 Last updated: {lastUpdate.toLocaleString()}</span>
+                  <span className="data-source">🇺🇸 {weatherData.dataSource}</span>
+                </div>
+                <div className="update-actions">
+                  <button 
+                    onClick={() => fetchNWSData(location)} 
+                    className="refresh-btn"
+                    disabled={loading}
+                  >
+                    {loading ? '🔄 Refreshing...' : '🔄 Refresh Data'}
+                  </button>
+                </div>
               </div>
             )}
           </div>
