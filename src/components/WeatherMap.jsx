@@ -90,18 +90,6 @@ const WeatherMap = () => {
       img.src = layer.url.replace('{z}', '5').replace('{x}', '10').replace('{y}', '10')
       img.alt = layer.name
       
-      img.style.cssText = `
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        opacity: 0.9;
-        z-index: 1;
-        border-radius: 8px;
-      `
-      
       console.log('🖼️ Setting weather map src:', img.src)
       
       mapContainer.appendChild(img)
