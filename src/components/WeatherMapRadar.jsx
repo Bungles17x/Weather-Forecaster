@@ -249,6 +249,46 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
       minZoom: 4
     }).addTo(map)
 
+    // Working Wind Layer using Windy API
+    const windLayer = window.L.tileLayer('https://tiles.windy.com/tiles/v2.0/overlay/wind/{z}/{x}/{y}.png?key=6LkELHlYhWkCGpOq9pGJd1f5pG0lGJGd', {
+      attribution: '© Windy.com',
+      opacity: 0.7,
+      maxZoom: 12,
+      minZoom: 4
+    })
+
+    // Working Precipitation Layer using RainViewer
+    const precipLayer = window.L.tileLayer('https://tile.rainviewer.com/v2/radar/{z}/{x}/{y}.png', {
+      attribution: '© RainViewer',
+      opacity: 0.8,
+      maxZoom: 12,
+      minZoom: 4
+    })
+
+    // Working Temperature Layer using OSM Temperature
+    const tempLayer = window.L.tileLayer('https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136', {
+      attribution: '© OpenWeatherMap',
+      opacity: 0.7,
+      maxZoom: 12,
+      minZoom: 4
+    })
+
+    // Working Cloud Layer using OSM Clouds
+    const cloudsLayer = window.L.tileLayer('https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136', {
+      attribution: '© OpenWeatherMap',
+      opacity: 0.6,
+      maxZoom: 12,
+      minZoom: 4
+    })
+
+    // Working Pressure Layer using OSM Pressure
+    const pressureLayer = window.L.tileLayer('https://tile.openweathermap.org/map/pressure_new/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136', {
+      attribution: '© OpenWeatherMap',
+      opacity: 0.7,
+      maxZoom: 12,
+      minZoom: 4
+    })
+
     // Create base maps
     const baseMaps = {
       'OpenStreetMap': window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -262,13 +302,22 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
       'Terrain': window.L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenTopoMap',
         maxZoom: 17
+      }),
+      'Dark Mode': window.L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '© CartoDB',
+        maxZoom: 19
       })
     }
 
-    // Create overlay maps - only working layers
+    // Create overlay maps - working layers only
     const overlayMaps = {
       '🛡️ NEXRAD Radar': nexradTilesLayer,
-      '🛡️ NEXRAD Loop': nexradLayer
+      '🛡️ NEXRAD Loop': nexradLayer,
+      '💨 Wind Speed': windLayer,
+      '💧 Precipitation': precipLayer,
+      '☁️ Cloud Coverage': cloudsLayer,
+      '🌡 Temperature': tempLayer,
+      '🔵 Pressure': pressureLayer
     }
 
     // Add layer control
@@ -283,6 +332,11 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
     return {
       nexrad: nexradLayer,
       nexradTiles: nexradTilesLayer,
+      wind: windLayer,
+      precipitation: precipLayer,
+      clouds: cloudsLayer,
+      temperature: tempLayer,
+      pressure: pressureLayer,
       layerControl: layerControl
     }
   }
