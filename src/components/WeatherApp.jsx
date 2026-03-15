@@ -2,6 +2,9 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import Header from './Header'
 import './WeatherApp.css'
 
+// Cache busting timestamp - FORCE RELOAD
+console.log('🔄 WeatherApp.jsx loaded at:', new Date().toISOString(), 'CACHE BUST: 2024-03-15-18-27')
+
 const WeatherApp = () => {
   // Core state
   const [weatherData, setWeatherData] = useState(null)
