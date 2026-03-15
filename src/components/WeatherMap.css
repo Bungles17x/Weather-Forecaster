@@ -20,6 +20,20 @@
   background: linear-gradient(135deg, #1e3c72, #2a5298);
   border-radius: 8px;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.map-display::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="50" font-size="50" fill="rgba(255,255,255,0.1)">🗺️</text></svg>') center/cover no-repeat;
+  z-index: 0;
 }
 
 .map-loading {

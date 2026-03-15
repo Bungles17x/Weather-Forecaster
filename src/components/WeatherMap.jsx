@@ -70,8 +70,17 @@ const WeatherMap = () => {
     if (mapContainer) {
       const img = document.createElement('img')
       img.className = 'weather-layer'
-      img.src = layer.url.replace('{z}', '5').replace('{x}', '10').replace('{y}', '10')
+      
+      // First try a test image to verify display works
+      img.src = 'https://picsum.photos/seed/weather/800/400.jpg'
       img.alt = layer.name
+      
+      // After test loads, try the real weather map
+      img.onload = () => {
+        console.log('✅ Test image loaded, trying weather map...')
+        img.src = layer.url.replace('{z}', '5').replace('{x}', '10').replace('{y}', '10')
+      }
+      
       img.style.cssText = `
         position: absolute;
         top: 0;
@@ -79,7 +88,9 @@ const WeatherMap = () => {
         width: 100%;
         height: 100%;
         object-fit: cover;
-        opacity: 0.8;
+        opacity: 0.9;
+        z-index: 1;
+        border-radius: 8px;
       `
       
       console.log('🖼️ Setting image src:', img.src)
@@ -92,7 +103,9 @@ const WeatherMap = () => {
       
       img.onerror = (error) => {
         console.log('❌ Map layer failed to load:', error)
-        setError(`Failed to load ${layer.name} map`)
+        // Try a different approach - use a placeholder
+        img.src = 'https://picsum.photos/seed/radar/800/400.jpg'
+        setError(`Using fallback for ${layer.name} map`)
         setLoading(false)
       }
       
@@ -138,6 +151,9 @@ const WeatherMap = () => {
                 <div className="map-info">
                   <span className="map-type">{mapLayers[activeMap]?.icon} {mapLayers[activeMap]?.name}</span>
                   <span className="map-update">Live Data</span>
+                </div>
+                <div className="map-debug">
+                  <span className="debug-text">Loading {mapLayers[activeMap]?.name}...</span>
                 </div>
               </div>
             )}
