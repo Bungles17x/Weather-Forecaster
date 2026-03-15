@@ -14,11 +14,6 @@ const WeatherMap = () => {
       icon: '📡',
       url: 'https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136'
     },
-    satellite: {
-      name: 'Satellite',
-      icon: '🛰️',
-      url: 'https://tile.openweathermap.org/map/satellite/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136'
-    },
     clouds: {
       name: 'Clouds',
       icon: '☁️',
@@ -36,13 +31,18 @@ const WeatherMap = () => {
     },
     pressure: {
       name: 'Pressure',
-      icon: '🔵',
+      icon: '�',
       url: 'https://tile.openweathermap.org/map/pressure_new/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136'
     },
     wind: {
       name: 'Wind Speed',
-      icon: '💨',
+      icon: '�',
       url: 'https://tile.openweathermap.org/map/wind_new/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136'
+    },
+    snow: {
+      name: 'Snow',
+      icon: '❄️',
+      url: 'https://tile.openweathermap.org/map/snow_new/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136'
     }
   }
 
