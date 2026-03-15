@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import Header from '../components/Header'
+import WeatherMap from '../components/WeatherMap'
 import './MapPage.css'
 
 const MapPage = () => {
@@ -108,29 +109,7 @@ const MapPage = () => {
                 <p>Loading weather map...</p>
               </div>
             ) : (
-              <div className="map-display">
-                <div className="map-placeholder">
-                  <div className="map-icon">🗺️</div>
-                  <h3>Weather Map - {mapLayers.find(l => l.id === selectedLayer)?.name}</h3>
-                  <p>Interactive weather map would be displayed here</p>
-                  <div className="map-demo">
-                    <div className="demo-overlay">
-                      <div className="demo-marker" style={{ top: '30%', left: '40%' }}>
-                        <div className="marker-icon">⛈️</div>
-                        <div className="marker-label">Storm</div>
-                      </div>
-                      <div className="demo-marker" style={{ top: '60%', left: '70%' }}>
-                        <div className="marker-icon">☀️</div>
-                        <div className="marker-label">Clear</div>
-                      </div>
-                      <div className="demo-marker" style={{ top: '45%', left: '25%' }}>
-                        <div className="marker-icon">🌧️</div>
-                        <div className="marker-label">Rain</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <WeatherMap />
             )}
           </div>
         </div>
