@@ -9,6 +9,8 @@
   padding: 2rem;
   max-width: 1400px;
   margin: 0 auto;
+  height: calc(100vh - 100px);
+  min-height: 600px;
 }
 
 /* Enhanced Header */
@@ -219,8 +221,10 @@
   border-radius: 12px;
   padding: 1.5rem;
   border: 1px solid rgba(255, 255, 255, 0.2);
-  height: calc(100vh - 250px);
+  height: calc(100vh - 180px);
   min-height: 600px;
+  max-height: calc(100vh - 180px);
+  overflow: hidden;
 }
 
 .map-sidebar {
@@ -479,20 +483,8 @@
   font-size: 0.9rem;
 }
 
-/* Responsive Design */
-@media (max-width: 1200px) {
-  .map-container.enhanced {
-    grid-template-columns: 1fr;
-  }
-  
-  .map-sidebar {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1rem;
-  }
-}
-
-@media (max-width: 768px) {
+/* Responsive Design - Only for very small screens */
+@media (max-width: 600px) {
   .map-content {
     padding: 1rem;
   }
