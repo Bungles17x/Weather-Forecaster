@@ -472,6 +472,21 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
                 const popupContent = createEnhancedAlertPopup(alert, polygonColor)
                 polygon.bindPopup(popupContent)
 
+                // Add click to center map on alert
+                polygon.on('click', function(e) {
+                  // Calculate center of polygon
+                  const bounds = polygon.getBounds()
+                  const center = bounds.getCenter()
+                  
+                  // Center map on alert location with appropriate zoom
+                  map.setView(center, 10, {
+                    animate: true,
+                    duration: 1.0
+                  })
+                  
+                  console.log(`🚨 Centered map on alert: ${event} at [${center.lat.toFixed(4)}, ${center.lng.toFixed(4)}]`)
+                })
+
                 console.log(`🚨 Added polygon for ${event}`)
 
               } else if (alert.geometry.type === 'MultiPolygon') {
@@ -507,6 +522,19 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
 
                   const popupContent = createEnhancedAlertPopup(alert, polygonColor)
                   polygon.bindPopup(popupContent)
+
+                  // Add click to center map on alert
+                  polygon.on('click', function(e) {
+                    const bounds = polygon.getBounds()
+                    const center = bounds.getCenter()
+                    
+                    map.setView(center, 10, {
+                      animate: true,
+                      duration: 1.0
+                    })
+                    
+                    console.log(`🚨 Centered map on multi-polygon alert: ${event} at [${center.lat.toFixed(4)}, ${center.lng.toFixed(4)}]`)
+                  })
                 })
 
               } else if (alert.geometry.type === 'Point') {
@@ -548,6 +576,16 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
                 const popupContent = createEnhancedAlertPopup(alert, polygonColor)
                 circleMarker.bindPopup(popupContent)
 
+                // Add click to center map on alert
+                circleMarker.on('click', function(e) {
+                  map.setView([lat, lng], 12, {
+                    animate: true,
+                    duration: 1.0
+                  })
+                  
+                  console.log(`🚨 Centered map on point alert: ${event} at [${lat.toFixed(4)}, ${lng.toFixed(4)}]`)
+                })
+
               } else if (alert.geometry.type === 'LineString') {
                 // LineString coordinates
                 const lineCoords = coords.map(coord => [coord[1], coord[0]])
@@ -576,6 +614,19 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
 
                 const popupContent = createEnhancedAlertPopup(alert, polygonColor)
                 polyline.bindPopup(popupContent)
+
+                // Add click to center map on alert
+                polyline.on('click', function(e) {
+                  const bounds = polyline.getBounds()
+                  const center = bounds.getCenter()
+                  
+                  map.setView(center, 11, {
+                    animate: true,
+                    duration: 1.0
+                  })
+                  
+                  console.log(`🚨 Centered map on line alert: ${event} at [${center.lat.toFixed(4)}, ${center.lng.toFixed(4)}]`)
+                })
               }
             }
           })
@@ -655,6 +706,19 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
 
         const popupContent = createEnhancedAlertPopup(testAlert, polygonColor)
         polygon.bindPopup(popupContent)
+
+        // Add click to center map on alert
+        polygon.on('click', function(e) {
+          const bounds = polygon.getBounds()
+          const center = bounds.getCenter()
+          
+          map.setView(center, 10, {
+            animate: true,
+            duration: 1.0
+          })
+          
+          console.log(`🚨 Centered map on test alert: ${testAlert.properties.event} at [${center.lat.toFixed(4)}, ${center.lng.toFixed(4)}]`)
+        })
         
         console.log('🚨 Test alert added to map')
       })
