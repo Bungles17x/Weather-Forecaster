@@ -42,6 +42,55 @@ const WeatherApp = () => {
     }
   }, [searchHistory])
 
+  // Weather alerts generation function
+  const generateWeatherAlerts = useCallback((currentData, forecastList) => {
+    const alerts = []
+    
+    if (!currentData || !forecastList) return alerts
+    
+    // Temperature alerts
+    const temp = currentData.main?.temp
+    if (temp > 95) {
+      alerts.push({
+        type: 'extreme_heat',
+        message: 'Extreme heat warning! Stay hydrated and avoid prolonged sun exposure.',
+        severity: 'high'
+      })
+    } else if (temp < 32) {
+      alerts.push({
+        type: 'freezing',
+        message: 'Freezing temperatures! Bundle up and protect exposed skin.',
+        severity: 'medium'
+      })
+    }
+    
+    // Wind alerts
+    const windSpeed = currentData.wind?.speed
+    if (windSpeed > 25) {
+      alerts.push({
+        type: 'high_wind',
+        message: 'High wind advisory! Secure loose objects and avoid outdoor activities.',
+        severity: 'medium'
+      })
+    }
+    
+    // Check for precipitation in next 12 hours
+    const next12Hours = forecastList.slice(0, 4)
+    const hasRain = next12Hours.some(item => 
+      item.weather?.[0]?.main?.toLowerCase().includes('rain')
+    )
+    
+    if (hasRain) {
+      alerts.push({
+        type: 'rain_expected',
+        message: 'Rain expected in the next 12 hours. Don\'t forget your umbrella!',
+        severity: 'low'
+      })
+    }
+    
+    return alerts
+  }, [])
+
   // Enhanced fetch with better error handling and performance
   const fetchWeatherData = useCallback(async (locationParam = location, isLocationChange = false) => {
     // Cancel any ongoing requests
