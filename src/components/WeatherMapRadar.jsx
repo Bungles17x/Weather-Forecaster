@@ -406,59 +406,71 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
               const event = alert.properties.event || 'Weather Alert'
               
               // Determine color based on severity
-              let polygonColor, polygonOpacity, markerColor
+              let polygonColor, polygonOpacity
               switch (severity) {
                 case 'extreme':
                   polygonColor = '#dc2626' // Red for extreme/warnings
                   polygonOpacity = 0.3
-                  markerColor = '#dc2626'
                   break
                 case 'severe':
                   polygonColor = '#f59e0b' // Yellow for severe
                   polygonOpacity = 0.3
-                  markerColor = '#f59e0b'
                   break
                 case 'moderate':
                   polygonColor = '#ea580c' // Orange for moderate/watches
                   polygonOpacity = 0.3
-                  markerColor = '#ea580c'
                   break
                 case 'minor':
                   polygonColor = '#3b82f6' // Blue for minor
                   polygonOpacity = 0.2
-                  markerColor = '#3b82f6'
                   break
                 default:
                   polygonColor = '#6b7280' // Gray for unknown
                   polygonOpacity = 0.2
-                  markerColor = '#6b7280'
               }
 
               console.log(`🚨 Alert ${event} - ${severity} - color: ${polygonColor}`)
 
               // Handle different geometry types
               const coords = alert.geometry.coordinates
-              let latLngs = []
               
               if (alert.geometry.type === 'Polygon') {
                 // Polygon coordinates
                 const polygonCoords = coords[0]
-                latLngs = polygonCoords.map(coord => [coord[1], coord[0]]) // Reverse [lng, lat] to [lat, lng]
+                const latLngs = polygonCoords.map(coord => [coord[1], coord[0]]) // Reverse [lng, lat] to [lat, lng]
                 
-                // Create polygon
+                // Create polygon with better interactivity
                 const polygon = window.L.polygon(latLngs, {
                   color: polygonColor,
                   fillColor: polygonColor,
                   fillOpacity: polygonOpacity,
-                  weight: 2,
-                  opacity: 0.8
+                  weight: 3,
+                  opacity: 0.9,
+                  className: 'alert-polygon'
                 }).addTo(alertsLayerGroup)
 
-                console.log(`🚨 Added polygon for ${event}`)
+                // Add hover effect
+                polygon.on('mouseover', function(e) {
+                  this.setStyle({
+                    weight: 5,
+                    opacity: 1,
+                    fillOpacity: polygonOpacity + 0.2
+                  })
+                })
+
+                polygon.on('mouseout', function(e) {
+                  this.setStyle({
+                    weight: 3,
+                    opacity: 0.9,
+                    fillOpacity: polygonOpacity
+                  })
+                })
 
                 // Add popup to polygon
-                const popupContent = createAlertPopup(alert, markerColor)
+                const popupContent = createAlertPopup(alert, polygonColor)
                 polygon.bindPopup(popupContent)
+
+                console.log(`🚨 Added polygon for ${event}`)
 
               } else if (alert.geometry.type === 'MultiPolygon') {
                 // MultiPolygon coordinates
@@ -469,11 +481,29 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
                     color: polygonColor,
                     fillColor: polygonColor,
                     fillOpacity: polygonOpacity,
-                    weight: 2,
-                    opacity: 0.8
+                    weight: 3,
+                    opacity: 0.9,
+                    className: 'alert-polygon'
                   }).addTo(alertsLayerGroup)
 
-                  const popupContent = createAlertPopup(alert, markerColor)
+                  // Add hover effect
+                  polygon.on('mouseover', function(e) {
+                    this.setStyle({
+                      weight: 5,
+                      opacity: 1,
+                      fillOpacity: polygonOpacity + 0.2
+                    })
+                  })
+
+                  polygon.on('mouseout', function(e) {
+                    this.setStyle({
+                      weight: 3,
+                      opacity: 0.9,
+                      fillOpacity: polygonOpacity
+                    })
+                  })
+
+                  const popupContent = createAlertPopup(alert, polygonColor)
                   polygon.bindPopup(popupContent)
                 })
 
@@ -485,15 +515,35 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
 
                 // Create circle marker for point alerts
                 const circleMarker = window.L.circleMarker([lat, lng], {
-                  radius: 20,
+                  radius: 25,
                   fillColor: polygonColor,
                   color: polygonColor,
-                  weight: 2,
-                  opacity: 0.8,
-                  fillOpacity: polygonOpacity
+                  weight: 3,
+                  opacity: 0.9,
+                  fillOpacity: polygonOpacity,
+                  className: 'alert-circle'
                 }).addTo(alertsLayerGroup)
 
-                const popupContent = createAlertPopup(alert, markerColor)
+                // Add hover effect
+                circleMarker.on('mouseover', function(e) {
+                  this.setRadius(30)
+                  this.setStyle({
+                    weight: 5,
+                    opacity: 1,
+                    fillOpacity: polygonOpacity + 0.2
+                  })
+                })
+
+                circleMarker.on('mouseout', function(e) {
+                  this.setRadius(25)
+                  this.setStyle({
+                    weight: 3,
+                    opacity: 0.9,
+                    fillOpacity: polygonOpacity
+                  })
+                })
+
+                const popupContent = createAlertPopup(alert, polygonColor)
                 circleMarker.bindPopup(popupContent)
 
               } else if (alert.geometry.type === 'LineString') {
@@ -502,30 +552,28 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
                 
                 const polyline = window.L.polyline(lineCoords, {
                   color: polygonColor,
-                  weight: 4,
-                  opacity: 0.8
+                  weight: 6,
+                  opacity: 0.9,
+                  className: 'alert-line'
                 }).addTo(alertsLayerGroup)
 
-                const popupContent = createAlertPopup(alert, markerColor)
-                polyline.bindPopup(popupContent)
-              }
-
-              // Add center marker for better visibility
-              if (latLngs.length > 0) {
-                // Calculate center of polygon
-                const center = calculatePolygonCenter(latLngs)
-                
-                const alertMarker = window.L.marker(center, {
-                  icon: window.L.divIcon({
-                    html: `<div style="background: ${markerColor}; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">🚨 ${event}</div>`,
-                    className: 'alert-marker',
-                    iconSize: [120, 20],
-                    iconAnchor: [60, 10]
+                // Add hover effect
+                polyline.on('mouseover', function(e) {
+                  this.setStyle({
+                    weight: 8,
+                    opacity: 1
                   })
-                }).addTo(alertsLayerGroup)
+                })
 
-                const popupContent = createAlertPopup(alert, markerColor)
-                alertMarker.bindPopup(popupContent)
+                polyline.on('mouseout', function(e) {
+                  this.setStyle({
+                    weight: 6,
+                    opacity: 0.9
+                  })
+                })
+
+                const popupContent = createAlertPopup(alert, polygonColor)
+                polyline.bindPopup(popupContent)
               }
             }
           })
@@ -567,7 +615,7 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
         const severity = testAlert.properties.severity
         const event = testAlert.properties.event
         const polygonColor = '#f59e0b' // Yellow for severe
-        const markerColor = '#f59e0b'
+        const polygonOpacity = 0.3
         
         const coords = testAlert.geometry.coordinates[0]
         const latLngs = coords.map(coord => [coord[1], coord[0]])
@@ -575,25 +623,32 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
         const polygon = window.L.polygon(latLngs, {
           color: polygonColor,
           fillColor: polygonColor,
-          fillOpacity: 0.3,
-          weight: 2,
-          opacity: 0.8
+          fillOpacity: polygonOpacity,
+          weight: 3,
+          opacity: 0.9,
+          className: 'alert-polygon'
         }).addTo(alertsLayerGroup)
 
-        const popupContent = createAlertPopup(testAlert, markerColor)
+        // Add hover effect
+        polygon.on('mouseover', function(e) {
+          this.setStyle({
+            weight: 5,
+            opacity: 1,
+            fillOpacity: polygonOpacity + 0.2
+          })
+        })
+
+        polygon.on('mouseout', function(e) {
+          this.setStyle({
+            weight: 3,
+            opacity: 0.9,
+            fillOpacity: polygonOpacity
+          })
+        })
+
+        const popupContent = createAlertPopup(testAlert, polygonColor)
         polygon.bindPopup(popupContent)
         
-        const center = calculatePolygonCenter(latLngs)
-        const alertMarker = window.L.marker(center, {
-          icon: window.L.divIcon({
-            html: `<div style="background: ${markerColor}; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">🚨 ${event}</div>`,
-            className: 'alert-marker',
-            iconSize: [120, 20],
-            iconAnchor: [60, 10]
-          })
-        }).addTo(alertsLayerGroup)
-
-        alertMarker.bindPopup(popupContent)
         console.log('🚨 Test alert added to map')
       })
   }
