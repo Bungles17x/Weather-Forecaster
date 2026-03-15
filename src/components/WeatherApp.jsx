@@ -1,12 +1,14 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import Header from './Header'
 import CurrentWeather from './CurrentWeather'
 import HourlyForecast from './HourlyForecast'
 import TenDayForecast from './TenDayForecast'
 import WeatherMap from './WeatherMap'
 import WeatherIndicators from './WeatherIndicators'
+import './WeatherApp.css'
 
 const WeatherApp = () => {
+  // Core state
   const [weatherData, setWeatherData] = useState(null)
   const [forecastData, setForecastData] = useState([])
   const [loading, setLoading] = useState(true)
@@ -14,14 +16,24 @@ const WeatherApp = () => {
   const [lastUpdate, setLastUpdate] = useState(null)
   const [refreshing, setRefreshing] = useState(false)
   const [location, setLocation] = useState('Mount Union, PA,US')
+  
+  // Enhanced UI state
   const [loadingMessage, setLoadingMessage] = useState('Fetching weather data...')
   const [loadingProgress, setLoadingProgress] = useState(0)
   const [changingLocation, setChangingLocation] = useState(false)
   const [gettingLocation, setGettingLocation] = useState(false)
   const [autoRefresh, setAutoRefresh] = useState(false)
   const [searchHistory, setSearchHistory] = useState([])
-  const hasFetched = React.useRef(false)
-  const retryCount = React.useRef(0)
+  const [weatherAlerts, setWeatherAlerts] = useState([])
+  const [connectionStatus, setConnectionStatus] = useState('checking')
+  const [dataQuality, setDataQuality] = useState('unknown')
+  
+  // Refs for optimization
+  const hasFetched = useRef(false)
+  const retryCount = useRef(0)
+  const abortController = useRef(null)
+  const debounceTimer = useRef(null)
+  const autoRefreshTimer = useRef(null)
 
   // Save search history to localStorage
   useEffect(() => {
@@ -30,139 +42,160 @@ const WeatherApp = () => {
     }
   }, [searchHistory])
 
+  // Enhanced fetch with better error handling and performance
   const fetchWeatherData = useCallback(async (locationParam = location, isLocationChange = false) => {
+    // Cancel any ongoing requests
+    if (abortController.current) {
+      abortController.current.abort()
+    }
+    
+    // Create new abort controller for this request
+    abortController.current = new AbortController()
+    
     console.log('🚀 fetchWeatherData called:', { 
       locationParam, 
       isLocationChange,
-      stackTrace: new Error().stack?.split('\n').slice(1, 4).join(' | ')
+      retryCount: retryCount.current
     })
     
+    // Set loading states
     if (isLocationChange) {
       setChangingLocation(true)
       setLoadingMessage(`Finding weather for ${locationParam}...`)
-      setError(null)
     } else {
       setLoading(true)
       setLoadingMessage('Fetching weather data...')
-      setError(null)
     }
+    setError(null)
     setLoadingProgress(0)
+    setConnectionStatus('connecting')
     
     try {
       const apiKey = import.meta.env.VITE_OPENWEATHER_KEY
-      console.log('🔑 API Key check:', { 
-        hasKey: !!apiKey, 
-        keyLength: apiKey?.length,
-        keyPrefix: apiKey?.substring(0, 8) + '...'
-      })
       
+      // Enhanced API key validation
       if (!apiKey || apiKey === 'YOUR_API_KEY_HERE' || apiKey.length < 10) {
-        console.log('❌ Invalid API key, using fallback data')
-        throw new Error('Invalid or missing API key. Using simulated weather data.')
+        throw new Error('API_KEY_INVALID')
       }
 
       setLoadingProgress(20)
       setLoadingMessage('Connecting to weather service...')
+      setConnectionStatus('connected')
       
-      // Add timeout and better error handling
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+      // Enhanced timeout with better error handling
+      const timeoutId = setTimeout(() => {
+        if (abortController.current) {
+          abortController.current.abort()
+        }
+      }, 15000) // Increased to 15 seconds
       
-      console.log('🌐 Fetching current weather for:', locationParam)
+      // Fetch current weather with enhanced error handling
       const currentResponse = await fetch(
         `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(locationParam)}&appid=${apiKey}&units=imperial`,
-        { signal: controller.signal }
+        { signal: abortController.current.signal }
       )
       
       clearTimeout(timeoutId)
-      console.log('📊 Current weather response:', { 
-        status: currentResponse.status, 
-        ok: currentResponse.ok,
-        statusText: currentResponse.statusText 
-      })
       
+      // Enhanced response validation
       if (!currentResponse.ok) {
-        if (currentResponse.status === 404) {
-          throw new Error(`Location "${locationParam}" not found. Please check the spelling and try again.`)
-        } else if (currentResponse.status === 401) {
-          throw new Error('Invalid API key. Please check your OpenWeather API configuration.')
-        } else if (currentResponse.status === 429) {
-          throw new Error('API rate limit exceeded. Please wait a moment and try again.')
-        } else {
-          throw new Error(`Failed to fetch current weather data: ${currentResponse.statusText}`)
-        }
+        const errorData = await currentResponse.json().catch(() => ({}))
+        throw new Error(`HTTP_${currentResponse.status}_${errorData.message || currentResponse.statusText}`)
       }
       
       setLoadingProgress(50)
       setLoadingMessage('Processing current weather data...')
+      
       const currentData = await currentResponse.json()
-      console.log('✅ Current weather data received:', { 
-        name: currentData.name, 
-        temp: currentData.main?.temp,
-        weather: currentData.weather?.[0]?.main 
-      })
-
-      setLoadingProgress(60)
-      setLoadingMessage('Loading forecast data...')
       
-      const controller2 = new AbortController()
-      const timeoutId2 = setTimeout(() => controller2.abort(), 10000)
-      
-      console.log('🌐 Fetching forecast data for:', locationParam)
-      const forecastResponse = await fetch(
-        `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(locationParam)}&appid=${apiKey}&units=imperial`,
-        { signal: controller2.signal }
-      )
-      
-      clearTimeout(timeoutId2)
-      console.log('📊 Forecast response:', { 
-        status: forecastResponse.status, 
-        ok: forecastResponse.ok,
-        statusText: forecastResponse.statusText 
-      })
-      
-      if (!forecastResponse.ok) {
-        if (forecastResponse.status === 404) {
-          throw new Error(`Forecast data not available for "${locationParam}".`)
-        } else if (forecastResponse.status === 401) {
-          throw new Error('Invalid API key for forecast data.')
-        } else if (forecastResponse.status === 429) {
-          throw new Error('API rate limit exceeded. Please wait a moment and try again.')
-        } else {
-          throw new Error(`Forecast API error: ${forecastResponse.status} - ${forecastResponse.statusText}`)
-        }
+      // Validate current data structure
+      if (!currentData.name || !currentData.main || !currentData.weather) {
+        throw new Error('INVALID_DATA_STRUCTURE')
       }
       
-      setLoadingProgress(80)
+      setLoadingProgress(70)
+      setLoadingMessage('Loading forecast data...')
+      
+      // Fetch forecast data with similar enhancements
+      const forecastResponse = await fetch(
+        `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(locationParam)}&appid=${apiKey}&units=imperial`,
+        { signal: abortController.current.signal }
+      )
+      
+      if (!forecastResponse.ok) {
+        const errorData = await forecastResponse.json().catch(() => ({}))
+        throw new Error(`FORECAST_HTTP_${forecastResponse.status}_${errorData.message || forecastResponse.statusText}`)
+      }
+      
+      setLoadingProgress(85)
       setLoadingMessage('Processing forecast information...')
+      
       const forecastData = await forecastResponse.json()
-      console.log('✅ Forecast data received:', { 
-        listLength: forecastData.list?.length,
-        firstItem: forecastData.list?.[0]?.dt_txt 
-      })
-
+      
+      // Validate forecast data
+      if (!forecastData.list || !Array.isArray(forecastData.list)) {
+        throw new Error('INVALID_FORECAST_DATA')
+      }
+      
+      // Process and set data
       setWeatherData(currentData)
       setForecastData(forecastData.list)
       setLocation(locationParam)
       setLastUpdate(new Date())
+      setDataQuality('real')
+      setConnectionStatus('connected')
+      
+      // Generate weather alerts if needed
+      const alerts = generateWeatherAlerts(currentData, forecastData.list)
+      setWeatherAlerts(alerts)
       
       // Reset retry count on success
       retryCount.current = 0
       
-      // Add to search history
+      // Enhanced search history management
       if (locationParam && !searchHistory.includes(locationParam)) {
         setSearchHistory(prev => [...prev.slice(-9), locationParam])
       }
       
       setLoadingProgress(100)
       setLoadingMessage('Weather data loaded successfully!')
+      
       console.log('🎉 Weather data loaded successfully for:', locationParam)
       
     } catch (err) {
       console.error('❌ Error fetching weather data:', err)
-      console.log('🔄 Using simulated data as fallback')
       
-      // Always provide fallback data so app never shows "Weather Data Unavailable"
+      // Enhanced error classification
+      let errorType = 'UNKNOWN_ERROR'
+      let errorMessage = 'Unable to fetch weather data.'
+      
+      if (err.name === 'AbortError') {
+        errorType = 'REQUEST_TIMEOUT'
+        errorMessage = 'Request timed out. Please check your connection.'
+      } else if (err.message.includes('API_KEY_INVALID')) {
+        errorType = 'API_KEY_ERROR'
+        errorMessage = 'Invalid API key. Please check your configuration.'
+      } else if (err.message.includes('HTTP_404')) {
+        errorType = 'LOCATION_NOT_FOUND'
+        errorMessage = `Location "${locationParam}" not found. Please check the spelling.`
+      } else if (err.message.includes('HTTP_401')) {
+        errorType = 'AUTHENTICATION_ERROR'
+        errorMessage = 'Invalid API key for weather service.'
+      } else if (err.message.includes('HTTP_429')) {
+        errorType = 'RATE_LIMIT_ERROR'
+        errorMessage = 'API rate limit exceeded. Please wait a moment.'
+      } else if (err.message.includes('HTTP_5')) {
+        errorType = 'SERVER_ERROR'
+        errorMessage = 'Weather service is temporarily unavailable.'
+      } else if (err.message.includes('INVALID_DATA')) {
+        errorType = 'DATA_ERROR'
+        errorMessage = 'Received invalid weather data.'
+      }
+      
+      setConnectionStatus('error')
+      setDataQuality('simulated')
+      
+      // Use fallback data
       const simulatedData = getSimulatedWeatherData()
       const simulatedForecast = getSimulatedForecastData()
       
@@ -171,24 +204,23 @@ const WeatherApp = () => {
       setLocation(locationParam)
       setLastUpdate(new Date())
       setLoadingProgress(100)
-      retryCount.current = 0
       
-      // Show a brief error message but don't block the app
-      let errorMessage = 'Using simulated weather data.'
-      if (err.name === 'AbortError') {
-        errorMessage = 'Request timed out. Using simulated weather data.'
-      } else if (err.message.includes('rate limit') || err.message.includes('429')) {
-        errorMessage = 'API rate limit exceeded. Showing simulated weather data.'
-      } else if (err.message.includes('API key') || err.message.includes('401')) {
-        errorMessage = 'Invalid API key. Showing simulated weather data.'
-      } else if (err.message.includes('404') || err.message.includes('not found')) {
-        errorMessage = 'Location not found. Showing simulated weather data.'
-      } else {
-        errorMessage = err.message || 'Network error. Using simulated weather data.'
+      // Show appropriate error message
+      setError(`${errorMessage} Using simulated weather data.`)
+      setTimeout(() => setError(null), 8000)
+      
+      // Implement exponential backoff for retries
+      if (retryCount.current < 3) {
+        retryCount.current++
+        const backoffDelay = Math.min(1000 * Math.pow(2, retryCount.current), 5000)
+        console.log(`🔄 Scheduling retry ${retryCount.current} in ${backoffDelay}ms`)
+        
+        setTimeout(() => {
+          if (retryCount.current <= 3) {
+            fetchWeatherData(locationParam, isLocationChange)
+          }
+        }, backoffDelay)
       }
-      
-      setError(errorMessage)
-      setTimeout(() => setError(null), 5000)
       
     } finally {
       setLoading(false)
@@ -197,7 +229,6 @@ const WeatherApp = () => {
     }
   }, [location, searchHistory])
 
-  // Initial data fetch with retry mechanism
   useEffect(() => {
     if (!hasFetched.current) {
       console.log('🚀 Initial data fetch useEffect triggered')
@@ -211,15 +242,34 @@ const WeatherApp = () => {
       return () => clearTimeout(timer)
     }
   }, [])
-
-  // Retry function for manual retry
-  const handleRetry = () => {
+  
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      if (abortController.current) {
+        abortController.current.abort()
+      }
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current)
+      }
+      if (autoRefreshTimer.current) {
+        clearInterval(autoRefreshTimer.current)
+      }
+    }
+  }, [])
+  
+  // Enhanced retry function with better feedback
+  const handleRetry = useCallback(() => {
     console.log('🔄 Manual retry triggered')
     retryCount.current = 0
-    fetchWeatherData()
-  }
+    setError('Attempting to fetch fresh weather data...')
+    setTimeout(() => {
+      fetchWeatherData()
+    }, 500)
+  }, [fetchWeatherData])
 
-  const handleCurrentLocation = () => {
+  // Enhanced geolocation with better error handling
+  const handleCurrentLocation = useCallback(() => {
     if (!navigator.geolocation) {
       setError('Geolocation is not supported by your browser')
       return
@@ -227,6 +277,7 @@ const WeatherApp = () => {
 
     setGettingLocation(true)
     setLoadingMessage('Getting your location...')
+    setConnectionStatus('locating')
 
     navigator.geolocation.getCurrentPosition(
       async (position) => {
@@ -234,11 +285,17 @@ const WeatherApp = () => {
         console.log('📍 Got location:', { latitude, longitude })
         
         try {
-          // Reverse geocoding to get city name
+          // Enhanced reverse geocoding with timeout
           const apiKey = import.meta.env.VITE_OPENWEATHER_KEY
+          const controller = new AbortController()
+          const timeoutId = setTimeout(() => controller.abort(), 10000)
+          
           const geoResponse = await fetch(
-            `https://api.openweathermap.org/geo/1.0/reverse?lat=${latitude}&lon=${longitude}&limit=1&appid=${apiKey}`
+            `https://api.openweathermap.org/geo/1.0/reverse?lat=${latitude}&lon=${longitude}&limit=1&appid=${apiKey}`,
+            { signal: controller.signal }
           )
+          
+          clearTimeout(timeoutId)
           
           if (geoResponse.ok) {
             const geoData = await geoResponse.json()
@@ -247,83 +304,134 @@ const WeatherApp = () => {
             await fetchWeatherData(cityName, true)
           } else {
             // Fallback to coordinates
-            await fetchWeatherData(`${latitude},${longitude}`, true)
+            await fetchWeatherData(`${latitude.toFixed(4)},${longitude.toFixed(4)}`, true)
           }
         } catch (error) {
           console.error('❌ Geocoding error:', error)
-          await fetchWeatherData(`${latitude},${longitude}`, true)
+          await fetchWeatherData(`${latitude.toFixed(4)},${longitude.toFixed(4)}`, true)
         }
       },
-      async (error) => {
+      (error) => {
         console.error('❌ Geolocation error:', error)
-        setError('Unable to get your location. Please check your browser permissions.')
+        let errorMessage = 'Unable to get your location.'
+        
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = 'Location access denied. Please enable location permissions.'
+            break
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = 'Location information is unavailable.'
+            break
+          case error.TIMEOUT:
+            errorMessage = 'Location request timed out.'
+            break
+          default:
+            errorMessage = 'Unknown geolocation error occurred.'
+        }
+        
+        setError(errorMessage)
         setGettingLocation(false)
         setLoading(false)
+        setConnectionStatus('error')
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 300000 // 5 minutes
       }
     )
-  }
+  }, [fetchWeatherData])
 
-  const handleRefresh = () => {
+  const handleRefresh = useCallback(() => {
     setRefreshing(true)
     fetchWeatherData()
-  }
+  }, [fetchWeatherData])
 
-  const handleLocationChange = (newLocation) => {
+  const handleLocationChange = useCallback((newLocation) => {
     if (newLocation && newLocation !== location) {
       setLocation(newLocation)
       fetchWeatherData(newLocation, true)
     }
-  }
+  }, [location, fetchWeatherData])
 
-  const shouldShowLoading = loading || changingLocation || gettingLocation
+  // Memoized values for performance
+  const shouldShowLoading = useMemo(() => loading || changingLocation || gettingLocation, [loading, changingLocation, gettingLocation])
+  const isUsingSimulatedData = useMemo(() => 
+    weatherData?.name === 'Kansas City' && weatherData?.main?.temp === 72,
+    [weatherData]
+  )
+  const timeSinceLastUpdate = useMemo(() => {
+    if (!lastUpdate) return null
+    const now = new Date()
+    const diff = Math.floor((now - lastUpdate) / 1000)
+    
+    if (diff < 60) return `${diff}s ago`
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`
+    return `${Math.floor(diff / 86400)}d ago`
+  }, [lastUpdate])
+  
+  // Enhanced simulated data with more realistic variations
+  const getSimulatedWeatherData = useCallback(() => {
+    const baseTemp = 65 + Math.random() * 25
+    const conditions = ['Clear', 'Clouds', 'Rain', 'Drizzle', 'Thunderstorm', 'Snow', 'Mist']
+    const condition = conditions[Math.floor(Math.random() * conditions.length)]
+    
+    return {
+      name: 'Kansas City',
+      sys: { 
+        country: 'US', 
+        sunrise: 1640998800, 
+        sunset: 1641031200 
+      },
+      main: {
+        temp: Math.round(baseTemp),
+        feels_like: Math.round(baseTemp + (Math.random() - 0.5) * 10),
+        temp_min: Math.round(baseTemp - 5),
+        temp_max: Math.round(baseTemp + 5),
+        humidity: 40 + Math.random() * 40,
+        pressure: 29.5 + Math.random() * 2,
+        visibility: 5 + Math.random() * 10
+      },
+      weather: [
+        {
+          main: condition,
+          description: condition.toLowerCase(),
+          icon: '01d'
+        }
+      ],
+      wind: {
+        speed: 3 + Math.random() * 15,
+        deg: Math.random() * 360
+      },
+      clouds: {
+        all: Math.random() * 100
+      },
+      dt: Math.floor(Date.now() / 1000)
+    }
+  }, [])
 
-  // Simulated weather data for fallback
-  const getSimulatedWeatherData = () => ({
-    name: 'Kansas City',
-    sys: { country: 'US', sunrise: 1640998800, sunset: 1641031200 },
-    main: {
-      temp: 72,
-      feels_like: 75,
-      temp_min: 65,
-      temp_max: 78,
-      humidity: 65,
-      pressure: 30.15,
-      visibility: 10
-    },
-    weather: [
-      {
-        main: 'Clouds',
-        description: 'partly cloudy',
-        icon: '02d'
-      }
-    ],
-    wind: {
-      speed: 8.5,
-      deg: 210
-    },
-    clouds: {
-      all: 40
-    },
-    dt: 1640995200
-  })
-
-  const getSimulatedForecastData = () => {
+  // Enhanced simulated forecast data with realistic patterns
+  const getSimulatedForecastData = useCallback(() => {
     const forecast = []
     const now = Date.now() / 1000
+    const baseTemp = 65 + Math.random() * 20
+    const conditions = ['Clear', 'Clouds', 'Rain', 'Drizzle', 'Thunderstorm', 'Snow', 'Mist']
     
     for (let i = 0; i < 40; i++) {
       const time = now + (i * 3 * 3600) // Every 3 hours
-      const temp = 65 + Math.random() * 20
-      const conditions = ['Clear', 'Clouds', 'Rain', 'Drizzle', 'Thunderstorm']
+      const tempVariation = Math.sin(i / 8) * 10 // Temperature variation over time
+      const temp = Math.round(baseTemp + tempVariation + (Math.random() - 0.5) * 5)
       const condition = conditions[Math.floor(Math.random() * conditions.length)]
       
       forecast.push({
         dt: time,
         main: {
           temp: temp,
-          temp_min: temp - 5,
-          temp_max: temp + 5,
-          humidity: 50 + Math.random() * 30
+          temp_min: temp - 3 - Math.random() * 4,
+          temp_max: temp + 3 + Math.random() * 4,
+          humidity: 40 + Math.random() * 40,
+          pressure: 29.5 + Math.random() * 2
         },
         weather: [
           {
@@ -333,21 +441,24 @@ const WeatherApp = () => {
           }
         ],
         wind: {
-          speed: 5 + Math.random() * 10,
+          speed: 3 + Math.random() * 12,
           deg: Math.random() * 360
+        },
+        clouds: {
+          all: Math.random() * 100
         },
         dt_txt: new Date(time * 1000).toISOString()
       })
     }
     
     return forecast
-  }
+  }, [])
 
   return (
     <div className="weather-app">
-      <Header onLocationChange={handleLocationChange} />
+      <Header onLocationChange={handleLocationChangeDebounced} />
       
-      {/* Loading Overlay */}
+      {/* Enhanced Loading Overlay */}
       {shouldShowLoading && (
         <div className="loading-overlay">
           <div className="loading-content">
@@ -360,23 +471,43 @@ const WeatherApp = () => {
                 style={{ width: `${loadingProgress}%` }}
               ></div>
             </div>
+            
+            {/* Connection Status Indicator */}
+            <div className="connection-status">
+              <span className={`status-indicator ${connectionStatus}`}></span>
+              <span className="status-text">
+                {connectionStatus === 'connecting' && 'Connecting...'}
+                {connectionStatus === 'connected' && 'Connected'}
+                {connectionStatus === 'locating' && 'Getting location...'}
+                {connectionStatus === 'error' && 'Connection error'}
+                {connectionStatus === 'checking' && 'Checking connection...'}
+              </span>
+            </div>
           </div>
         </div>
       )}
       
-      {/* Error Banner */}
+      {/* Enhanced Error Banner */}
       {!shouldShowLoading && error && (
         <div className="error-notification notification-error">
           <div className="error-icon">⚠️</div>
           <div className="error-content">
-            <h4>Weather Data Error</h4>
+            <h4>Weather Data Notice</h4>
             <p>{error}</p>
-            <button 
-              onClick={handleRetry} 
-              className="btn btn-primary btn-sm"
-            >
-              Try Real Data
-            </button>
+            <div className="error-actions">
+              <button 
+                onClick={handleRetry} 
+                className="btn btn-primary btn-sm"
+              >
+                Try Real Data
+              </button>
+              <button 
+                onClick={() => setError(null)} 
+                className="btn btn-secondary btn-sm"
+              >
+                Dismiss
+              </button>
+            </div>
           </div>
           <button 
             onClick={() => setError(null)} 
@@ -387,7 +518,54 @@ const WeatherApp = () => {
         </div>
       )}
       
+      {/* Weather Alerts Banner */}
+      {!shouldShowLoading && weatherAlerts.length > 0 && (
+        <div className="weather-alerts">
+          {weatherAlerts.map((alert, index) => (
+            <div 
+              key={index} 
+              className={`alert-banner alert-${alert.severity}`}
+            >
+              <span className="alert-icon">
+                {alert.severity === 'high' && '🚨'}
+                {alert.severity === 'medium' && '⚠️'}
+                {alert.severity === 'low' && 'ℹ️'}
+              </span>
+              <span className="alert-message">{alert.message}</span>
+              <button 
+                onClick={() => setWeatherAlerts(prev => prev.filter((_, i) => i !== index))}
+                className="alert-close"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+      
+      {/* Simulated Data Banner */}
+      {!shouldShowLoading && isUsingSimulatedData && (
+        <div className="simulated-data-banner">
+          <div className="banner-content">
+            <span className="banner-icon">📊</span>
+            <span className="banner-text">Showing simulated weather data</span>
+            <button 
+              className="banner-retry-btn"
+              onClick={() => {
+                setError('Attempting to get real weather data...')
+                setTimeout(() => {
+                  handleRetry()
+                }, 1000)
+              }}
+            >
+              Try Real Data
+            </button>
+          </div>
+        </div>
+      )}
+      
       <main className="weather-content">
+        {/* Enhanced Refresh Indicator */}
         {!shouldShowLoading && refreshing && (
           <div className="refresh-indicator">
             <div className="refresh-spinner"></div>
@@ -395,29 +573,41 @@ const WeatherApp = () => {
           </div>
         )}
         
+        {/* Status Bar */}
+        {!shouldShowLoading && weatherData && (
+          <div className="weather-status-bar">
+            <div className="status-left">
+              <span className="data-quality">
+                {dataQuality === 'real' ? '🟢 Live Data' : '🟡 Simulated Data'}
+              </span>
+              {lastUpdate && (
+                <span className="last-update">
+                  Last updated: {timeSinceLastUpdate}
+                </span>
+              )}
+            </div>
+            <div className="status-right">
+              <button 
+                onClick={toggleAutoRefresh}
+                className={`auto-refresh-toggle ${autoRefresh ? 'active' : ''}`}
+                title="Toggle auto-refresh (5 minutes)"
+              >
+                {autoRefresh ? '🔄 Auto-refresh ON' : '🔄 Auto-refresh OFF'}
+              </button>
+              <button 
+                onClick={handleRefresh}
+                className="refresh-btn"
+                title="Refresh weather data"
+              >
+                🔄 Refresh
+              </button>
+            </div>
+          </div>
+        )}
+        
+        {/* Weather Components */}
         {!shouldShowLoading && weatherData && (
           <>
-            {/* Show banner if using simulated data */}
-            {weatherData.name === 'Kansas City' && weatherData.main?.temp === 72 && (
-              <div className="simulated-data-banner">
-                <div className="banner-content">
-                  <span className="banner-icon">📊</span>
-                  <span className="banner-text">Showing simulated weather data</span>
-                  <button 
-                    className="banner-retry-btn"
-                    onClick={() => {
-                      setError('Attempting to get real weather data...')
-                      setTimeout(() => {
-                        handleRetry()
-                      }, 1000)
-                    }}
-                  >
-                    Try Real Data
-                  </button>
-                </div>
-              </div>
-            )}
-            
             <CurrentWeather data={weatherData} />
             <HourlyForecast data={forecastData.slice(0, 8)} />
             <TenDayForecast data={forecastData} />
