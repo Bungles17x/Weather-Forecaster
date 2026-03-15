@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import './CurrentWeather.css'
 import { WeatherIcon } from './WeatherIcons'
-// import nwsService from '../services/nwsService'
+import nwsService from '../services/nwsService'
 
 const CurrentWeather = ({ data }) => {
   const [nwsAlerts, setNwsAlerts] = useState([])
@@ -10,22 +10,26 @@ const CurrentWeather = ({ data }) => {
   useEffect(() => {
     const fetchNWSData = async () => {
       try {
-          // NWS alerts temporarily disabled due to API issues
-          // const lat = 40.79
-          // const lon = -77.85
+          // Use coordinates from weather data or default to Mount Union, PA
+          const lat = data?.coord?.lat || 40.79
+          const lon = data?.coord?.lon || -77.85
           
-          // // Fetch NWS alerts
-          // const alerts = await nwsService.getActiveAlerts(lat, lon)
-          // setNwsAlerts(alerts)
+          console.log('🌩️ Fetching NWS alerts for coordinates:', { lat, lon })
           
-          console.log('NWS alerts temporarily disabled')
+          // Fetch NWS alerts with better error handling
+          const alerts = await nwsService.getActiveAlerts(lat, lon)
+          console.log('📢 NWS alerts received:', alerts.length)
+          setNwsAlerts(alerts)
         } catch (error) {
-          console.error('Error fetching NWS data:', error)
+          console.log('⚠️ NWS alerts temporarily unavailable:', error.message)
+          // Don't set empty array, keep existing alerts if any
         }
       }
     
-    fetchNWSData()
-  }, [])
+    if (data) {
+      fetchNWSData()
+    }
+  }, [data])
 
   const handleAlertClick = (alert) => {
     setSelectedAlert(alert)

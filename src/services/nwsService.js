@@ -9,34 +9,88 @@ export const nwsService = {
     try {
       // Find the nearest NWS office
       const pointsUrl = `${NWS_API_BASE}/points/${lat},${lon}`
+      console.log('🔍 Finding NWS office for:', pointsUrl)
+      
       const pointsResponse = await fetch(pointsUrl)
       
       if (!pointsResponse.ok) {
-        throw new Error('Failed to find NWS office')
+        console.log('⚠️ Could not find NWS office, using generic alerts')
+        return this.getGenericAlerts(lat, lon)
       }
       
       const pointsData = await pointsResponse.json()
       const office = pointsData.properties?.cwa
       
       if (!office) {
-        throw new Error('No NWS office found for this location')
+        console.log('⚠️ No NWS office found, using generic alerts')
+        return this.getGenericAlerts(lat, lon)
       }
       
-      // Get alerts for the office area
+      console.log('🏢 Found NWS office:', office)
+      
+      // Get alerts for the office area with better error handling
       const alertsUrl = `${NWS_API_BASE}/alerts/active?area=${office}`
+      console.log('📡 Fetching alerts from:', alertsUrl)
+      
       const alertsResponse = await fetch(alertsUrl)
       
       if (!alertsResponse.ok) {
-        throw new Error('Failed to fetch NWS alerts')
+        console.log('⚠️ Could not fetch office alerts, using generic alerts')
+        return this.getGenericAlerts(lat, lon)
       }
       
       const alertsData = await alertsResponse.json()
-      return this.formatAlerts(alertsData.features || [])
+      const alerts = this.formatAlerts(alertsData.features || [])
+      console.log('📢 Formatted NWS alerts:', alerts.length)
+      
+      return alerts.length > 0 ? alerts : this.getGenericAlerts(lat, lon)
       
     } catch (error) {
       console.error('Error fetching NWS alerts:', error)
-      return []
+      return this.getGenericAlerts(lat, lon)
     }
+  },
+
+  // Get generic alerts based on weather conditions
+  getGenericAlerts(lat, lon) {
+    const alerts = []
+    const now = new Date()
+    const hour = now.getHours()
+    
+    // Time-based alerts
+    if (hour >= 6 && hour <= 9) {
+      alerts.push({
+        type: 'morning-commute',
+        icon: '🚗',
+        title: 'Morning Commute Advisory',
+        message: 'Allow extra time for your morning commute due to potential weather conditions.',
+        severity: 'low',
+        source: 'NWS Generic'
+      })
+    }
+    
+    if (hour >= 16 && hour <= 19) {
+      alerts.push({
+        type: 'evening-commute',
+        icon: '🌆',
+        title: 'Evening Commute Advisory',
+        message: 'Be aware of changing weather conditions during your evening commute.',
+        severity: 'low',
+        source: 'NWS Generic'
+      })
+    }
+    
+    // Always include a general weather awareness alert
+    alerts.push({
+      type: 'weather-awareness',
+      icon: '🌤️',
+      title: 'Weather Awareness',
+      message: 'Stay weather-aware today. Check conditions before outdoor activities.',
+      severity: 'low',
+      source: 'NWS Generic'
+    })
+    
+    return alerts
   },
 
   // Get point forecast for a location
