@@ -589,20 +589,22 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
         console.error('🚨 Error fetching active alerts:', error)
         
         // Add a test alert to verify the system works
-        console.log('🚨 Adding test alert for demonstration')
+        console.log('🚨 Adding weather advisory test alert for demonstration')
         const testAlert = {
           properties: {
-            event: 'Test Advisory',
-            severity: 'severe',
-            urgency: 'Immediate',
-            headline: 'This is a test advisory to verify the alert system works',
-            description: 'Test advisory description with detailed information about weather conditions and safety precautions.',
-            areaDesc: 'Test Area',
+            event: 'Winter Weather Advisory',
+            severity: 'moderate',
+            urgency: 'Expected',
+            headline: 'Winter Weather Advisory in Effect Until Tomorrow Morning',
+            description: 'Snow accumulations of 3 to 6 inches expected. Travel could be difficult during the evening commute. Hazardous conditions could impact travel Tuesday morning and evening commutes.',
+            areaDesc: 'Test County, Test Region',
             effective: new Date().toISOString(),
-            expires: new Date(Date.now() + 3600000).toISOString(),
+            expires: new Date(Date.now() + 7200000).toISOString(), // 2 hours from now
             web: 'https://www.weather.gov',
-            instruction: 'This is a test advisory with safety instructions for demonstration purposes.',
-            certainty: 'Observed'
+            instruction: 'Slow down and use caution while traveling. The latest road conditions for the state you are calling from can be obtained by calling 5 1 1. Keep an extra flashlight, food, and water in your vehicle in case of an emergency.',
+            certainty: 'Likely',
+            sender: 'National Weather Service Test Office',
+            senderName: 'NWS Test Region'
           },
           geometry: {
             type: 'Polygon',
@@ -690,6 +692,27 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
     } else if (event.toLowerCase().includes('statement')) {
       advisoryType = 'Weather Statement'
       advisoryIcon = '📄'
+    } else if (event.toLowerCase().includes('winter')) {
+      advisoryType = 'Winter Weather Advisory'
+      advisoryIcon = '❄️'
+    } else if (event.toLowerCase().includes('heat')) {
+      advisoryType = 'Heat Advisory'
+      advisoryIcon = '🌡️'
+    } else if (event.toLowerCase().includes('flood')) {
+      advisoryType = 'Flood Advisory'
+      advisoryIcon = '🌊'
+    } else if (event.toLowerCase().includes('wind')) {
+      advisoryType = 'Wind Advisory'
+      advisoryIcon = '💨'
+    } else if (event.toLowerCase().includes('fog')) {
+      advisoryType = 'Fog Advisory'
+      advisoryIcon = '🌫️'
+    } else if (event.toLowerCase().includes('freeze')) {
+      advisoryType = 'Freeze Advisory'
+      advisoryIcon = '🧊'
+    } else if (event.toLowerCase().includes('frost')) {
+      advisoryType = 'Frost Advisory'
+      advisoryIcon = '🥶'
     }
 
     return `
@@ -710,9 +733,17 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
           </div>
 
           <div style="background: #fff3cd; border-left: 4px solid ${color}; padding: 8px; margin-bottom: 8px;">
-            <div style="font-size: 11px; font-weight: bold; color: #856404; margin-bottom: 4px;">🛡️ SAFETY INSTRUCTIONS:</div>
+            <div style="font-size: 11px; font-weight: bold; color: #856404; margin-bottom: 4px;">🛡️ WEATHER ADVISORY SAFETY INSTRUCTIONS:</div>
             <div style="font-size: 11px; color: #856404; line-height: 1.4;">${instruction}</div>
           </div>
+
+          ${alert.properties.sender ? `
+            <div style="background: #d1ecf1; border-left: 4px solid #17a2b8; padding: 6px; margin-bottom: 8px;">
+              <div style="font-size: 10px; color: #0c5460;">
+                <strong>Issued by:</strong> ${alert.properties.senderName || alert.properties.sender}
+              </div>
+            </div>
+          ` : ''}
 
           <div style="font-size: 11px; color: #666; line-height: 1.4;">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 8px;">
@@ -730,7 +761,7 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
           ${web ? `
             <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb; text-align: center;">
               <a href="${web}" target="_blank" style="color: #007bff; text-decoration: none; font-size: 12px; display: inline-block; padding: 4px 12px; border: 1px solid #007bff; border-radius: 4px; transition: background-color 0.2s;">
-                🔗 View Full Details →
+                🔗 View Full Weather Advisory Details →
               </a>
             </div>
           ` : ''}
