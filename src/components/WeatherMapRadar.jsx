@@ -811,21 +811,83 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
     const locationMarker = window.L.marker([coords.latitude, coords.longitude], {
       title: 'Your Location',
       icon: window.L.divIcon({
-        html: '<div style="background: #4285F4; color: white; padding: 8px; border-radius: 50%; font-weight: bold;">📍</div>',
+        html: '<div style="background: #dc2626; color: white; padding: 8px; border-radius: 50%; font-size: 16px; font-weight: bold; box-shadow: 0 2px 8px rgba(220, 38, 38, 0.4); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">📍</div>',
         className: 'location-marker',
-        iconSize: [40, 40]
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
       })
     }).addTo(map)
 
+    // Add pulsing circle around location
+    const pulsingCircle = window.L.circleMarker([coords.latitude, coords.longitude], {
+      radius: 30,
+      fillColor: '#dc2626',
+      color: '#dc2626',
+      weight: 2,
+      opacity: 0.6,
+      fillOpacity: 0.2
+    }).addTo(map)
+
+    // Animate the pulsing circle
+    let pulseRadius = 30
+    let pulseOpacity = 0.6
+    let growing = true
+    
+    const pulseAnimation = setInterval(() => {
+      if (growing) {
+        pulseRadius += 1
+        pulseOpacity -= 0.02
+        if (pulseRadius >= 50) {
+          growing = false
+        }
+      } else {
+        pulseRadius -= 1
+        pulseOpacity += 0.02
+        if (pulseRadius <= 30) {
+          growing = true
+        }
+      }
+      
+      pulsingCircle.setRadius(pulseRadius)
+      pulsingCircle.setStyle({ opacity: pulseOpacity, fillOpacity: pulseOpacity * 0.3 })
+    }, 50)
+
+    // Add popup with location info
     const locationPopup = `
-      <div class="location-info-window">
-        <h4>📍 Your Location</h4>
-        <p>Lat: ${coords.latitude.toFixed(4)}</p>
-        <p>Lng: ${coords.longitude.toFixed(4)}</p>
+      <div class="location-info-window" style="min-width: 200px;">
+        <div style="background: #dc2626; color: white; padding: 8px; border-radius: 4px 4px 0 0; margin: -8px -8px 8px -8px;">
+          <h4 style="margin: 0; font-size: 14px; font-weight: bold;">📍 Your Current Location</h4>
+        </div>
+        <div style="padding: 8px;">
+          <div style="font-size: 12px; line-height: 1.4;">
+            <div><strong>Latitude:</strong> ${coords.latitude.toFixed(6)}</div>
+            <div><strong>Longitude:</strong> ${coords.longitude.toFixed(6)}</div>
+            <div><strong>Accuracy:</strong> ${coords.accuracy ? `${coords.accuracy.toFixed(0)} meters` : 'Unknown'}</div>
+            <div><strong>Timestamp:</strong> ${new Date().toLocaleString()}</div>
+          </div>
+          <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb;">
+            <div style="font-size: 11px; color: #666;">
+              <div>🔴 Red pin shows your current GPS location</div>
+              <div>🔄 Pulsing circle indicates active tracking</div>
+            </div>
+          </div>
+        </div>
       </div>
     `
 
     locationMarker.bindPopup(locationPopup)
+    
+    // Make location marker bounce when added
+    locationMarker.bounce = true
+    setTimeout(() => {
+      locationMarker.bounce = false
+    }, 1500)
+
+    return {
+      marker: locationMarker,
+      pulseCircle: pulsingCircle,
+      animation: pulseAnimation
+    }
   }
 
   const getWeatherIcon = (iconCode) => {
