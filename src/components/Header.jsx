@@ -10,6 +10,7 @@ const Header = ({ onLocationChange }) => {
   const [searchInput, setSearchInput] = useState('')
   const [searchSuggestions, setSearchSuggestions] = useState([])
   const [showSuggestions, setShowSuggestions] = useState(false)
+  const [locating, setLocating] = useState(false)
   const location = useLocation()
 
   // Get current page for active navigation
@@ -28,6 +29,56 @@ const Header = ({ onLocationChange }) => {
 
   const handleLocationChange = () => {
     setIsLocationModalOpen(true)
+  }
+
+  const handleLocateMe = () => {
+    if (!navigator.geolocation) {
+      console.error('Geolocation is not supported by your browser')
+      return
+    }
+
+    setLocating(true)
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords
+        console.log('📍 Navbar location found:', { latitude, longitude })
+        
+        // You can update the app's location state here
+        if (onLocationChange) {
+          onLocationChange(`${latitude.toFixed(4)}, ${longitude.toFixed(4)}`)
+        }
+        
+        setLocating(false)
+      },
+      (error) => {
+        console.error('❌ Navbar geolocation error:', error)
+        let errorMessage = 'Unable to get your location'
+        
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = 'Location permission denied. Please enable location access.'
+            break
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = 'Location information unavailable.'
+            break
+          case error.TIMEOUT:
+            errorMessage = 'Location request timed out.'
+            break
+          case error.UNKNOWN_ERROR:
+            errorMessage = 'An unknown error occurred.'
+            break
+        }
+        
+        console.error(errorMessage)
+        setLocating(false)
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 300000 // 5 minutes
+      }
+    )
   }
 
   const handleLocationSubmit = (e) => {
@@ -234,11 +285,35 @@ const Header = ({ onLocationChange }) => {
           
           <div className="header-right">
             <nav className="header-nav">
-              <button className="nav-btn refresh-btn" onClick={handleRefresh} title="Refresh Weather">
-                🔄
+              <button
+                onClick={handleLocateMe}
+                className={`locate-me-btn ${locating ? 'locating' : ''}`}
+                disabled={locating}
+                title="Find my current location"
+              >
+                <span className="locate-me-icon">{locating ? '🔄' : '📍'}</span>
+                <span className="locate-me-text">
+                  {locating ? 'Locating...' : 'Locate Me'}
+                </span>
               </button>
-              <button className="nav-btn menu-btn" onClick={handleMenuToggle} title="Menu">
-                ☰
+              
+              <button
+                onClick={handleLocationChange}
+                className="location-btn"
+                title="Change location"
+              >
+                <span className="location-icon">📍</span>
+                <span>Location</span>
+              </button>
+              
+              <button
+                onClick={handleMenuToggle}
+                className={`menu-toggle ${isMenuOpen ? 'open' : ''}`}
+                title="Toggle menu"
+              >
+                <span className="hamburger-line"></span>
+                <span className="hamburger-line"></span>
+                <span className="hamburger-line"></span>
               </button>
             </nav>
           </div>
