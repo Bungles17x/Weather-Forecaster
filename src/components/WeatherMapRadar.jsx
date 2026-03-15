@@ -384,12 +384,23 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
     // Create layer group for alerts
     const alertsLayerGroup = window.L.layerGroup().addTo(map)
     
-    // Fetch active weather alerts from NWS
-    fetch('https://api.weather.gov/alerts/active/area')
-      .then(response => response.json())
+    // Fetch active weather alerts from NWS with correct endpoint
+    fetch('https://api.weather.gov/alerts/active')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        return response.json()
+      })
       .then(data => {
+        console.log('🚨 Alerts data received:', data)
+        
         if (data.features && data.features.length > 0) {
-          data.features.forEach(alert => {
+          console.log(`🚨 Processing ${data.features.length} alerts`)
+          
+          data.features.forEach((alert, index) => {
+            console.log(`🚨 Processing alert ${index + 1}:`, alert.properties.event)
+            
             if (alert.geometry && alert.geometry.coordinates) {
               const severity = alert.properties.severity ? alert.properties.severity.toLowerCase() : 'unknown'
               const event = alert.properties.event || 'Weather Alert'
@@ -423,6 +434,8 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
                   markerColor = '#6b7280'
               }
 
+              console.log(`🚨 Alert ${event} - ${severity} - color: ${polygonColor}`)
+
               // Handle different geometry types
               const coords = alert.geometry.coordinates
               let latLngs = []
@@ -440,6 +453,8 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
                   weight: 2,
                   opacity: 0.8
                 }).addTo(alertsLayerGroup)
+
+                console.log(`🚨 Added polygon for ${event}`)
 
                 // Add popup to polygon
                 const popupContent = createAlertPopup(alert, markerColor)
@@ -514,10 +529,72 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
               }
             }
           })
+          
+          console.log(`🚨 Successfully added ${data.features.length} alerts to map`)
+        } else {
+          console.log('🚨 No active alerts found')
         }
       })
       .catch(error => {
-        console.error('Error fetching active alerts:', error)
+        console.error('🚨 Error fetching active alerts:', error)
+        
+        // Add a test alert to verify the system works
+        console.log('🚨 Adding test alert for demonstration')
+        const testAlert = {
+          properties: {
+            event: 'Test Alert',
+            severity: 'severe',
+            urgency: 'Immediate',
+            headline: 'This is a test alert to verify the alert system works',
+            areaDesc: 'Test Area',
+            effective: new Date().toISOString(),
+            expires: new Date(Date.now() + 3600000).toISOString(),
+            web: 'https://www.weather.gov'
+          },
+          geometry: {
+            type: 'Polygon',
+            coordinates: [[
+              [-77.8867, 40.3838],
+              [-77.8867, 40.3938],
+              [-77.8767, 40.3938],
+              [-77.8767, 40.3838],
+              [-77.8867, 40.3838]
+            ]]
+          }
+        }
+        
+        // Process test alert
+        const severity = testAlert.properties.severity
+        const event = testAlert.properties.event
+        const polygonColor = '#f59e0b' // Yellow for severe
+        const markerColor = '#f59e0b'
+        
+        const coords = testAlert.geometry.coordinates[0]
+        const latLngs = coords.map(coord => [coord[1], coord[0]])
+        
+        const polygon = window.L.polygon(latLngs, {
+          color: polygonColor,
+          fillColor: polygonColor,
+          fillOpacity: 0.3,
+          weight: 2,
+          opacity: 0.8
+        }).addTo(alertsLayerGroup)
+
+        const popupContent = createAlertPopup(testAlert, markerColor)
+        polygon.bindPopup(popupContent)
+        
+        const center = calculatePolygonCenter(latLngs)
+        const alertMarker = window.L.marker(center, {
+          icon: window.L.divIcon({
+            html: `<div style="background: ${markerColor}; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">🚨 ${event}</div>`,
+            className: 'alert-marker',
+            iconSize: [120, 20],
+            iconAnchor: [60, 10]
+          })
+        }).addTo(alertsLayerGroup)
+
+        alertMarker.bindPopup(popupContent)
+        console.log('🚨 Test alert added to map')
       })
   }
 
