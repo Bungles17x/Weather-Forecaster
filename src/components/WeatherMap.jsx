@@ -2,46 +2,51 @@ import React, { useState, useEffect, useRef } from 'react'
 import './WeatherMap.css'
 
 const WeatherMap = () => {
-  const [activeMap, setActiveMap] = useState('radar')
+  const [activeMap, setActiveMap] = useState('nexrad')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const mapRef = useRef(null)
 
   // OpenWeatherMap radar layers
   const mapLayers = {
+    nexrad: {
+      name: 'NEXRAD Radar',
+      icon: '',
+      url: 'https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136'
+    },
     radar: {
       name: 'Weather Radar',
-      icon: '📡',
+      icon: '',
       url: 'https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136'
     },
     clouds: {
       name: 'Clouds',
-      icon: '☁️',
+      icon: '',
       url: 'https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136'
     },
     temperature: {
       name: 'Temperature',
-      icon: '🌡️',
+      icon: '',
       url: 'https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136'
     },
     precipitation: {
       name: 'Precipitation',
-      icon: '💧',
+      icon: '',
       url: 'https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136'
     },
     pressure: {
       name: 'Pressure',
-      icon: '�',
+      icon: '',
       url: 'https://tile.openweathermap.org/map/pressure_new/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136'
     },
     wind: {
       name: 'Wind Speed',
-      icon: '�',
+      icon: '',
       url: 'https://tile.openweathermap.org/map/wind_new/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136'
     },
     snow: {
       name: 'Snow',
-      icon: '❄️',
+      icon: '',
       url: 'https://tile.openweathermap.org/map/snow_new/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136'
     }
   }
@@ -106,7 +111,7 @@ const WeatherMap = () => {
   useEffect(() => {
     // Initialize map with default layer
     setTimeout(() => {
-      updateMapLayer('radar')
+      updateMapLayer('nexrad')
     }, 1000)
   }, [])
 
