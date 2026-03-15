@@ -6,7 +6,7 @@ import { LogoIcon } from './WeatherIcons'
 const Header = ({ onLocationChange }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false)
-  const [locationInput, setLocationInput] = useState('Mount Union, PA')
+  const [locationInput, setLocationInput] = useState('New York, NY')
   const [searchInput, setSearchInput] = useState('')
   const [searchSuggestions, setSearchSuggestions] = useState([])
   const [showSuggestions, setShowSuggestions] = useState(false)

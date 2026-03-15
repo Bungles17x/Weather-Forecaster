@@ -15,7 +15,7 @@ const WeatherApp = () => {
   const [error, setError] = useState(null)
   const [lastUpdate, setLastUpdate] = useState(null)
   const [refreshing, setRefreshing] = useState(false)
-  const [location, setLocation] = useState('Mount Union, PA,US')
+  const [location, setLocation] = useState('New York, NY')
   
   // Enhanced UI state
   const [loadingMessage, setLoadingMessage] = useState('Fetching weather data...')
