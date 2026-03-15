@@ -250,57 +250,80 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
     }).addTo(map)
 
     // NOAA Wind Radar
-    const noaaLayer = window.L.tileLayer('https://tile.openweathermap.org/weather/v2/wind/{z}/{x}/{y}.png?appid=YOUR_OPENWEATHER_KEY&size=2x', {
+    const noaaLayer = window.L.tileLayer('https://tile.openweathermap.org/weather/v2/wind/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136&size=2x', {
       attribution: '© OpenWeatherMap',
       opacity: 0.8,
       maxZoom: 12,
       minZoom: 4
-    }).addTo(map)
+    })
 
     // NWS Precipitation Radar
-    const precipLayer = window.L.tileLayer('https://tile.openweathermap.org/weather/v2/rain/{z}/{x}/{y}.png?appid=YOUR_OPENWEATHER_KEY&size=2x', {
+    const precipLayer = window.L.tileLayer('https://tile.openweathermap.org/weather/v2/rain/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136&size=2x', {
       attribution: '© OpenWeatherMap',
       opacity: 0.7,
       maxZoom: 12,
       minZoom: 4
-    }).addTo(map)
+    })
 
     // NWS Clouds Radar
-    const cloudsLayer = window.L.tileLayer('https://tile.openweathermap.org/weather/v2/clouds/{z}/{x}/{y}.png?appid=YOUR_OPENWEATHER_KEY&size=2x', {
+    const cloudsLayer = window.L.tileLayer('https://tile.openweathermap.org/weather/v2/clouds/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136&size=2x', {
       attribution: '© OpenWeatherMap',
       opacity: 0.6,
       maxZoom: 12,
       minZoom: 4
-    }).addTo(map)
+    })
 
     // NWS Temperature Radar
-    const tempLayer = window.L.tileLayer('https://tile.openweathermap.org/weather/v2/temp/{z}/{x}/{y}.png?appid=YOUR_OPENWEATHER_KEY&size=2x', {
+    const tempLayer = window.L.tileLayer('https://tile.openweathermap.org/weather/v2/temp/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136&size=2x', {
       attribution: '© OpenWeatherMap',
       opacity: 0.7,
       maxZoom: 12,
       minZoom: 4
-    }).addTo(map)
+    })
 
-    // Add layer control for toggling radar layers
+    // Active Weather Alerts Layer
+    const alertsLayer = window.L.tileLayer('https://api.weather.gov/alerts/active/area/{z}/{x}/{y}', {
+      attribution: '© NOAA NWS',
+      opacity: 0.8,
+      maxZoom: 12,
+      minZoom: 4
+    })
+
+    // Create base maps
     const baseMaps = {
       'OpenStreetMap': window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors',
         maxZoom: 19
+      }),
+      'Satellite': window.L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: '© Esri',
+        maxZoom: 19
+      }),
+      'Terrain': window.L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenTopoMap',
+        maxZoom: 17
       })
     }
 
+    // Create overlay maps
     const overlayMaps = {
       '🛡️ NEXRAD Radar': nexradTilesLayer,
       '🛡️ NEXRAD Loop': nexradLayer,
       '💨 Wind Speed': noaaLayer,
       '💧 Precipitation': precipLayer,
       '☁️ Cloud Coverage': cloudsLayer,
-      '🌡 Temperature': tempLayer
+      '🌡 Temperature': tempLayer,
+      '🚨 Active Alerts': alertsLayer
     }
 
-    window.L.control.layers(baseMaps, overlayMaps, {
-      position: 'topright'
+    // Add layer control
+    const layerControl = window.L.control.layers(baseMaps, overlayMaps, {
+      position: 'topright',
+      collapsed: false
     }).addTo(map)
+
+    // Add active alerts markers
+    addActiveAlertsMarkers(map)
 
     return {
       nexrad: nexradLayer,
@@ -308,8 +331,72 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
       noaa: noaaLayer,
       precipitation: precipLayer,
       clouds: cloudsLayer,
-      temperature: tempLayer
+      temperature: tempLayer,
+      alerts: alertsLayer,
+      layerControl: layerControl
     }
+  }
+
+  const addActiveAlertsMarkers = (map) => {
+    // Fetch active weather alerts from NWS
+    fetch('https://api.weather.gov/alerts/active/area')
+      .then(response => response.json())
+      .then(data => {
+        if (data.features && data.features.length > 0) {
+          data.features.forEach(alert => {
+            if (alert.geometry && alert.geometry.coordinates) {
+              const coords = alert.geometry.coordinates
+              // Handle different geometry types
+              let centerCoords
+              if (coords[0] && Array.isArray(coords[0][0])) {
+                // Polygon coordinates
+                centerCoords = coords[0][0][0]
+              } else if (coords[0] && Array.isArray(coords[0])) {
+                // Line coordinates
+                centerCoords = coords[0][0]
+              } else {
+                // Point coordinates
+                centerCoords = coords
+              }
+
+              if (centerCoords && centerCoords.length >= 2) {
+                // Reverse coordinates from [lng, lat] to [lat, lng] for Leaflet
+                const lat = centerCoords[1]
+                const lng = centerCoords[0]
+
+                const alertMarker = window.L.marker([lat, lng], {
+                  icon: window.L.divIcon({
+                    html: `<div style="background: #dc2626; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; white-space: nowrap;">🚨 ALERT</div>`,
+                    className: 'alert-marker',
+                    iconSize: [80, 20],
+                    iconAnchor: [40, 10]
+                  })
+                }).addTo(map)
+
+                const alertPopup = `
+                  <div class="alert-popup">
+                    <h4 style="margin: 0 0 8px 0; color: #dc2626; font-size: 14px; font-weight: bold;">${alert.properties.event || 'Weather Alert'}</h4>
+                    <p style="margin: 0 0 8px 0; font-size: 12px; line-height: 1.4;">${alert.properties.headline || alert.properties.description || 'Active weather alert in this area'}</p>
+                    <div style="font-size: 11px; color: #666;">
+                      <div><strong>Severity:</strong> ${alert.properties.severity || 'Unknown'}</div>
+                      <div><strong>Urgency:</strong> ${alert.properties.urgency || 'Unknown'}</div>
+                      <div><strong>Areas:</strong> ${alert.properties.areaDesc || 'Unknown'}</div>
+                      <div><strong>Effective:</strong> ${alert.properties.effective ? new Date(alert.properties.effective).toLocaleString() : 'Unknown'}</div>
+                      ${alert.properties.expires ? `<div><strong>Expires:</strong> ${new Date(alert.properties.expires).toLocaleString()}</div>` : ''}
+                    </div>
+                    ${alert.properties.web ? `<a href="${alert.properties.web}" target="_blank" style="color: #007bff; text-decoration: none; font-size: 12px;">View Full Details</a>` : ''}
+                  </div>
+                `
+
+                alertMarker.bindPopup(alertPopup)
+              }
+            }
+          })
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching active alerts:', error)
+      })
   }
 
   const addWeatherLayers = (map) => {
