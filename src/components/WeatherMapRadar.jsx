@@ -329,7 +329,7 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
     })
 
     // Add active alerts markers
-    const alertsLayerGroup = addActiveAlertsMarkers(map)
+    const alertsLayerGroup = addActiveAlertsMarkers(map, setMapCenter, setZoom)
 
     // Create base maps
     const baseMaps = {
@@ -381,7 +381,7 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
     }
   }
 
-  const addActiveAlertsMarkers = (map) => {
+  const addActiveAlertsMarkers = (map, setMapCenter, setZoom) => {
     // Create layer group for alerts
     const alertsLayerGroup = window.L.layerGroup().addTo(map)
     
@@ -472,7 +472,7 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
                 const popupContent = createEnhancedAlertPopup(alert, polygonColor)
                 polygon.bindPopup(popupContent)
 
-                // Add click to center map on alert
+                // Add click to center map on alert and update location
                 polygon.on('click', function(e) {
                   // Calculate center of polygon
                   const bounds = polygon.getBounds()
@@ -484,7 +484,24 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
                     duration: 1.0
                   })
                   
-                  console.log(`🚨 Centered map on alert: ${event} at [${center.lat.toFixed(4)}, ${center.lng.toFixed(4)}]`)
+                  // Update current location to alert area
+                  const newLocation = {
+                    latitude: center.lat,
+                    longitude: center.lng,
+                    accuracy: 1000 // 1km accuracy for alert area
+                  }
+                  
+                  // Update map center state
+                  setMapCenter({ lat: center.lat, lng: center.lng })
+                  setZoom(10)
+                  
+                  // Update location marker if it exists
+                  if (window.currentLocationMarker) {
+                    window.currentLocationMarker.setLatLng([center.lat, center.lng])
+                  }
+                  
+                  console.log(`🚨 Centered map and updated location to alert: ${event} at [${center.lat.toFixed(4)}, ${center.lng.toFixed(4)}]`)
+                  console.log(`📍 Updated current location to:`, newLocation)
                 })
 
                 console.log(`🚨 Added polygon for ${event}`)
@@ -523,7 +540,7 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
                   const popupContent = createEnhancedAlertPopup(alert, polygonColor)
                   polygon.bindPopup(popupContent)
 
-                  // Add click to center map on alert
+                  // Add click to center map on alert and update location
                   polygon.on('click', function(e) {
                     const bounds = polygon.getBounds()
                     const center = bounds.getCenter()
@@ -533,7 +550,21 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
                       duration: 1.0
                     })
                     
-                    console.log(`🚨 Centered map on multi-polygon alert: ${event} at [${center.lat.toFixed(4)}, ${center.lng.toFixed(4)}]`)
+                    // Update current location to alert area
+                    const newLocation = {
+                      latitude: center.lat,
+                      longitude: center.lng,
+                      accuracy: 1000
+                    }
+                    
+                    setMapCenter({ lat: center.lat, lng: center.lng })
+                    setZoom(10)
+                    
+                    if (window.currentLocationMarker) {
+                      window.currentLocationMarker.setLatLng([center.lat, center.lng])
+                    }
+                    
+                    console.log(`🚨 Centered map and updated location to multi-polygon alert: ${event} at [${center.lat.toFixed(4)}, ${center.lng.toFixed(4)}]`)
                   })
                 })
 
@@ -576,14 +607,28 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
                 const popupContent = createEnhancedAlertPopup(alert, polygonColor)
                 circleMarker.bindPopup(popupContent)
 
-                // Add click to center map on alert
+                // Add click to center map on alert and update location
                 circleMarker.on('click', function(e) {
                   map.setView([lat, lng], 12, {
                     animate: true,
                     duration: 1.0
                   })
                   
-                  console.log(`🚨 Centered map on point alert: ${event} at [${lat.toFixed(4)}, ${lng.toFixed(4)}]`)
+                  // Update current location to alert area
+                  const newLocation = {
+                    latitude: lat,
+                    longitude: lng,
+                    accuracy: 500
+                  }
+                  
+                  setMapCenter({ lat: lat, lng: lng })
+                  setZoom(12)
+                  
+                  if (window.currentLocationMarker) {
+                    window.currentLocationMarker.setLatLng([lat, lng])
+                  }
+                  
+                  console.log(`🚨 Centered map and updated location to point alert: ${event} at [${lat.toFixed(4)}, ${lng.toFixed(4)}]`)
                 })
 
               } else if (alert.geometry.type === 'LineString') {
@@ -615,7 +660,7 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
                 const popupContent = createEnhancedAlertPopup(alert, polygonColor)
                 polyline.bindPopup(popupContent)
 
-                // Add click to center map on alert
+                // Add click to center map on alert and update location
                 polyline.on('click', function(e) {
                   const bounds = polyline.getBounds()
                   const center = bounds.getCenter()
@@ -625,7 +670,21 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
                     duration: 1.0
                   })
                   
-                  console.log(`🚨 Centered map on line alert: ${event} at [${center.lat.toFixed(4)}, ${center.lng.toFixed(4)}]`)
+                  // Update current location to alert area
+                  const newLocation = {
+                    latitude: center.lat,
+                    longitude: center.lng,
+                    accuracy: 750
+                  }
+                  
+                  setMapCenter({ lat: center.lat, lng: center.lng })
+                  setZoom(11)
+                  
+                  if (window.currentLocationMarker) {
+                    window.currentLocationMarker.setLatLng([center.lat, center.lng])
+                  }
+                  
+                  console.log(`🚨 Centered map and updated location to line alert: ${event} at [${center.lat.toFixed(4)}, ${center.lng.toFixed(4)}]`)
                 })
               }
             }
@@ -707,7 +766,7 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
         const popupContent = createEnhancedAlertPopup(testAlert, polygonColor)
         polygon.bindPopup(popupContent)
 
-        // Add click to center map on alert
+        // Add click to center map on alert and update location
         polygon.on('click', function(e) {
           const bounds = polygon.getBounds()
           const center = bounds.getCenter()
@@ -717,7 +776,21 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
             duration: 1.0
           })
           
-          console.log(`🚨 Centered map on test alert: ${testAlert.properties.event} at [${center.lat.toFixed(4)}, ${center.lng.toFixed(4)}]`)
+          // Update current location to alert area
+          const newLocation = {
+            latitude: center.lat,
+            longitude: center.lng,
+            accuracy: 1000
+          }
+          
+          setMapCenter({ lat: center.lat, lng: center.lng })
+          setZoom(10)
+          
+          if (window.currentLocationMarker) {
+            window.currentLocationMarker.setLatLng([center.lat, center.lng])
+          }
+          
+          console.log(`🚨 Centered map and updated location to test alert: ${testAlert.properties.event} at [${center.lat.toFixed(4)}, ${center.lng.toFixed(4)}]`)
         })
         
         console.log('🚨 Test alert added to map')
@@ -1177,6 +1250,9 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
         iconAnchor: [16, 16]
       })
     }).addTo(map)
+
+    // Store marker globally for updates
+    window.currentLocationMarker = locationMarker
 
     console.log('📍 Location marker added to map')
 
