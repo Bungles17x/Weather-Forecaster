@@ -5,6 +5,8 @@ const WeatherMap = () => {
   const [activeMap, setActiveMap] = useState('nexrad')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [currentLocation, setCurrentLocation] = useState({ lat: 40.7128, lon: -74.0060 })
+  const [locating, setLocating] = useState(false)
   const mapRef = useRef(null)
 
   // OpenWeatherMap radar layers
@@ -56,6 +58,60 @@ const WeatherMap = () => {
     setLoading(true)
     console.log(`Switched to ${mapType} map`)
     updateMapLayer(mapType)
+  }
+
+  const handleLocateMe = () => {
+    if (!navigator.geolocation) {
+      setError('Geolocation is not supported by your browser')
+      return
+    }
+
+    setLocating(true)
+    setError(null)
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords
+        console.log('📍 Location found:', { latitude, longitude })
+        setCurrentLocation({ lat: latitude, lon: longitude })
+        setLocating(false)
+        
+        // Update map with new location
+        updateMapLayer(activeMap)
+        
+        // Show success message
+        setTimeout(() => {
+          setError(null)
+        }, 2000)
+      },
+      (error) => {
+        console.error('❌ Geolocation error:', error)
+        let errorMessage = 'Unable to get your location'
+        
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = 'Location permission denied. Please enable location access.'
+            break
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = 'Location information unavailable.'
+            break
+          case error.TIMEOUT:
+            errorMessage = 'Location request timed out.'
+            break
+          case error.UNKNOWN_ERROR:
+            errorMessage = 'An unknown error occurred.'
+            break
+        }
+        
+        setError(errorMessage)
+        setLocating(false)
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 300000 // 5 minutes
+      }
+    )
   }
 
   const updateMapLayer = (mapType) => {
@@ -166,6 +222,20 @@ const WeatherMap = () => {
                 <span className="btn-text">{layer.name}</span>
               </button>
             ))}
+          </div>
+          
+          <div className="location-controls">
+            <button
+              onClick={handleLocateMe}
+              className={`locate-btn ${locating ? 'locating' : ''}`}
+              disabled={locating}
+              title="Find my current location"
+            >
+              <span className="locate-icon">{locating ? '🔄' : '📍'}</span>
+              <span className="locate-text">
+                {locating ? 'Locating...' : 'Locate Me'}
+              </span>
+            </button>
           </div>
         </div>
         
