@@ -179,6 +179,7 @@ const WeatherApp = () => {
 
   // Get current weather from NWS
   const getCurrentWeather = useCallback(async (office, gridX, gridY) => {
+    console.log('🚀 NEW getCurrentWeather function called - VERSION 2.0')
     try {
       console.log('🔍 Attempting to get current weather for office:', office, 'grid:', gridX, gridY)
       
@@ -240,6 +241,7 @@ const WeatherApp = () => {
       }
       
       // Use the first available station
+      console.log('📡 Stations available, count:', stationsData.features.length)
       const firstStation = stationsData.features[0]
       if (!firstStation || !firstStation.properties || !firstStation.properties.stationIdentifier) {
         console.log('⚠️ Invalid station data, using forecast fallback')
