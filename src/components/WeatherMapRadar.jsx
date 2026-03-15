@@ -30,7 +30,23 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
     leafletScript.onload = () => {
       console.log('✅ Leaflet loaded successfully')
       setLoading(false)
-      initializeOpenStreetMap()
+      // Wait for DOM to be ready before initializing map
+      setTimeout(() => {
+        if (mapRef.current && mapRef.current.offsetHeight > 0) {
+          initializeOpenStreetMap()
+        } else {
+          console.log('🔄 Map container not ready, retrying...')
+          setTimeout(() => {
+            if (mapRef.current && mapRef.current.offsetHeight > 0) {
+              initializeOpenStreetMap()
+            } else {
+              console.log('❌ Map container still not available')
+              setLoading(false)
+              initializeSimpleMap()
+            }
+          }, 1000)
+        }
+      }, 100)
     }
     leafletScript.onerror = () => {
       console.error('❌ Failed to load Leaflet')
@@ -55,6 +71,51 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
       }
     }
   }, [])
+
+  const initializeSimpleMap = () => {
+    console.log('🗺️ Initializing simple map fallback')
+    if (mapRef.current) {
+      mapRef.current.innerHTML = `
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 400px; background: #f0f2f5; border: 2px solid #e9ecef; border-radius: 8px;">
+          <h3 style="color: #333; margin-bottom: 1rem;">🗺️ Weather Map</h3>
+          <p style="color: #666; margin-bottom: 1rem;">Map loading in progress...</p>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; width: 100%; max-width: 600px; padding: 1rem;">
+            <div style="text-align: center; padding: 1rem; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+              <div style="font-size: 2rem; margin-bottom: 0.5rem;">🛡️</div>
+              <div style="font-weight: 600; color: #333;">NEXRAD</div>
+              <div style="font-size: 0.875rem; color: #666;">Doppler Radar</div>
+            </div>
+            <div style="text-align: center; padding: 1rem; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+              <div style="font-size: 2rem; margin-bottom: 0.5rem;">💧</div>
+              <div style="font-weight: 600; color: #333;">Precipitation</div>
+              <div style="font-size: 0.875rem; color: #666;">Rain/Snow</div>
+            </div>
+            <div style="text-align: center; padding: 1rem; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+              <div style="font-size: 2rem; margin-bottom: 0.5rem;">💨</div>
+              <div style="font-weight: 600; color: #333;">Wind</div>
+              <div style="font-size: 0.875rem; color: #666;">Wind Speed</div>
+            </div>
+            <div style="text-align: center; padding: 1rem; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+              <div style="font-size: 2rem; margin-bottom: 0.5rem;">☁️</div>
+              <div style="font-weight: 600; color: #333;">Clouds</div>
+              <div style="font-size: 0.875rem; color: #666;">Coverage</div>
+            </div>
+            <div style="text-align: center; padding: 1rem; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+              <div style="font-size: 2rem; margin-bottom: 0.5rem;">🌡</div>
+              <div style="font-weight: 600; color: #333;">Temperature</div>
+              <div style="font-size: 0.875rem; color: #666;">Heat Map</div>
+            </div>
+            <div style="text-align: center; padding: 1rem; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+              <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔵</div>
+              <div style="font-weight: 600; color: #333;">Pressure</div>
+              <div style="font-size: 0.875rem; color: #666;">Systems</div>
+            </div>
+          </div>
+          <p style="color: #666; font-size: 0.875rem; margin-top: 1rem;">NOAA/NWS Radar Data • Real-time Updates</p>
+        </div>
+      `
+    }
+  }
 
   const initializeMap = useCallback(() => {
     if (!window.google || !window.google.maps) {
