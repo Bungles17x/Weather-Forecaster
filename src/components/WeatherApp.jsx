@@ -73,10 +73,20 @@ const WeatherApp = () => {
     try {
       const apiKey = import.meta.env.VITE_OPENWEATHER_KEY
       
+      console.log('🔑 API Key Debug:', { 
+        hasKey: !!apiKey, 
+        keyLength: apiKey?.length,
+        keyPrefix: apiKey?.substring(0, 8) + '...',
+        fullKey: apiKey
+      })
+      
       // Enhanced API key validation
       if (!apiKey || apiKey === 'YOUR_API_KEY_HERE' || apiKey.length < 10) {
+        console.log('❌ API Key validation failed')
         throw new Error('API_KEY_INVALID')
       }
+
+      console.log('✅ API Key validation passed')
 
       setLoadingProgress(20)
       setLoadingMessage('Connecting to weather service...')
@@ -90,10 +100,16 @@ const WeatherApp = () => {
       }, 15000) // Increased to 15 seconds
       
       // Fetch current weather with enhanced error handling
-      const currentResponse = await fetch(
-        `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(locationParam)}&appid=${apiKey}&units=imperial`,
-        { signal: abortController.current.signal }
-      )
+      const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(locationParam)}&appid=${apiKey}&units=imperial`
+      console.log('🌐 Making API call to:', apiUrl)
+      
+      const currentResponse = await fetch(apiUrl, { signal: abortController.current.signal })
+      
+      console.log('📊 API Response:', { 
+        status: currentResponse.status, 
+        ok: currentResponse.ok,
+        statusText: currentResponse.statusText 
+      })
       
       clearTimeout(timeoutId)
       
