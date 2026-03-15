@@ -44,13 +44,15 @@
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   position: relative;
   min-height: 700px;
+  text-align: center;
+  padding: 2rem;
 }
 
 .loading-spinner {
   width: 50px;
   height: 50px;
-  border: 4px solid rgba(255, 255, 255, 0.1);
-  border-top: 4px solid #3498db;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top: 3px solid #3498db;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 1rem;
@@ -65,6 +67,59 @@
   color: rgba(255, 255, 255, 0.8);
   font-size: 1.125rem;
   font-weight: 500;
+  margin-bottom: 2rem;
+  line-height: 1.5;
+}
+
+.map-error {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+  background: #1a1a1a;
+  color: white;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  position: relative;
+  min-height: 700px;
+  text-align: center;
+  padding: 2rem;
+}
+
+.error-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  color: #e74c3c;
+}
+
+.map-error h3 {
+  margin: 0 0 1rem 0;
+  color: #e74c3c;
+  font-size: 1.5rem;
+}
+
+.map-error p {
+  margin: 0 0 2rem 0;
+  color: #ecf0f1;
+  text-align: center;
+  max-width: 400px;
+  line-height: 1.5;
+}
+
+.retry-btn {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.retry-btn:hover {
+  background: #2980b9;
 }
 
 /* Weather Info Window Styles */
@@ -139,6 +194,226 @@
   line-height: 1.4;
 }
 
+/* Enhanced Mobile Styles */
+@media (max-width: 768px) {
+  .weather-map-radar {
+    height: 100vh;
+    width: 100vw;
+    margin: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .map-container {
+    height: 100%;
+    width: 100%;
+    min-height: 100vh;
+    max-height: 100vh;
+  }
+
+  .map-canvas {
+    border-radius: 0;
+  }
+
+  .map-loading,
+  .map-error {
+    min-height: 100vh;
+  }
+
+  /* Hide hover effects on mobile */
+  .map-container:hover {
+    transform: none;
+    box-shadow: none;
+  }
+
+  /* Optimize layer controls for mobile */
+  .leaflet-control-layers {
+    font-size: 12px !important;
+  }
+
+  .leaflet-control-layers-base,
+  .leaflet-control-layers-overlays {
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  /* Make alert polygons more touch-friendly */
+  .alert-polygon {
+    stroke-width: 4 !important;
+  }
+
+  .alert-circle {
+    stroke-width: 4 !important;
+  }
+
+  .alert-line {
+    stroke-width: 8 !important;
+  }
+
+  /* Optimize popups for mobile */
+  .leaflet-popup-content-wrapper {
+    width: 280px !important;
+  }
+
+  .leaflet-popup-content {
+    font-size: 12px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .weather-map-radar {
+    height: 100vh;
+    width: 100vw;
+    margin: 0;
+    border-radius: 0;
+  }
+
+  .map-container {
+    height: 100%;
+    width: 100%;
+    min-height: 100vh;
+    max-height: 100vh;
+  }
+
+  .map-loading p {
+    font-size: 0.875rem;
+  }
+
+  .map-error h3 {
+    font-size: 1.25rem;
+  }
+
+  .map-error p {
+    font-size: 0.875rem;
+    padding: 0 1rem;
+  }
+
+  .retry-btn {
+    padding: 0.625rem 1.25rem;
+    font-size: 0.875rem;
+  }
+
+  /* Further optimize layer controls for small mobile */
+  .leaflet-control-layers {
+    font-size: 11px !important;
+    max-width: 200px;
+  }
+
+  .leaflet-control-layers-toggle {
+    width: 30px !important;
+    height: 30px !important;
+    line-height: 30px !important;
+  }
+
+  /* Make location marker larger for touch */
+  .location-marker {
+    transform: scale(1.2);
+  }
+
+  /* Optimize popups for very small screens */
+  .leaflet-popup-content-wrapper {
+    width: 250px !important;
+  }
+
+  .leaflet-popup-content {
+    font-size: 11px !important;
+    line-height: 1.3 !important;
+  }
+
+  .alert-popup {
+    min-width: 250px !important;
+    max-width: 250px !important;
+  }
+}
+
+/* Animation for map container - disabled on mobile */
+@media (min-width: 769px) {
+  .map-container {
+    transition: all 0.3s ease;
+  }
+
+  .map-container:hover {
+    transform: scale(1.01);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+  }
+}
+
+/* Focus styles */
+.map-canvas:focus {
+  outline: 2px solid #3498db;
+  outline-offset: 2px;
+}
+
+/* Dark mode support (already dark) */
+.weather-map-radar {
+  background: #1a1a1a;
+  color: #ffffff;
+}
+
+/* Alert polygon styles */
+.alert-polygon {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.alert-circle {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.alert-line {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* Location marker styles */
+.location-marker {
+  z-index: 1000;
+  transition: all 0.3s ease;
+}
+
+/* Layer control optimizations */
+.leaflet-control-layers {
+  background: rgba(26, 26, 26, 0.95) !important;
+  border: 1px solid #444 !important;
+  border-radius: 4px !important;
+  color: white !important;
+}
+
+.leaflet-control-layers-expanded {
+  background: rgba(26, 26, 26, 0.98) !important;
+}
+
+.leaflet-control-layers-base label,
+.leaflet-control-layers-overlays label {
+  color: white !important;
+  font-weight: 500 !important;
+}
+
+.leaflet-control-layers-toggle {
+  background: rgba(26, 26, 26, 0.95) !important;
+  border: 1px solid #444 !important;
+  border-radius: 4px !important;
+  color: white !important;
+}
+
+/* Popup optimizations */
+.leaflet-popup-content-wrapper {
+  background: rgba(26, 26, 26, 0.98) !important;
+  color: white !important;
+  border-radius: 6px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+}
+
+.leaflet-popup-tip {
+  background: rgba(26, 26, 26, 0.98) !important;
+}
+
+.leaflet-popup-close-button {
+  color: white !important;
+  font-size: 20px !important;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .weather-map-radar {
@@ -177,28 +452,6 @@
   .map-loading p {
     font-size: 0.875rem;
   }
-}
-
-/* Animation for map container */
-.map-container {
-  transition: all 0.3s ease;
-}
-
-.map-container:hover {
-  transform: scale(1.01);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
-}
-
-/* Focus styles */
-.map-canvas:focus {
-  outline: 2px solid #3498db;
-  outline-offset: 2px;
-}
-
-/* Dark mode support (already dark) */
-.weather-map-radar {
-  background: #1a1a1a;
-  color: white;
 }
 
 /* Large screen optimizations */
