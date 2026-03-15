@@ -180,6 +180,7 @@ const WeatherApp = () => {
   // Get current weather from NWS
   const getCurrentWeather = useCallback(async (office, gridX, gridY) => {
     try {
+      // Try to get stations first
       const stationsUrl = `${NWS_BASE_URL}/gridpoints/${office}/${gridX},${gridY}/stations`
       const stationsResponse = await fetch(stationsUrl)
       
@@ -188,6 +189,37 @@ const WeatherApp = () => {
       }
       
       const stationsData = await stationsResponse.json()
+      
+      // Check if stations data is available
+      if (!stationsData.features || stationsData.features.length === 0) {
+        console.log('⚠️ No weather stations found, using grid point forecast for current conditions')
+        // Fallback: use the latest forecast period as "current" weather
+        const forecastUrl = `${NWS_BASE_URL}/gridpoints/${office}/${gridX},${gridY}/forecast`
+        const forecastResponse = await fetch(forecastUrl)
+        
+        if (!forecastResponse.ok) {
+          throw new Error('Failed to get forecast data')
+        }
+        
+        const forecastData = await forecastResponse.json()
+        const currentPeriod = forecastData.properties.periods[0]
+        
+        // Convert forecast data to observation-like format
+        return {
+          temperature: { value: currentPeriod.temperature === null ? null : 
+            currentPeriod.temperatureUnit === 'F' ? currentPeriod.temperature : 
+            currentPeriod.temperature * 9/5 + 32 }, // Convert C to F if needed
+          textDescription: currentPeriod.shortForecast || currentPeriod.detailedForecast || 'No data available',
+          relativeHumidity: { value: null }, // Not available in forecast
+          windSpeed: { value: currentPeriod.windSpeed ? parseInt(currentPeriod.windSpeed) || null : null },
+          windDirection: currentPeriod.windDirection || null,
+          visibility: { value: null }, // Not available in forecast
+          barometricPressure: { value: null }, // Not available in forecast
+          timestamp: new Date().toISOString()
+        }
+      }
+      
+      // Use the first available station
       const stationId = stationsData.features[0].properties.stationIdentifier
       
       // Get latest observations from the station
@@ -200,9 +232,21 @@ const WeatherApp = () => {
       
       const obsData = await obsResponse.json()
       return obsData.features[0].properties
+      
     } catch (error) {
       console.error('Current weather error:', error)
-      throw error
+      
+      // Return fallback data if all else fails
+      return {
+        temperature: { value: null },
+        textDescription: 'Weather data temporarily unavailable',
+        relativeHumidity: { value: null },
+        windSpeed: { value: null },
+        windDirection: null,
+        visibility: { value: null },
+        barometricPressure: { value: null },
+        timestamp: new Date().toISOString()
+      }
     }
   }, [])
 
@@ -331,6 +375,17 @@ const WeatherApp = () => {
   // Format wind speed
   const formatWindSpeed = (speed) => {
     if (speed === null || speed === undefined) return '-- mph'
+    
+    // Handle different wind speed formats
+    if (typeof speed === 'string') {
+      // Parse strings like "10 mph" or "5 to 10 mph"
+      const match = speed.match(/(\d+)/)
+      if (match) {
+        return `${match[1]} mph`
+      }
+      return speed
+    }
+    
     return `${Math.round(speed)} mph`
   }
 
