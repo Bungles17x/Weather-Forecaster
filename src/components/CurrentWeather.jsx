@@ -56,6 +56,30 @@ const CurrentWeather = ({ data }) => {
     return currentTime >= sunriseTime && currentTime <= sunsetTime
   }
 
+  const getUVIndex = () => {
+    // Simplified UV index calculation based on cloud cover and time
+    const hour = new Date(dt * 1000).getHours()
+    const midday = hour >= 11 && hour <= 15
+    const cloudFactor = 1 - (all / 100)
+    let uvIndex = 0
+    
+    if (isDaytime() && midday) {
+      uvIndex = Math.round(8 * cloudFactor)
+    } else if (isDaytime()) {
+      uvIndex = Math.round(4 * cloudFactor)
+    }
+    
+    return Math.max(0, Math.min(11, uvIndex))
+  }
+
+  const getUVLevel = (index) => {
+    if (index <= 2) return { level: 'Low', color: '#00ff00' }
+    if (index <= 5) return { level: 'Moderate', color: '#ffff00' }
+    if (index <= 7) return { level: 'High', color: '#ff8800' }
+    if (index <= 10) return { level: 'Very High', color: '#ff0000' }
+    return { level: 'Extreme', color: '#8b0000' }
+  }
+
   const getDewPoint = () => {
     // Simplified dew point calculation
     const a = 17.27
