@@ -71,15 +71,24 @@ const WeatherMap = () => {
       const img = document.createElement('img')
       img.className = 'weather-layer'
       
-      // First try a test image to verify display works
-      img.src = 'https://picsum.photos/seed/weather/800/400.jpg'
-      img.alt = layer.name
-      
-      // After test loads, try the real weather map
-      img.onload = () => {
-        console.log('✅ Test image loaded, trying weather map...')
-        img.src = layer.url.replace('{z}', '5').replace('{x}', '10').replace('{y}', '10')
+      // Set up error handling first
+      img.onerror = (error) => {
+        console.log('❌ Weather map failed to load, using fallback:', error)
+        img.src = 'https://picsum.photos/seed/radar/800/400.jpg'
+        setError(`Using fallback for ${layer.name} map`)
+        setLoading(false)
       }
+      
+      // Set up success handling for weather map
+      img.onload = () => {
+        console.log('✅ Weather map loaded successfully')
+        setLoading(false)
+        setError(null)
+      }
+      
+      // Try the weather map directly
+      img.src = layer.url.replace('{z}', '5').replace('{x}', '10').replace('{y}', '10')
+      img.alt = layer.name
       
       img.style.cssText = `
         position: absolute;
@@ -93,21 +102,7 @@ const WeatherMap = () => {
         border-radius: 8px;
       `
       
-      console.log('🖼️ Setting image src:', img.src)
-      
-      img.onload = () => {
-        console.log('✅ Map layer loaded successfully')
-        setLoading(false)
-        setError(null)
-      }
-      
-      img.onerror = (error) => {
-        console.log('❌ Map layer failed to load:', error)
-        // Try a different approach - use a placeholder
-        img.src = 'https://picsum.photos/seed/radar/800/400.jpg'
-        setError(`Using fallback for ${layer.name} map`)
-        setLoading(false)
-      }
+      console.log('🖼️ Setting weather map src:', img.src)
       
       mapContainer.appendChild(img)
     } else {
