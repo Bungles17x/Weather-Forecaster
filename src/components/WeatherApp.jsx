@@ -5,7 +5,6 @@ import HourlyForecast from './HourlyForecast'
 import TenDayForecast from './TenDayForecast'
 import WeatherMap from './WeatherMap'
 import WeatherIndicators from './WeatherIndicators'
-import WeatherAlerts from './WeatherAlerts'
 import './WeatherApp.css'
 
 const WeatherApp = () => {
@@ -26,7 +25,6 @@ const WeatherApp = () => {
   const [gettingLocation, setGettingLocation] = useState(false)
   const [autoRefresh, setAutoRefresh] = useState(false)
   const [searchHistory, setSearchHistory] = useState([])
-  const [weatherAlerts, setWeatherAlerts] = useState([])
   const [connectionStatus, setConnectionStatus] = useState('checking')
   const [dataQuality, setDataQuality] = useState('unknown')
   
@@ -51,55 +49,6 @@ const WeatherApp = () => {
       localStorage.removeItem('weatherLastLocation')
       setLocation('New York, NY')
     }
-  }, [])
-
-  // Weather alerts generation function
-  const generateWeatherAlerts = useCallback((currentData, forecastList) => {
-    const alerts = []
-    
-    if (!currentData || !forecastList) return alerts
-    
-    // Temperature alerts
-    const temp = currentData.main?.temp
-    if (temp > 95) {
-      alerts.push({
-        type: 'extreme_heat',
-        message: 'Extreme heat warning! Stay hydrated and avoid prolonged sun exposure.',
-        severity: 'high'
-      })
-    } else if (temp < 32) {
-      alerts.push({
-        type: 'freezing',
-        message: 'Freezing temperatures! Bundle up and protect exposed skin.',
-        severity: 'medium'
-      })
-    }
-    
-    // Wind alerts
-    const windSpeed = currentData.wind?.speed
-    if (windSpeed > 25) {
-      alerts.push({
-        type: 'high_wind',
-        message: 'High wind advisory! Secure loose objects and avoid outdoor activities.',
-        severity: 'medium'
-      })
-    }
-    
-    // Check for precipitation in next 12 hours
-    const next12Hours = forecastList.slice(0, 4)
-    const hasRain = next12Hours.some(item => 
-      item.weather?.[0]?.main?.toLowerCase().includes('rain')
-    )
-    
-    if (hasRain) {
-      alerts.push({
-        type: 'rain_expected',
-        message: 'Rain expected in the next 12 hours. Don\'t forget your umbrella!',
-        severity: 'low'
-      })
-    }
-    
-    return alerts
   }, [])
 
   // Enhanced fetch with better error handling and performance
@@ -223,10 +172,6 @@ const WeatherApp = () => {
       
       // Save current location
       localStorage.setItem('weatherLastLocation', locationParam)
-      
-      // Generate weather alerts if needed
-      const alerts = generateWeatherAlerts(currentData, forecastData.list)
-      setWeatherAlerts(alerts)
       
       // Reset retry count on success
       retryCount.current = 0
@@ -709,31 +654,6 @@ const WeatherApp = () => {
         </div>
       )}
       
-      {/* Weather Alerts Banner */}
-      {!shouldShowLoading && weatherAlerts.length > 0 && (
-        <div className="weather-alerts">
-          {weatherAlerts.map((alert, index) => (
-            <div 
-              key={index} 
-              className={`alert-banner alert-${alert.severity}`}
-            >
-              <span className="alert-icon">
-                {alert.severity === 'high' && '🚨'}
-                {alert.severity === 'medium' && '⚠️'}
-                {alert.severity === 'low' && 'ℹ️'}
-              </span>
-              <span className="alert-message">{alert.message}</span>
-              <button 
-                onClick={() => setWeatherAlerts(prev => prev.filter((_, i) => i !== index))}
-                className="alert-close"
-              >
-                ×
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-      
       {/* Simulated Data Banner */}
       {!shouldShowLoading && isUsingSimulatedData && (
         <div className="simulated-data-banner">
@@ -799,7 +719,6 @@ const WeatherApp = () => {
         {/* Weather Components */}
         {!shouldShowLoading && weatherData && (
           <>
-            <WeatherAlerts />
             <CurrentWeather data={weatherData} />
             <HourlyForecast data={forecastData.slice(0, 8)} />
             <TenDayForecast data={forecastData} />

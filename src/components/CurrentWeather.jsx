@@ -1,38 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import './CurrentWeather.css'
 import { WeatherIcon } from './WeatherIcons'
-import nwsService from '../services/nwsService'
+import WeatherAlerts from './WeatherAlerts'
 
 const CurrentWeather = ({ data }) => {
-  const [nwsAlerts, setNwsAlerts] = useState([])
   const [selectedAlert, setSelectedAlert] = useState(null)
 
-  useEffect(() => {
-    const fetchNWSData = async () => {
-      try {
-          // Use coordinates from weather data or default to Mount Union, PA
-          const lat = data?.coord?.lat || 40.79
-          const lon = data?.coord?.lon || -77.85
-          
-          console.log('🌩️ Fetching NWS alerts for coordinates:', { lat, lon })
-          
-          // Fetch NWS alerts with better error handling
-          const alerts = await nwsService.getActiveAlerts(lat, lon)
-          console.log('📢 NWS alerts received:', alerts.length)
-          setNwsAlerts(alerts)
-        } catch (error) {
-          console.log('⚠️ NWS alerts temporarily unavailable:', error.message)
-          // Don't set empty array, keep existing alerts if any
-        }
-      }
-    
-    if (data) {
-      fetchNWSData()
-    }
-  }, [data])
-
   const handleAlertClick = (alert) => {
-    setSelectedAlert(alert)
+    setSelectedAlert(selectedAlert?.id === alert.id ? null : alert)
   }
 
   const closeAlertDetails = () => {
@@ -51,11 +26,6 @@ const CurrentWeather = ({ data }) => {
     dt,
     clouds: { all }
   } = data
-
-  const getWeatherAlerts = () => {
-    // Only use real NWS alerts, no generated fallbacks
-    return nwsAlerts
-  }
 
   const getWindDirection = (degrees) => {
     const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']
@@ -84,30 +54,6 @@ const CurrentWeather = ({ data }) => {
     const sunriseTime = sunrise * 1000
     const sunsetTime = sunset * 1000
     return currentTime >= sunriseTime && currentTime <= sunsetTime
-  }
-
-  const getUVIndex = () => {
-    // Simplified UV index calculation based on cloud cover and time
-    const hour = new Date(dt * 1000).getHours()
-    const midday = hour >= 11 && hour <= 15
-    const cloudFactor = 1 - (all / 100)
-    let uvIndex = 0
-    
-    if (isDaytime() && midday) {
-      uvIndex = Math.round(8 * cloudFactor)
-    } else if (isDaytime()) {
-      uvIndex = Math.round(4 * cloudFactor)
-    }
-    
-    return Math.max(0, Math.min(11, uvIndex))
-  }
-
-  const getUVLevel = (index) => {
-    if (index <= 2) return { level: 'Low', color: '#00ff00' }
-    if (index <= 5) return { level: 'Moderate', color: '#ffff00' }
-    if (index <= 7) return { level: 'High', color: '#ff8800' }
-    if (index <= 10) return { level: 'Very High', color: '#ff0000' }
-    return { level: 'Extreme', color: '#8b0000' }
   }
 
   const getDewPoint = () => {
@@ -139,32 +85,13 @@ const CurrentWeather = ({ data }) => {
     return 'Very Poor'
   }
 
-  const getAirQuality = () => {
-    // Simplified air quality based on weather conditions
-    let aqi = 50 // Base moderate
-    
-    if (humidity > 80) aqi += 20
-    if (visibility < 5000) aqi += 30
-    if (pressure < 1000) aqi += 10
-    
-    if (aqi <= 50) return { level: 'Good', color: '#00e400' }
-    if (aqi <= 100) return { level: 'Moderate', color: '#ffff00' }
-    if (aqi <= 150) return { level: 'Unhealthy for Sensitive', color: '#ff7e00' }
-    return { level: 'Unhealthy', color: '#ff0000' }
-  }
-
-  const uvIndex = getUVIndex()
-  const uvLevel = getUVLevel(uvIndex)
   const comfortIndex = getComfortIndex()
-  const airQuality = getAirQuality()
 
   const currentTime = new Date().toLocaleTimeString([], { 
     hour: '2-digit', 
     minute: '2-digit',
     hour12: true 
   })
-
-  const alerts = getWeatherAlerts()
 
   return (
     <section className="main-weather">
@@ -209,34 +136,8 @@ const CurrentWeather = ({ data }) => {
             </div>
           </div>
 
-          {/* NWS Weather Alerts */}
-          {alerts.length > 0 && (
-            <div className="weather-alerts-container">
-              <div className="weather-alerts-header">
-                <h3>Weather Alerts</h3>
-              </div>
-              <div className="weather-alerts-list">
-                {alerts.map((alert, index) => (
-                  <div 
-                    key={index} 
-                    className={`weather-alert alert-${alert.severity} clickable`}
-                    onClick={() => handleAlertClick(alert)}
-                  >
-                    <div className="alert-icon">{alert.icon}</div>
-                    <div className="alert-content">
-                      <div className="alert-title">{alert.title}</div>
-                      <div className="alert-message">{alert.message}</div>
-                      <div className="alert-severity">
-                        Severity: <span className={`severity-${alert.severity}`}>
-                          {alert.severity.toUpperCase()}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          {/* Weather Alerts */}
+          <WeatherAlerts />
 
           {/* Alert Details Modal */}
           {selectedAlert && (
