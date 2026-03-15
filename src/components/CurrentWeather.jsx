@@ -85,7 +85,10 @@ const CurrentWeather = ({ data }) => {
     return 'Very Poor'
   }
 
+  const uvIndex = getUVIndex()
+  const uvLevel = getUVLevel(uvIndex)
   const comfortIndex = getComfortIndex()
+  const airQuality = getAirQuality()
 
   const currentTime = new Date().toLocaleTimeString([], { 
     hour: '2-digit', 
