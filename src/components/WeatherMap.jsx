@@ -1,54 +1,174 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import './WeatherMap.css'
 
 const WeatherMap = () => {
   const [activeMap, setActiveMap] = useState('radar')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const mapRef = useRef(null)
+
+  // OpenWeatherMap radar layers
+  const mapLayers = {
+    radar: {
+      name: 'Weather Radar',
+      icon: '📡',
+      url: 'https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136'
+    },
+    satellite: {
+      name: 'Satellite',
+      icon: '🛰️',
+      url: 'https://tile.openweathermap.org/map/satellite/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136'
+    },
+    clouds: {
+      name: 'Clouds',
+      icon: '☁️',
+      url: 'https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136'
+    },
+    temperature: {
+      name: 'Temperature',
+      icon: '🌡️',
+      url: 'https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136'
+    },
+    precipitation: {
+      name: 'Precipitation',
+      icon: '💧',
+      url: 'https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136'
+    },
+    pressure: {
+      name: 'Pressure',
+      icon: '🔵',
+      url: 'https://tile.openweathermap.org/map/pressure_new/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136'
+    },
+    wind: {
+      name: 'Wind Speed',
+      icon: '💨',
+      url: 'https://tile.openweathermap.org/map/wind_new/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136'
+    }
+  }
 
   const handleMapChange = (mapType) => {
     setActiveMap(mapType)
+    setLoading(true)
     console.log(`Switched to ${mapType} map`)
-    // TODO: Implement actual map functionality
+    updateMapLayer(mapType)
   }
 
-  const mapTypes = [
-    { id: 'radar', name: 'Radar', icon: '📡' },
-    { id: 'satellite', name: 'Satellite', icon: '🛰️' },
-    { id: 'temperature', name: 'Temperature', icon: '🌡️' },
-    { id: 'precipitation', name: 'Precipitation', icon: '💧' }
-  ]
+  const updateMapLayer = (mapType) => {
+    if (!mapRef.current) return
+    
+    const layer = mapLayers[mapType]
+    if (!layer) return
+
+    // Remove existing layers
+    const existingLayers = mapRef.current.querySelectorAll('.weather-layer')
+    existingLayers.forEach(layer => layer.remove())
+
+    // Add new layer
+    const mapContainer = mapRef.current.querySelector('.map-display')
+    if (mapContainer) {
+      const img = document.createElement('img')
+      img.className = 'weather-layer'
+      img.src = layer.url.replace('{z}', '5').replace('{x}', '10').replace('{y}', '10')
+      img.alt = layer.name
+      img.style.cssText = `
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0.8;
+      `
+      
+      img.onload = () => {
+        setLoading(false)
+        setError(null)
+      }
+      
+      img.onerror = () => {
+        setError(`Failed to load ${layer.name} map`)
+        setLoading(false)
+      }
+      
+      mapContainer.appendChild(img)
+    }
+  }
+
+  useEffect(() => {
+    // Initialize map with default layer
+    setTimeout(() => {
+      updateMapLayer('radar')
+    }, 1000)
+  }, [])
 
   return (
     <section id="weather-map-section" className="weather-map-section">
       <div className="container">
-        <h2 className="section-title">Radar & Maps</h2>
+        <h2 className="section-title">Weather Radar & Maps</h2>
         
-        <div className="map-container">
-          <div className="map-placeholder">
-            <div className="map-icon">🗺️</div>
-            <h3>Interactive Weather Map</h3>
-            <p>Currently showing: <strong>{activeMap}</strong></p>
-            <p>Click the buttons below to switch between different map views</p>
+        <div className="map-container" ref={mapRef}>
+          <div className="map-display">
+            {loading && (
+              <div className="map-loading">
+                <div className="loading-spinner"></div>
+                <p>Loading {mapLayers[activeMap]?.name || 'map'}...</p>
+              </div>
+            )}
             
-            <div className="map-controls">
-              {mapTypes.map((mapType) => (
-                <button 
-                  key={mapType.id}
-                  className={`btn ${activeMap === mapType.id ? 'btn-primary' : 'btn-secondary'}`}
-                  onClick={() => handleMapChange(mapType.id)}
-                >
-                  <span className="btn-icon">{mapType.icon}</span>
-                  {mapType.name}
+            {error && (
+              <div className="map-error">
+                <div className="error-icon">⚠️</div>
+                <p>{error}</p>
+                <button onClick={() => updateMapLayer(activeMap)} className="retry-btn">
+                  Retry
                 </button>
-              ))}
-            </div>
+              </div>
+            )}
             
-            <div className="map-info">
-              <p>
-                {activeMap === 'radar' && 'View live precipitation and storm movement in your area.'}
-                {activeMap === 'satellite' && 'See cloud cover and weather systems from above.'}
-                {activeMap === 'temperature' && 'Track temperature changes across the region.'}
-                {activeMap === 'precipitation' && 'Monitor rainfall and snowfall amounts.'}
-              </p>
+            {!loading && !error && (
+              <div className="map-overlay">
+                <div className="map-info">
+                  <span className="map-type">{mapLayers[activeMap]?.icon} {mapLayers[activeMap]?.name}</span>
+                  <span className="map-update">Live Data</span>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        <div className="map-controls">
+          <div className="map-buttons">
+            {Object.entries(mapLayers).map(([key, layer]) => (
+              <button
+                key={key}
+                className={`map-btn ${activeMap === key ? 'active' : ''}`}
+                onClick={() => handleMapChange(key)}
+                title={`View ${layer.name}`}
+              >
+                <span className="btn-icon">{layer.icon}</span>
+                <span className="btn-text">{layer.name}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+        
+        <div className="map-info-panel">
+          <div className="info-grid">
+            <div className="info-item">
+              <span className="info-label">Coverage:</span>
+              <span className="info-value">United States</span>
+            </div>
+            <div className="info-item">
+              <span className="info-label">Update Frequency:</span>
+              <span className="info-value">Every 10 minutes</span>
+            </div>
+            <div className="info-item">
+              <span className="info-label">Data Source:</span>
+              <span className="info-value">OpenWeatherMap</span>
+            </div>
+            <div className="info-item">
+              <span className="info-label">Resolution:</span>
+              <span className="info-value">High Definition</span>
             </div>
           </div>
         </div>
