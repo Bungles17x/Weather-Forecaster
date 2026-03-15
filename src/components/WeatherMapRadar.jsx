@@ -176,18 +176,73 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
   }
 
   const addRadarOverlay = (map) => {
-    // NEXRAD radar overlay
-    const nexradLayer = new window.google.maps.GroundOverlay({
-      url: 'https://radar.weather.gov/ridge/Conus/Loop/NEXRAD.gif',
-      bounds: new window.google.maps.LatLngBounds(
-        new window.google.maps.LatLng(20.0, -130.0),
-        new window.google.maps.LatLng(55.0, -60.0)
-      ),
+    // NOAA/NWS radar overlay
+    const noaaLayer = new window.google.maps.ImageMapType({
+      getTileUrl: (coord, zoom) => {
+        return `https://tile.openweathermap.org/weather/v2/wind/{zoom}/{coord.x}/{coord.y}.png?appid=YOUR_OPENWEATHER_KEY&size=2x`
+      },
+      name: 'NOAA Wind Radar',
+      alt: 'NOAA Wind Radar Layer',
+      opacity: 0.8
+    })
+
+    noaaLayer.setMap(map)
+    
+    // Add NWS precipitation radar
+    const precipLayer = new window.google.maps.ImageMapType({
+      getTileUrl: (coord, zoom) => {
+        return `https://tile.openweathermap.org/weather/v2/rain/{zoom}/{coord.x}/{coord.y}.png?appid=YOUR_OPENWEATHER_KEY&size=2x`
+      },
+      name: 'NWS Precipitation Radar',
+      alt: 'NWS Precipitation Radar Layer',
       opacity: 0.7
     })
 
+    precipLayer.setMap(map)
+    
+    // Add NWS clouds radar
+    const cloudsLayer = new window.google.maps.ImageMapType({
+      getTileUrl: (coord, zoom) => {
+        return `https://tile.openweathermap.org/weather/v2/clouds/{zoom}/{coord.x}/{coord.y}.png?appid=YOUR_OPENWEATHER_KEY&size=2x`
+      },
+      name: 'NWS Clouds Radar',
+      alt: 'NWS Clouds Radar Layer',
+      opacity: 0.6
+    })
+
+    cloudsLayer.setMap(map)
+    
+    // Add NWS temperature radar
+    const tempLayer = new window.google.maps.ImageMapType({
+      getTileUrl: (coord, zoom) => {
+        return `https://tile.openweathermap.org/weather/v2/temp/{zoom}/{coord.x}/{coord.y}.png?appid=YOUR_OPENWEATHER_KEY&size=2x`
+      },
+      name: 'NWS Temperature Radar',
+      alt: 'NWS Temperature Radar Layer',
+      opacity: 0.7
+    })
+
+    tempLayer.setMap(map)
+    
+    // Add NEXRAD from NOAA
+    const nexradLayer = new window.google.maps.ImageMapType({
+      getTileUrl: (coord, zoom) => {
+        return `https://radar.weather.gov/ridge/Conus/Loop/NEXRAD.gif`
+      },
+      name: 'NEXRAD Radar',
+      alt: 'NEXRAD Radar Layer',
+      opacity: 0.9
+    })
+
     nexradLayer.setMap(map)
-    return nexradLayer
+    
+    return {
+      noaa: noaaLayer,
+      precipitation: precipLayer,
+      clouds: cloudsLayer,
+      temperature: tempLayer,
+      nexrad: nexradLayer
+    }
   }
 
   const addWeatherMarkers = (map, data) => {
