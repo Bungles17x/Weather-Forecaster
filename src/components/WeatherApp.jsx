@@ -241,7 +241,7 @@ const WeatherApp = () => {
       
       return () => clearTimeout(timer)
     }
-  }, [])
+  }, [fetchWeatherData])
   
   // Cleanup timers on unmount
   useEffect(() => {
