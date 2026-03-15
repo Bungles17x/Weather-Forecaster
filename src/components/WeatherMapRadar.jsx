@@ -434,6 +434,7 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
             if (alert.geometry && alert.geometry.coordinates) {
               const severity = alert.properties.severity ? alert.properties.severity.toLowerCase() : 'unknown'
               const event = alert.properties.event || 'Weather Alert'
+              const urgency = alert.properties.urgency || 'Unknown'
               
               // Determine color based on severity
               let polygonColor, polygonOpacity
@@ -496,8 +497,8 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
                   })
                 })
 
-                // Add popup to polygon
-                const popupContent = createAlertPopup(alert, polygonColor)
+                // Create enhanced popup with advisory information
+                const popupContent = createEnhancedAlertPopup(alert, polygonColor)
                 polygon.bindPopup(popupContent)
 
                 console.log(`🚨 Added polygon for ${event}`)
@@ -533,7 +534,7 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
                     })
                   })
 
-                  const popupContent = createAlertPopup(alert, polygonColor)
+                  const popupContent = createEnhancedAlertPopup(alert, polygonColor)
                   polygon.bindPopup(popupContent)
                 })
 
@@ -573,7 +574,7 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
                   })
                 })
 
-                const popupContent = createAlertPopup(alert, polygonColor)
+                const popupContent = createEnhancedAlertPopup(alert, polygonColor)
                 circleMarker.bindPopup(popupContent)
 
               } else if (alert.geometry.type === 'LineString') {
@@ -602,7 +603,7 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
                   })
                 })
 
-                const popupContent = createAlertPopup(alert, polygonColor)
+                const popupContent = createEnhancedAlertPopup(alert, polygonColor)
                 polyline.bindPopup(popupContent)
               }
             }
@@ -620,14 +621,17 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
         console.log('🚨 Adding test alert for demonstration')
         const testAlert = {
           properties: {
-            event: 'Test Alert',
+            event: 'Test Advisory',
             severity: 'severe',
             urgency: 'Immediate',
-            headline: 'This is a test alert to verify the alert system works',
+            headline: 'This is a test advisory to verify the alert system works',
+            description: 'Test advisory description with detailed information about weather conditions and safety precautions.',
             areaDesc: 'Test Area',
             effective: new Date().toISOString(),
             expires: new Date(Date.now() + 3600000).toISOString(),
-            web: 'https://www.weather.gov'
+            web: 'https://www.weather.gov',
+            instruction: 'This is a test advisory with safety instructions for demonstration purposes.',
+            certainty: 'Observed'
           },
           geometry: {
             type: 'Polygon',
@@ -676,11 +680,89 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
           })
         })
 
-        const popupContent = createAlertPopup(testAlert, polygonColor)
+        const popupContent = createEnhancedAlertPopup(testAlert, polygonColor)
         polygon.bindPopup(popupContent)
         
         console.log('🚨 Test alert added to map')
       })
+  }
+
+  const createEnhancedAlertPopup = (alert, color) => {
+    const severity = alert.properties.severity || 'Unknown'
+    const urgency = alert.properties.urgency || 'Unknown'
+    const event = alert.properties.event || 'Weather Alert'
+    const headline = alert.properties.headline || alert.properties.description || 'Active weather alert in this area'
+    const description = alert.properties.description || 'No additional description available.'
+    const areas = alert.properties.areaDesc || 'Unknown'
+    const effective = alert.properties.effective ? new Date(alert.properties.effective).toLocaleString() : 'Unknown'
+    const expires = alert.properties.expires ? new Date(alert.properties.expires).toLocaleString() : 'Unknown'
+    const web = alert.properties.web
+    const instruction = alert.properties.instruction || 'Follow standard safety precautions for this type of weather event.'
+    const certainty = alert.properties.certainty || 'Unknown'
+
+    // Determine advisory type based on event and severity
+    let advisoryType = 'Weather Advisory'
+    let advisoryIcon = '📋'
+    
+    if (event.toLowerCase().includes('watch')) {
+      advisoryType = 'Weather Watch'
+      advisoryIcon = '👁️'
+    } else if (event.toLowerCase().includes('warning')) {
+      advisoryType = 'Weather Warning'
+      advisoryIcon = '⚠️'
+    } else if (event.toLowerCase().includes('advisory')) {
+      advisoryType = 'Weather Advisory'
+      advisoryIcon = '📋'
+    } else if (event.toLowerCase().includes('statement')) {
+      advisoryType = 'Weather Statement'
+      advisoryIcon = '📄'
+    }
+
+    return `
+      <div class="alert-popup" style="min-width: 320px; max-width: 400px;">
+        <div style="background: ${color}; color: white; padding: 10px; border-radius: 4px 4px 0 0; margin: -8px -8px 8px -8px;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <h4 style="margin: 0; font-size: 16px; font-weight: bold;">${advisoryIcon} ${event}</h4>
+            <span style="background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 12px; font-size: 12px; font-weight: bold;">${advisoryType}</span>
+          </div>
+        </div>
+        <div style="padding: 8px;">
+          <div style="background: #f8f9fa; padding: 8px; border-radius: 4px; margin-bottom: 8px;">
+            <p style="margin: 0; font-size: 13px; line-height: 1.4; font-weight: 500;">${headline}</p>
+          </div>
+          
+          <div style="font-size: 12px; line-height: 1.4; color: #333; margin-bottom: 8px;">
+            <p style="margin: 0 0 8px 0;">${description}</p>
+          </div>
+
+          <div style="background: #fff3cd; border-left: 4px solid ${color}; padding: 8px; margin-bottom: 8px;">
+            <div style="font-size: 11px; font-weight: bold; color: #856404; margin-bottom: 4px;">🛡️ SAFETY INSTRUCTIONS:</div>
+            <div style="font-size: 11px; color: #856404; line-height: 1.4;">${instruction}</div>
+          </div>
+
+          <div style="font-size: 11px; color: #666; line-height: 1.4;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 8px;">
+              <div><strong>Severity:</strong> <span style="color: ${color}; font-weight: bold;">${severity.toUpperCase()}</span></div>
+              <div><strong>Urgency:</strong> ${urgency}</div>
+              <div><strong>Certainty:</strong> ${certainty}</div>
+              <div><strong>Areas:</strong> ${areas}</div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
+              <div><strong>Effective:</strong> ${effective}</div>
+              <div><strong>Expires:</strong> ${expires}</div>
+            </div>
+          </div>
+          
+          ${web ? `
+            <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb; text-align: center;">
+              <a href="${web}" target="_blank" style="color: #007bff; text-decoration: none; font-size: 12px; display: inline-block; padding: 4px 12px; border: 1px solid #007bff; border-radius: 4px; transition: background-color 0.2s;">
+                🔗 View Full Details →
+              </a>
+            </div>
+          ` : ''}
+        </div>
+      </div>
+    `
   }
 
   const createAlertPopup = (alert, color) => {
