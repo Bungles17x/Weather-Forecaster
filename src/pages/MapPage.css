@@ -219,6 +219,8 @@
   border-radius: 12px;
   padding: 1.5rem;
   border: 1px solid rgba(255, 255, 255, 0.2);
+  height: calc(100vh - 250px);
+  min-height: 600px;
 }
 
 .map-sidebar {
@@ -331,8 +333,10 @@
 
 .map-wrapper {
   flex: 1;
-  min-height: calc(100vh - 300px);
+  height: 100%;
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .map-wrapper .weather-layer {
