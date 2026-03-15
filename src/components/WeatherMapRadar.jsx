@@ -228,7 +228,12 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
 
     // Add location marker
     if (coordinates) {
+      console.log('📍 Adding location marker for:', coordinates)
       addLocationMarkerOSM(map, coordinates)
+    } else {
+      console.log('📍 No coordinates provided, adding default location marker')
+      // Add a default location marker if no coordinates
+      addLocationMarkerOSM(map, { latitude: mapCenter.lat, longitude: mapCenter.lng })
     }
   }, [mapCenter, zoom, weatherData, coordinates])
 
@@ -808,6 +813,8 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
   }
 
   const addLocationMarkerOSM = (map, coords) => {
+    console.log('📍 addLocationMarkerOSM called with coords:', coords)
+    
     const locationMarker = window.L.marker([coords.latitude, coords.longitude], {
       title: 'Your Location',
       icon: window.L.divIcon({
@@ -818,6 +825,8 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
       })
     }).addTo(map)
 
+    console.log('📍 Location marker added to map')
+
     // Add pulsing circle around location
     const pulsingCircle = window.L.circleMarker([coords.latitude, coords.longitude], {
       radius: 30,
@@ -827,6 +836,8 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
       opacity: 0.6,
       fillOpacity: 0.2
     }).addTo(map)
+
+    console.log('📍 Pulsing circle added')
 
     // Animate the pulsing circle
     let pulseRadius = 30
@@ -852,6 +863,8 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
       pulsingCircle.setStyle({ opacity: pulseOpacity, fillOpacity: pulseOpacity * 0.3 })
     }, 50)
 
+    console.log('📍 Pulse animation started')
+
     // Add popup with location info
     const locationPopup = `
       <div class="location-info-window" style="min-width: 200px;">
@@ -876,12 +889,15 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
     `
 
     locationMarker.bindPopup(locationPopup)
+    console.log('📍 Popup bound to marker')
     
     // Make location marker bounce when added
     locationMarker.bounce = true
     setTimeout(() => {
       locationMarker.bounce = false
     }, 1500)
+
+    console.log('📍 Location marker setup complete')
 
     return {
       marker: locationMarker,
