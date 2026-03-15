@@ -302,32 +302,51 @@ const WeatherApp = () => {
       deg: 210
     },
     clouds: {
+      all: 40
+    },
+    dt: 1640995200
+  })
+
+  const getSimulatedForecastData = () => {
+    const forecast = []
+    const now = Date.now() / 1000
     
-    forecast.push({
-      dt: time,
-      main: {
-        temp: temp,
-        temp_min: temp - 5,
-        temp_max: temp + 5,
-        humidity: 50 + Math.random() * 30
-      },
-      weather: [
-        {
-          main: condition,
-          description: condition.toLowerCase(),
-          icon: '01d'
-        }
-      ],
-      wind: {
-        speed: 5 + Math.random() * 10,
-        deg: Math.random() * 360
-      },
-      dt_txt: new Date(time * 1000).toISOString()
-    })
-  }
-  
-  return forecast
-}
+    for (let i = 0; i < 40; i++) {
+      const time = now + (i * 3 * 3600) // Every 3 hours
+      const temp = 65 + Math.random() * 20
+      const conditions = ['Clear', 'Clouds', 'Rain', 'Drizzle', 'Thunderstorm']
+      const condition = conditions[Math.floor(Math.random() * conditions.length)]
+      
+      forecast.push({
+        dt: time,
+        main: {
+          temp: temp,
+          temp_min: temp - 5,
+          temp_max: temp + 5,
+          humidity: 50 + Math.random() * 30
+        },
+        weather: [
+          {
+            main: condition,
+            description: condition.toLowerCase(),
+            icon: '01d'
+          }
+        ],
+        wind: {
+          speed: 5 + Math.random() * 10,
+          deg: Math.random() * 360
+        },
+        dt_txt: new Date(time * 1000).toISOString()
+    
+    {/* Error Banner */}
+    {!shouldShowLoading && error && (
+      <div className="error-notification notification-error">
+        <div className="error-icon">⚠️</div>
+        <div className="error-content">
+          <h4>Weather Data Error</h4>
+          <p>{error}</p>
+          <button 
+            onClick={handleRetry} 
             className="btn btn-primary btn-sm"
           >
             Try Real Data
