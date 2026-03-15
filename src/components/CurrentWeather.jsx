@@ -254,6 +254,124 @@ const CurrentWeather = ({ data }) => {
                       <div className="alert-details-title">{selectedAlert.title}</div>
                       <div className="alert-details-message">{selectedAlert.message}</div>
                       
+                      {/* Full NWS Alert Details */}
+                      {selectedAlert.source === 'NWS' && (
+                        <div className="nws-alert-details">
+                          <div className="nws-alert-section">
+                            <h4>Official Information</h4>
+                            <div className="nws-info-grid">
+                              {selectedAlert.event && (
+                                <div className="nws-info-item">
+                                  <span className="nws-label">Event Type:</span>
+                                  <span className="nws-value">{selectedAlert.event}</span>
+                                </div>
+                              )}
+                              {selectedAlert.senderName && (
+                                <div className="nws-info-item">
+                                  <span className="nws-label">Issued By:</span>
+                                  <span className="nws-value">{selectedAlert.senderName}</span>
+                                </div>
+                              )}
+                              {selectedAlert.nwsId && (
+                                <div className="nws-info-item">
+                                  <span className="nws-label">Alert ID:</span>
+                                  <span className="nws-value">{selectedAlert.nwsId}</span>
+                                </div>
+                              )}
+                              {selectedAlert.category && (
+                                <div className="nws-info-item">
+                                  <span className="nws-label">Category:</span>
+                                  <span className="nws-value">{selectedAlert.category}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Timing Information */}
+                          <div className="nws-alert-section">
+                            <h4>Timing</h4>
+                            <div className="nws-timing-grid">
+                              {selectedAlert.effective && (
+                                <div className="nws-timing-item">
+                                  <span className="nws-label">Effective:</span>
+                                  <span className="nws-value">{new Date(selectedAlert.effective).toLocaleString()}</span>
+                                </div>
+                              )}
+                              {selectedAlert.expires && (
+                                <div className="nws-timing-item">
+                                  <span className="nws-label">Expires:</span>
+                                  <span className="nws-value">{new Date(selectedAlert.expires).toLocaleString()}</span>
+                                </div>
+                              )}
+                              {selectedAlert.onset && (
+                                <div className="nws-timing-item">
+                                  <span className="nws-label">Onset:</span>
+                                  <span className="nws-value">{new Date(selectedAlert.onset).toLocaleString()}</span>
+                                </div>
+                              )}
+                              {selectedAlert.ends && (
+                                <div className="nws-timing-item">
+                                  <span className="nws-label">Ends:</span>
+                                  <span className="nws-value">{new Date(selectedAlert.ends).toLocaleString()}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Affected Areas */}
+                          {selectedAlert.areas && (
+                            <div className="nws-alert-section">
+                              <h4>Affected Areas</h4>
+                              <div className="nws-areas">
+                                <span className="nws-areas-text">{selectedAlert.areas}</span>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Safety Instructions */}
+                          {selectedAlert.instruction && (
+                            <div className="nws-alert-section">
+                              <h4>Safety Instructions</h4>
+                              <div className="nws-instructions">
+                                <p>{selectedAlert.instruction}</p>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Full Description */}
+                          {selectedAlert.description && selectedAlert.description !== selectedAlert.message && (
+                            <div className="nws-alert-section">
+                              <h4>Full Description</h4>
+                              <div className="nws-description">
+                                <p>{selectedAlert.description}</p>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Contact Information */}
+                          {selectedAlert.contact && (
+                            <div className="nws-alert-section">
+                              <h4>Contact Information</h4>
+                              <div className="nws-contact">
+                                <p>{selectedAlert.contact}</p>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Web Link */}
+                          {selectedAlert.web && (
+                            <div className="nws-alert-section">
+                              <h4>More Information</h4>
+                              <div className="nws-web">
+                                <a href={selectedAlert.web} target="_blank" rel="noopener noreferrer" className="nws-link">
+                                  View Full Alert on NWS.gov
+                                </a>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
                       <div className="alert-details-meta">
                         <div className="meta-item">
                           <span className="meta-label">Severity:</span>

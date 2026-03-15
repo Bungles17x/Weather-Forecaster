@@ -8,6 +8,174 @@
   }
 }
 
+/* Enhanced NWS Alert Details */
+.nws-alert-details {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.nws-alert-section {
+  margin-bottom: 1.5rem;
+}
+
+.nws-alert-section h4 {
+  margin: 0 0 0.75rem 0;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0.9;
+}
+
+.nws-info-grid,
+.nws-timing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+}
+
+.nws-info-item,
+.nws-timing-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.nws-label {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
+}
+
+.nws-value {
+  font-size: 0.8rem;
+  color: #fff;
+  font-weight: 600;
+  text-align: right;
+}
+
+.nws-areas {
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.nws-areas-text {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.4;
+}
+
+.nws-instructions,
+.nws-description,
+.nws-contact {
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.nws-instructions p,
+.nws-description p,
+.nws-contact p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.5;
+}
+
+.nws-web {
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+}
+
+.nws-link {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background: rgba(59, 130, 246, 0.2);
+  color: #3b82f6;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  transition: all 0.2s ease;
+}
+
+.nws-link:hover {
+  background: rgba(59, 130, 246, 0.3);
+  border-color: rgba(59, 130, 246, 0.5);
+  transform: translateY(-1px);
+}
+
+/* Enhanced alert details modal */
+.alert-details-modal {
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.alert-details-content {
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+/* Scrollbar styling for alert details */
+.alert-details-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.alert-details-content::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.alert-details-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+}
+
+.alert-details-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* Responsive design for NWS alerts */
+@media (max-width: 768px) {
+  .nws-info-grid,
+  .nws-timing-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .nws-info-item,
+  .nws-timing-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+  
+  .nws-value {
+    text-align: left;
+  }
+  
+  .alert-details-modal {
+    max-height: 90vh;
+  }
+  
+  .alert-details-content {
+    max-height: 70vh;
+  }
+}
+
 @keyframes slideUp {
   from {
     opacity: 0;

@@ -180,7 +180,7 @@ export const nwsService = {
     }
   },
 
-  // Format NWS alerts to our alert format
+  // Format NWS alerts to our alert format with full details
   formatAlerts(nwsAlerts) {
     return nwsAlerts.map(alert => {
       const properties = alert.properties
@@ -197,7 +197,28 @@ export const nwsService = {
         areas: properties.areas,
         effective: properties.effective,
         expires: properties.expires,
-        source: 'NWS'
+        source: 'NWS',
+        // Full NWS details
+        nwsId: properties.id,
+        event: properties.event,
+        sender: properties.sender,
+        senderName: properties.senderName,
+        instruction: properties.instruction,
+        description: properties.description,
+        affectedZones: properties.affectedZones,
+        geocode: properties.geocode,
+        category: properties.category,
+        contact: properties.contact,
+        web: properties.web,
+        note: properties.note,
+        // Timing information
+        onset: properties.onset,
+        ends: properties.ends,
+        // Additional metadata
+        responseType: properties.responseType,
+        certainty: properties.certainty,
+        urgency: properties.urgency,
+        severity: properties.severity
       }
     })
   },
