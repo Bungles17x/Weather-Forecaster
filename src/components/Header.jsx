@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import './Header.css'
 import { LogoIcon } from './WeatherIcons'
 
@@ -9,6 +10,20 @@ const Header = ({ onLocationChange }) => {
   const [searchInput, setSearchInput] = useState('')
   const [searchSuggestions, setSearchSuggestions] = useState([])
   const [showSuggestions, setShowSuggestions] = useState(false)
+  const location = useLocation()
+
+  // Get current page for active navigation
+  const getCurrentPage = () => {
+    const path = location.pathname
+    if (path === '/' || path === '') return 'weather'
+    if (path === '/home') return 'home'
+    if (path === '/forecast') return 'forecast'
+    if (path === '/map') return 'map'
+    if (path === '/settings') return 'settings'
+    return 'weather'
+  }
+
+  const currentPage = getCurrentPage()
 
   const handleLocationChange = () => {
     setIsLocationModalOpen(true)
@@ -28,135 +43,33 @@ const Header = ({ onLocationChange }) => {
     
     if (query.length > 0) {
       // Generate search suggestions
-      const cities = [
+      const suggestions = [
         'New York, NY',
-        'Los Angeles, CA', 
+        'Los Angeles, CA',
         'Chicago, IL',
         'Houston, TX',
         'Phoenix, AZ',
         'Philadelphia, PA',
         'San Antonio, TX',
         'San Diego, CA',
-        'Dallas, TX',
-        'San Jose, CA',
-        'Austin, TX',
-        'Jacksonville, FL',
-        'Fort Worth, TX',
-        'Columbus, OH',
-        'Charlotte, NC',
-        'San Francisco, CA',
-        'Indianapolis, IN',
-        'Seattle, WA',
-        'Denver, CO',
-        'Washington, DC',
-        'Boston, MA',
-        'El Paso, TX',
-        'Nashville, TN',
-        'Oklahoma City, OK',
-        'Las Vegas, NV',
-        'Detroit, MI',
-        'Portland, OR',
-        'Memphis, TN',
-        'Louisville, KY',
-        'Milwaukee, WI',
-        'Baltimore, MD',
-        'Albuquerque, NM',
-        'Tucson, AZ',
-        'Fresno, CA',
-        'Sacramento, CA',
-        'Kansas City, MO',
-        'Mesa, AZ',
-        'Atlanta, GA',
-        'Omaha, NE',
-        'Colorado Springs, CO',
-        'Raleigh, NC',
-        'Miami, FL',
-        'Oakland, CA',
-        'Tulsa, OK',
-        'Minneapolis, MN',
-        'Cleveland, OH',
-        'Wichita, KS',
-        'Arlington, TX',
-        'New Orleans, LA',
-        'Bakersfield, CA',
-        'Tampa, FL',
-        'Honolulu, HI',
-        'Anaheim, CA',
-        'Aurora, CO',
-        'Santa Ana, CA',
-        'St. Louis, MO',
-        'Riverside, CA',
-        'Corpus Christi, TX',
-        'Lexington, KY',
-        'Pittsburgh, PA',
-        'Anchorage, AK',
-        'Stockton, CA',
-        'Cincinnati, OH',
-        'Saint Paul, MN',
-        'Toledo, OH',
-        'Greensboro, NC',
-        'Newark, NJ',
-        'Plano, TX',
-        'Henderson, NV',
-        'Lincoln, NE',
-        'Buffalo, NY',
-        'Jersey City, NJ',
-        'Chula Vista, CA',
-        'Fort Wayne, IN',
-        'Orlando, FL',
-        'St. Petersburg, FL',
-        'Chandler, AZ',
-        'Laredo, TX',
-        'Norfolk, VA',
-        'Durham, NC',
-        'Madison, WI',
-        'Lubbock, TX',
-        'Irvine, CA',
-        'Winston-Salem, NC',
-        'Glendale, AZ',
-        'Garland, TX',
-        'Hialeah, FL',
-        'Reno, NV',
-        'Chesapeake, VA',
-        'Gilbert, AZ',
-        'Baton Rouge, LA',
-        'Irving, TX',
-        'Scottsdale, AZ',
-        'North Las Vegas, NV',
-        'Fremont, CA',
-        'Boise, ID',
-        'Richmond, VA'
-      ]
-      
-      const filtered = cities.filter(city => 
+        'Dallas, TX'
+      ].filter(city => 
         city.toLowerCase().includes(query.toLowerCase())
-      ).slice(0, 8)
-      
-      setSearchSuggestions(filtered)
+      )
+      setSearchSuggestions(suggestions)
       setShowSuggestions(true)
     } else {
+      setShowSuggestions(false)
       setSearchSuggestions([])
-      setShowSuggestions(false)
-    }
-  }
-
-  const handleSearchSubmit = (e) => {
-    e.preventDefault()
-    if (searchInput.trim()) {
-      onLocationChange && onLocationChange(searchInput)
-      setShowSuggestions(false)
     }
   }
 
   const handleSuggestionClick = (suggestion) => {
-    setSearchInput(suggestion)
-    onLocationChange && onLocationChange(suggestion)
+    setLocationInput(suggestion)
+    setSearchSuggestions([])
     setShowSuggestions(false)
-  }
-
-  const handleSearchBlur = () => {
-    // Delay hiding suggestions to allow click on suggestion
-    setTimeout(() => setShowSuggestions(false), 200)
+    onLocationChange && onLocationChange(suggestion)
+    setIsLocationModalOpen(false)
   }
 
   const handleMenuToggle = () => {
@@ -168,96 +81,145 @@ const Header = ({ onLocationChange }) => {
   }
 
   const handleRefresh = () => {
-    // TODO: Implement weather data refresh
-    console.log('Refreshing weather data...')
-    window.location.reload() // Temporary solution
+    window.location.reload()
   }
 
   const handleSettings = () => {
-    // TODO: Implement settings modal
-    console.log('Opening settings...')
-    alert('Settings feature coming soon!')
+    window.location.href = '/settings'
   }
 
-  const scrollToSection = (sectionId) => {
-    const element = document.getElementById(sectionId)
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      handleMenuClose()
-    } else {
-      console.log(`Section ${sectionId} not found`)
-      handleMenuClose()
-    }
+  const clearSearchHistory = () => {
+    setSearchSuggestions([])
+    localStorage.removeItem('weatherSearchHistory')
   }
+
+  // Load search history from localStorage
+  useEffect(() => {
+    const history = localStorage.getItem('weatherSearchHistory')
+    if (history) {
+      setSearchSuggestions(JSON.parse(history))
+    }
+  }, [])
 
   return (
     <>
       <header className="weather-header">
-        <div className="container">
-          <div className="flex justify-between align-center">
-            <div className="header-left">
-              <div className="logo">
-                <LogoIcon size={32} />
-                <span className="logo-text">Weather Forecaster</span>
-              </div>
-            </div>
-            
-            <div className="header-center">
-              {/* Search Bar */}
-              <div className="search-container">
-                <form onSubmit={handleSearchSubmit} className="search-form">
-                  <div className="search-input-wrapper">
-                    <input
-                      type="text"
-                      value={searchInput}
-                      onChange={handleSearch}
-                      onBlur={handleSearchBlur}
-                      onFocus={() => searchInput.length > 0 && setShowSuggestions(true)}
-                      placeholder="Search city, state..."
-                      className="search-input"
-                    />
-                    <button type="submit" className="search-btn">
-                      🔍
+        <div className="header-content">
+          <div className="header-left">
+            <Link to="/" className="logo-container">
+              <LogoIcon />
+              <span className="app-title">Weather Forecaster</span>
+            </Link>
+          </div>
+          
+          <div className="header-center">
+            <div className="search-container">
+              <form className="search-form" onSubmit={handleSearchSubmit}>
+                <div className="search-input-wrapper">
+                  <input
+                    type="text"
+                    className="search-input"
+                    placeholder="Search location..."
+                    value={searchInput}
+                    onChange={handleSearch}
+                    onFocus={() => searchInput && setShowSuggestions(true)}
+                  />
+                  <button type="submit" className="search-button">
+                    🔍
+                  </button>
+                </div>
+              </form>
+              
+              {showSuggestions && searchSuggestions.length > 0 && (
+                <div className="search-suggestions">
+                  <div className="suggestions-header">
+                    <span>Suggestions</span>
+                    <button className="clear-history-btn" onClick={clearSearchHistory}>
+                      Clear History
                     </button>
                   </div>
-                  
-                  {/* Search Suggestions Dropdown */}
-                  {showSuggestions && searchSuggestions.length > 0 && (
-                    <div className="search-suggestions">
-                      {searchSuggestions.map((suggestion, index) => (
-                        <div
-                          key={index}
-                          className="suggestion-item"
-                          onClick={() => handleSuggestionClick(suggestion)}
-                        >
-                          <span className="suggestion-icon">📍</span>
-                          <span className="suggestion-text">{suggestion}</span>
-                        </div>
-                      ))}
+                  {searchSuggestions.map((suggestion, index) => (
+                    <div
+                      key={index}
+                      className="suggestion-item"
+                      onClick={() => handleSuggestionClick(suggestion)}
+                    >
+                      <span className="suggestion-icon">📍</span>
+                      <span className="suggestion-text">{suggestion}</span>
                     </div>
-                  )}
-                </form>
-              </div>
-              
-              <div className="location-display">
-                <span className="location-icon">📍</span>
-                <span className="location-name">Mount Union, PA</span>
-                <button className="btn btn-secondary btn-sm" onClick={handleLocationChange}>
-                  Change
-                </button>
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
-            
-            <div className="header-right">
-              <nav className="header-nav">
-                <button className="nav-btn refresh-btn" onClick={handleRefresh} title="Refresh Weather">
-                  🔄
-                </button>
-                <button className="nav-btn menu-btn" onClick={handleMenuToggle} title="Menu">
-                  ☰
-                </button>
-              </nav>
-            </div>
+          </div>
+
+          {/* Mobile App Navigation */}
+          <div className="mobile-app-nav">
+            <Link to="/" className={`app-nav-item ${currentPage === 'weather' ? 'active' : ''}`}>
+              <span className="app-nav-icon">🌤️</span>
+              <span className="app-nav-label">Weather</span>
+            </Link>
+            <Link to="/home" className={`app-nav-item ${currentPage === 'home' ? 'active' : ''}`}>
+              <span className="app-nav-icon">🏠</span>
+              <span className="app-nav-label">Home</span>
+            </Link>
+            <Link to="/forecast" className={`app-nav-item ${currentPage === 'forecast' ? 'active' : ''}`}>
+              <span className="app-nav-icon">📅</span>
+              <span className="app-nav-label">Forecast</span>
+            </Link>
+            <Link to="/map" className={`app-nav-item ${currentPage === 'map' ? 'active' : ''}`}>
+              <span className="app-nav-icon">🗺️</span>
+              <span className="app-nav-label">Map</span>
+            </Link>
+            <Link to="/settings" className={`app-nav-item ${currentPage === 'settings' ? 'active' : ''}`}>
+              <span className="app-nav-icon">⚙️</span>
+              <span className="app-nav-label">Settings</span>
+            </Link>
+          </div>
+
+          {/* Desktop Navigation */}
+          <div className="desktop-nav">
+            <Link to="/" className={`desktop-nav-item ${currentPage === 'weather' ? 'active' : ''}`}>
+              <div className="shimmer"></div>
+              <div className="glow"></div>
+              <span className="desktop-nav-icon">🌤️</span>
+              <span className="desktop-nav-label">Weather</span>
+            </Link>
+            <Link to="/home" className={`desktop-nav-item ${currentPage === 'home' ? 'active' : ''}`}>
+              <div className="shimmer"></div>
+              <div className="glow"></div>
+              <span className="desktop-nav-icon">🏠</span>
+              <span className="desktop-nav-label">Home</span>
+            </Link>
+            <Link to="/forecast" className={`desktop-nav-item ${currentPage === 'forecast' ? 'active' : ''}`}>
+              <div className="shimmer"></div>
+              <div className="glow"></div>
+              <span className="desktop-nav-icon">📅</span>
+              <span className="desktop-nav-label">Forecast</span>
+            </Link>
+            <Link to="/map" className={`desktop-nav-item ${currentPage === 'map' ? 'active' : ''}`}>
+              <div className="shimmer"></div>
+              <div className="glow"></div>
+              <span className="desktop-nav-icon">🗺️</span>
+              <span className="desktop-nav-label">Map</span>
+            </Link>
+            <Link to="/settings" className={`desktop-nav-item ${currentPage === 'settings' ? 'active' : ''}`}>
+              <div className="shimmer"></div>
+              <div className="glow"></div>
+              <span className="desktop-nav-icon">⚙️</span>
+              <span className="desktop-nav-label">Settings</span>
+            </Link>
+          </div>
+          
+          <div className="header-right">
+            <nav className="header-nav">
+              <button className="nav-btn refresh-btn" onClick={handleRefresh} title="Refresh Weather">
+                🔄
+              </button>
+              <button className="nav-btn menu-btn" onClick={handleMenuToggle} title="Menu">
+                ☰
+              </button>
+            </nav>
           </div>
         </div>
       </header>
@@ -274,89 +236,78 @@ const Header = ({ onLocationChange }) => {
             <div className="menu-content">
               <div className="menu-section">
                 <h4>Navigation</h4>
-                <button className="menu-item" onClick={handleRefresh}>
-                  <span className="menu-icon">🔄</span>
-                  <span>Refresh Weather</span>
-                </button>
-                <button className="menu-item" onClick={handleLocationChange}>
-                  <span className="menu-icon">📍</span>
-                  <span>Change Location</span>
-                </button>
-                <button className="menu-item" onClick={handleSettings}>
+                <Link to="/" className="menu-item" onClick={handleMenuClose}>
+                  <span className="menu-icon">🌤️</span>
+                  <span>Weather</span>
+                </Link>
+                <Link to="/home" className="menu-item" onClick={handleMenuClose}>
+                  <span className="menu-icon">🏠</span>
+                  <span>Home</span>
+                </Link>
+                <Link to="/forecast" className="menu-item" onClick={handleMenuClose}>
+                  <span className="menu-icon">📅</span>
+                  <span>Forecast</span>
+                </Link>
+                <Link to="/map" className="menu-item" onClick={handleMenuClose}>
+                  <span className="menu-icon">🗺️</span>
+                  <span>Map</span>
+                </Link>
+                <Link to="/settings" className="menu-item" onClick={handleMenuClose}>
                   <span className="menu-icon">⚙️</span>
                   <span>Settings</span>
-                </button>
+                </Link>
               </div>
               
               <div className="menu-section">
-                <h4>Quick Actions</h4>
-                <button className="menu-item" onClick={() => scrollToSection('hourly-forecast')}>
-                  <span className="menu-icon">⏰</span>
-                  <span>Hourly Forecast</span>
+                <h4>Actions</h4>
+                <button className="menu-item" onClick={() => { handleMenuClose(); handleRefresh(); }}>
+                  <span className="menu-icon">🔄</span>
+                  <span>Refresh Weather</span>
                 </button>
-                <button className="menu-item" onClick={() => scrollToSection('ten-day-forecast')}>
-                  <span className="menu-icon">📅</span>
-                  <span>10-Day Forecast</span>
+                <button className="menu-item" onClick={() => { handleMenuClose(); handleLocationChange(); }}>
+                  <span className="menu-icon">📍</span>
+                  <span>Change Location</span>
                 </button>
-                <button className="menu-item" onClick={() => scrollToSection('weather-map-section')}>
-                  <span className="menu-icon">🗺️</span>
-                  <span>Weather Map</span>
+                <button className="menu-item" onClick={() => { handleMenuClose(); handleSettings(); }}>
+                  <span className="menu-icon">⚙️</span>
+                  <span>Settings</span>
                 </button>
-              </div>
-              
-              <div className="menu-footer">
-                <div className="menu-info">
-                  <p>Version 1.0.0</p>
-                  <p>Powered by OpenWeatherMap</p>
-                </div>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Location Change Modal */}
+      {/* Location Modal */}
       {isLocationModalOpen && (
         <div className="modal-overlay" onClick={() => setIsLocationModalOpen(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+          <div className="location-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>Change Location</h3>
-              <button className="modal-close" onClick={() => setIsLocationModalOpen(false)}>✕</button>
+              <button className="modal-close-btn" onClick={() => setIsLocationModalOpen(false)}>✕</button>
             </div>
             
-            <form id="location-form" onSubmit={handleLocationSubmit} className="modal-body">
+            <form className="location-form" onSubmit={handleLocationSubmit}>
               <div className="form-group">
-                <label htmlFor="location">Enter City, State or ZIP Code</label>
+                <label className="form-label">Enter Location</label>
                 <input
                   type="text"
-                  id="location"
+                  className="form-input"
                   value={locationInput}
                   onChange={(e) => setLocationInput(e.target.value)}
-                  placeholder="e.g., New York, NY or 10001"
-                  className="location-input"
-                  autoFocus
+                  placeholder="e.g., New York, NY"
                 />
               </div>
               
-              <div className="quick-locations">
-                <p>Quick Locations:</p>
-                <div className="quick-location-buttons">
-                  <button type="button" onClick={() => setLocationInput('New York, NY')}>New York</button>
-                  <button type="button" onClick={() => setLocationInput('Los Angeles, CA')}>Los Angeles</button>
-                  <button type="button" onClick={() => setLocationInput('Chicago, IL')}>Chicago</button>
-                  <button type="button" onClick={() => setLocationInput('Houston, TX')}>Houston</button>
-                </div>
+              <div className="form-actions">
+                <button type="submit" className="btn btn-primary">
+                  Get Weather
+                </button>
+                <button type="button" className="btn btn-secondary" onClick={() => setIsLocationModalOpen(false)}>
+                  Cancel
+                </button>
               </div>
             </form>
-            
-            <div className="modal-footer">
-              <button type="button" className="btn btn-secondary" onClick={() => setIsLocationModalOpen(false)}>
-                Cancel
-              </button>
-              <button type="submit" form="location-form" className="btn btn-primary">
-                Update Location
-              </button>
-            </div>
           </div>
         </div>
       )}
