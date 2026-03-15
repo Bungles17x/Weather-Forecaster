@@ -465,21 +465,67 @@ const WeatherApp = () => {
     if (isCoordinateLocation) {
       console.log('🌍 Using coordinate-based location:', newLocation)
       setIsUsingCoordinates(true)
-      // For coordinates, we'll need to use a different API or reverse geocoding
-      // For now, let's use a nearby city based on coordinates
+      
+      // For coordinates, try to use reverse geocoding first
       const [lat, lon] = newLocation.split(',').map(coord => parseFloat(coord.trim()))
       
-      // Simple approximation to nearest major city (you can enhance this with proper reverse geocoding)
-      let approximateCity = 'New York, NY' // default
-      if (lat > 40.7 && lat < 41.0 && lon > -74.0 && lon < -73.8) {
-        approximateCity = 'New York, NY'
-      } else if (lat >= 40.5 && lat < 41.0 && lon >= -74.0 && lon <= -73.5) {
-        approximateCity = 'New York, NY'
+      // Try reverse geocoding to get city name
+      const reverseGeocode = async () => {
+        try {
+          const apiKey = import.meta.env.VITE_OPENWEATHER_KEY
+          const response = await fetch(
+            `https://api.openweathermap.org/geo/1.0/reverse?lat=${lat}&lon=${lon}&limit=1&appid=${apiKey}`
+          )
+          
+          if (response.ok) {
+            const data = await response.json()
+            const cityName = data[0]?.name || 'Your Location'
+            console.log('🏙️ Reverse geocoded city:', cityName)
+            return cityName
+          }
+        } catch (error) {
+          console.error('❌ Reverse geocoding failed:', error)
+          return null
+        }
       }
-      // Add more city approximations as needed
       
-      setLocation(approximateCity)
-      fetchWeatherData(approximateCity)
+      // Try reverse geocoding
+      reverseGeocode().then(cityName => {
+        if (cityName) {
+          setLocation(cityName)
+          fetchWeatherData(cityName)
+        } else {
+          // Fallback: Use coordinates directly with a different API approach
+          console.log('🌍 Using coordinates directly as fallback')
+          setLocation(`Coordinates: ${lat.toFixed(2)}, ${lon.toFixed(2)}`)
+          // For now, use a nearby major city approximation
+          let approximateCity = 'New York, NY' // default
+          
+          // Better coordinate mapping based on actual coordinates
+          if (lat >= 38.0 && lat <= 42.0 && lon >= -78.0 && lon <= -76.0) {
+            approximateCity = 'New York, NY'
+          } else if (lat >= 25.0 && lat <= 48.0 && lon >= -125.0 && lon <= -66.0) {
+            approximateCity = 'Chicago, IL'
+          } else if (lat >= 34.0 && lat <= 41.0 && lon >= -119.0 && lon <= -117.0) {
+            approximateCity = 'Los Angeles, CA'
+          } else if (lat >= 29.0 && lat <= 33.0 && lon >= -96.0 && lon <= -94.0) {
+            approximateCity = 'Houston, TX'
+          } else if (lat >= 33.0 && lat <= 34.0 && lon >= -112.0 && lon <= -110.0) {
+            approximateCity = 'Phoenix, AZ'
+          } else if (lat >= 39.0 && lat <= 41.0 && lon >= -76.0 && lon <= -73.0) {
+            approximateCity = 'Philadelphia, PA'
+          } else if (lat >= 29.0 && lat <= 31.0 && lon >= -99.0 && lon <= -97.0) {
+            approximateCity = 'San Antonio, TX'
+          } else if (lat >= 32.0 && lat <= 34.0 && lon >= -118.0 && lon <= -116.0) {
+            approximateCity = 'San Diego, CA'
+          } else if (lat >= 32.0 && lat <= 34.0 && lon >= -97.0 && lon <= -95.0) {
+            approximateCity = 'Dallas, TX'
+          }
+          
+          setLocation(approximateCity)
+          fetchWeatherData(approximateCity)
+        }
+      })
     } else {
       console.log('🏙️ Using city-based location:', newLocation)
       setIsUsingCoordinates(false)
