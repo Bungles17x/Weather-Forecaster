@@ -20,9 +20,6 @@
   background: linear-gradient(135deg, #1e3c72, #2a5298);
   border-radius: 8px;
   overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .weather-layer {
@@ -32,9 +29,12 @@
   width: 100% !important;
   height: 100% !important;
   object-fit: cover !important;
-  opacity: 0.9 !important;
-  z-index: 10 !important;
+  opacity: 1 !important;
+  z-index: 1000 !important;
   border-radius: 8px !important;
+  pointer-events: none !important;
+  border: 3px solid red !important;
+  box-sizing: border-box !important;
 }
 
 .map-loading {
@@ -114,7 +114,7 @@
   border-radius: 20px;
   color: white;
   font-size: 0.8rem;
-  z-index: 5;
+  z-index: 2000;
 }
 
 .map-info {
