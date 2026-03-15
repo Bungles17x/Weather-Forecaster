@@ -331,7 +331,23 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
     // Advisory Layer - Weather Advisories and Warnings
     const advisoryLayer = window.L.tileLayer('https://tile.openweathermap.org/map/weather_new/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136', {
       attribution: '© OpenWeatherMap',
-      opacity: 0.6,
+      opacity: 0.7,
+      maxZoom: 12,
+      minZoom: 4
+    }).addTo(map) // Add to map by default
+
+    // NOAA Advisory Layer - Alternative source
+    const noaaAdvisoryLayer = window.L.tileLayer('https://www.weather.gov/ridge/Conus/Warnings/Warnings_small_loop.gif', {
+      attribution: '© NOAA NWS',
+      opacity: 0.8,
+      maxZoom: 12,
+      minZoom: 4
+    })
+
+    // METAR Weather Stations Advisory Layer
+    const metarLayer = window.L.tileLayer('https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/layer/wwa/{z}/{x}/{y}.png', {
+      attribution: '© Iowa State Mesonet',
+      opacity: 0.8,
       maxZoom: 12,
       minZoom: 4
     })
@@ -365,7 +381,9 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
       '☁️ Cloud Coverage': cloudsLayer,
       '🌡 Temperature': tempLayer,
       '🔵 Pressure': pressureLayer,
-      '📋 Advisory': advisoryLayer
+      '📋 Advisory': advisoryLayer,
+      '🚨 NOAA Advisory': noaaAdvisoryLayer,
+      '🏢 METAR Advisory': metarLayer
     }
 
     // Add layer control
@@ -386,6 +404,8 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
       temperature: tempLayer,
       pressure: pressureLayer,
       advisory: advisoryLayer,
+      noaaAdvisory: noaaAdvisoryLayer,
+      metarAdvisory: metarLayer,
       layerControl: layerControl
     }
   }
