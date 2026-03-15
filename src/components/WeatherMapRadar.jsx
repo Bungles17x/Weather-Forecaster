@@ -342,6 +342,9 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
   }
 
   const addActiveAlertsMarkers = (map) => {
+    // Create layer group for alerts
+    const alertsLayerGroup = window.L.layerGroup().addTo(map)
+    
     // Fetch active weather alerts from NWS
     fetch('https://api.weather.gov/alerts/active/area')
       .then(response => response.json())
@@ -349,50 +352,126 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
         if (data.features && data.features.length > 0) {
           data.features.forEach(alert => {
             if (alert.geometry && alert.geometry.coordinates) {
-              const coords = alert.geometry.coordinates
-              // Handle different geometry types
-              let centerCoords
-              if (coords[0] && Array.isArray(coords[0][0])) {
-                // Polygon coordinates
-                centerCoords = coords[0][0][0]
-              } else if (coords[0] && Array.isArray(coords[0])) {
-                // Line coordinates
-                centerCoords = coords[0][0]
-              } else {
-                // Point coordinates
-                centerCoords = coords
+              const severity = alert.properties.severity ? alert.properties.severity.toLowerCase() : 'unknown'
+              const event = alert.properties.event || 'Weather Alert'
+              
+              // Determine color based on severity
+              let polygonColor, polygonOpacity, markerColor
+              switch (severity) {
+                case 'extreme':
+                  polygonColor = '#dc2626' // Red for extreme/warnings
+                  polygonOpacity = 0.3
+                  markerColor = '#dc2626'
+                  break
+                case 'severe':
+                  polygonColor = '#f59e0b' // Yellow for severe
+                  polygonOpacity = 0.3
+                  markerColor = '#f59e0b'
+                  break
+                case 'moderate':
+                  polygonColor = '#ea580c' // Orange for moderate/watches
+                  polygonOpacity = 0.3
+                  markerColor = '#ea580c'
+                  break
+                case 'minor':
+                  polygonColor = '#3b82f6' // Blue for minor
+                  polygonOpacity = 0.2
+                  markerColor = '#3b82f6'
+                  break
+                default:
+                  polygonColor = '#6b7280' // Gray for unknown
+                  polygonOpacity = 0.2
+                  markerColor = '#6b7280'
               }
 
-              if (centerCoords && centerCoords.length >= 2) {
-                // Reverse coordinates from [lng, lat] to [lat, lng] for Leaflet
-                const lat = centerCoords[1]
-                const lng = centerCoords[0]
+              // Handle different geometry types
+              const coords = alert.geometry.coordinates
+              let latLngs = []
+              
+              if (alert.geometry.type === 'Polygon') {
+                // Polygon coordinates
+                const polygonCoords = coords[0]
+                latLngs = polygonCoords.map(coord => [coord[1], coord[0]]) // Reverse [lng, lat] to [lat, lng]
+                
+                // Create polygon
+                const polygon = window.L.polygon(latLngs, {
+                  color: polygonColor,
+                  fillColor: polygonColor,
+                  fillOpacity: polygonOpacity,
+                  weight: 2,
+                  opacity: 0.8
+                }).addTo(alertsLayerGroup)
 
-                const alertMarker = window.L.marker([lat, lng], {
+                // Add popup to polygon
+                const popupContent = createAlertPopup(alert, markerColor)
+                polygon.bindPopup(popupContent)
+
+              } else if (alert.geometry.type === 'MultiPolygon') {
+                // MultiPolygon coordinates
+                coords.forEach(polygonCoords => {
+                  const latLngsMulti = polygonCoords[0].map(coord => [coord[1], coord[0]])
+                  
+                  const polygon = window.L.polygon(latLngsMulti, {
+                    color: polygonColor,
+                    fillColor: polygonColor,
+                    fillOpacity: polygonOpacity,
+                    weight: 2,
+                    opacity: 0.8
+                  }).addTo(alertsLayerGroup)
+
+                  const popupContent = createAlertPopup(alert, markerColor)
+                  polygon.bindPopup(popupContent)
+                })
+
+              } else if (alert.geometry.type === 'Point') {
+                // Point coordinates
+                const pointCoords = coords
+                const lat = pointCoords[1]
+                const lng = pointCoords[0]
+
+                // Create circle marker for point alerts
+                const circleMarker = window.L.circleMarker([lat, lng], {
+                  radius: 20,
+                  fillColor: polygonColor,
+                  color: polygonColor,
+                  weight: 2,
+                  opacity: 0.8,
+                  fillOpacity: polygonOpacity
+                }).addTo(alertsLayerGroup)
+
+                const popupContent = createAlertPopup(alert, markerColor)
+                circleMarker.bindPopup(popupContent)
+
+              } else if (alert.geometry.type === 'LineString') {
+                // LineString coordinates
+                const lineCoords = coords.map(coord => [coord[1], coord[0]])
+                
+                const polyline = window.L.polyline(lineCoords, {
+                  color: polygonColor,
+                  weight: 4,
+                  opacity: 0.8
+                }).addTo(alertsLayerGroup)
+
+                const popupContent = createAlertPopup(alert, markerColor)
+                polyline.bindPopup(popupContent)
+              }
+
+              // Add center marker for better visibility
+              if (latLngs.length > 0) {
+                // Calculate center of polygon
+                const center = calculatePolygonCenter(latLngs)
+                
+                const alertMarker = window.L.marker(center, {
                   icon: window.L.divIcon({
-                    html: `<div style="background: #dc2626; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; white-space: nowrap;">🚨 ALERT</div>`,
+                    html: `<div style="background: ${markerColor}; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">🚨 ${event}</div>`,
                     className: 'alert-marker',
-                    iconSize: [80, 20],
-                    iconAnchor: [40, 10]
+                    iconSize: [120, 20],
+                    iconAnchor: [60, 10]
                   })
-                }).addTo(map)
+                }).addTo(alertsLayerGroup)
 
-                const alertPopup = `
-                  <div class="alert-popup">
-                    <h4 style="margin: 0 0 8px 0; color: #dc2626; font-size: 14px; font-weight: bold;">${alert.properties.event || 'Weather Alert'}</h4>
-                    <p style="margin: 0 0 8px 0; font-size: 12px; line-height: 1.4;">${alert.properties.headline || alert.properties.description || 'Active weather alert in this area'}</p>
-                    <div style="font-size: 11px; color: #666;">
-                      <div><strong>Severity:</strong> ${alert.properties.severity || 'Unknown'}</div>
-                      <div><strong>Urgency:</strong> ${alert.properties.urgency || 'Unknown'}</div>
-                      <div><strong>Areas:</strong> ${alert.properties.areaDesc || 'Unknown'}</div>
-                      <div><strong>Effective:</strong> ${alert.properties.effective ? new Date(alert.properties.effective).toLocaleString() : 'Unknown'}</div>
-                      ${alert.properties.expires ? `<div><strong>Expires:</strong> ${new Date(alert.properties.expires).toLocaleString()}</div>` : ''}
-                    </div>
-                    ${alert.properties.web ? `<a href="${alert.properties.web}" target="_blank" style="color: #007bff; text-decoration: none; font-size: 12px;">View Full Details</a>` : ''}
-                  </div>
-                `
-
-                alertMarker.bindPopup(alertPopup)
+                const popupContent = createAlertPopup(alert, markerColor)
+                alertMarker.bindPopup(popupContent)
               }
             }
           })
@@ -401,6 +480,46 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
       .catch(error => {
         console.error('Error fetching active alerts:', error)
       })
+  }
+
+  const createAlertPopup = (alert, color) => {
+    const severity = alert.properties.severity || 'Unknown'
+    const urgency = alert.properties.urgency || 'Unknown'
+    const event = alert.properties.event || 'Weather Alert'
+    const headline = alert.properties.headline || alert.properties.description || 'Active weather alert in this area'
+    const areas = alert.properties.areaDesc || 'Unknown'
+    const effective = alert.properties.effective ? new Date(alert.properties.effective).toLocaleString() : 'Unknown'
+    const expires = alert.properties.expires ? new Date(alert.properties.expires).toLocaleString() : 'Unknown'
+    const web = alert.properties.web
+
+    return `
+      <div class="alert-popup" style="min-width: 280px;">
+        <div style="background: ${color}; color: white; padding: 8px; border-radius: 4px 4px 0 0; margin: -8px -8px 8px -8px;">
+          <h4 style="margin: 0; font-size: 14px; font-weight: bold;">${event}</h4>
+        </div>
+        <div style="padding: 8px;">
+          <p style="margin: 0 0 8px 0; font-size: 12px; line-height: 1.4;">${headline}</p>
+          <div style="font-size: 11px; color: #666; line-height: 1.4;">
+            <div><strong>Severity:</strong> <span style="color: ${color}; font-weight: bold;">${severity.toUpperCase()}</span></div>
+            <div><strong>Urgency:</strong> ${urgency}</div>
+            <div><strong>Areas:</strong> ${areas}</div>
+            <div><strong>Effective:</strong> ${effective}</div>
+            ${alert.properties.expires ? `<div><strong>Expires:</strong> ${expires}</div>` : ''}
+          </div>
+          ${web ? `<a href="${web}" target="_blank" style="color: #007bff; text-decoration: none; font-size: 12px; display: inline-block; margin-top: 8px;">View Full Details →</a>` : ''}
+        </div>
+      </div>
+    `
+  }
+
+  const calculatePolygonCenter = (latLngs) => {
+    let sumLat = 0
+    let sumLng = 0
+    latLngs.forEach(([lat, lng]) => {
+      sumLat += lat
+      sumLng += lng
+    })
+    return [sumLat / latLngs.length, sumLng / latLngs.length]
   }
 
   const addWeatherLayers = (map) => {
