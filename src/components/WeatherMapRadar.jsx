@@ -23,23 +23,36 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
 
   // Load map script
   useEffect(() => {
-    const script = document.createElement('script')
-    script.src = `https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places`
-    script.async = true
-    script.onload = () => {
+    // Try to load Leaflet for OpenStreetMap (more reliable)
+    const leafletScript = document.createElement('script')
+    leafletScript.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
+    leafletScript.async = true
+    leafletScript.onload = () => {
+      console.log('✅ Leaflet loaded successfully')
       setLoading(false)
-      initializeMap()
-    }
-    script.onerror = () => {
-      console.error('Failed to load Google Maps API')
-      setLoading(false)
-      // Fallback to OpenStreetMap
       initializeOpenStreetMap()
     }
-    document.head.appendChild(script)
+    leafletScript.onerror = () => {
+      console.error('❌ Failed to load Leaflet')
+      setLoading(false)
+      // Fallback to simple display
+      initializeSimpleMap()
+    }
+    document.head.appendChild(leafletScript)
+
+    // Load Leaflet CSS
+    const leafletCSS = document.createElement('link')
+    leafletCSS.rel = 'stylesheet'
+    leafletCSS.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'
+    document.head.appendChild(leafletCSS)
 
     return () => {
-      document.head.removeChild(script)
+      if (document.head.contains(leafletScript)) {
+        document.head.removeChild(leafletScript)
+      }
+      if (document.head.contains(leafletCSS)) {
+        document.head.removeChild(leafletCSS)
+      }
     }
   }, [])
 
@@ -100,14 +113,9 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
       maxZoom: 19
     }).addTo(map)
 
-    // Add weather layers
-    addWeatherLayersOSM(map)
+    // Add NOAA/NWS radar layers
+    addRadarLayersOSM(map)
     
-    // Add radar overlay
-    if (radarOverlay) {
-      addRadarOverlayOSM(map)
-    }
-
     // Add weather markers
     if (weatherData) {
       addWeatherMarkersOSM(map, weatherData)
@@ -118,7 +126,49 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
       addLocationMarkerOSM(map, coordinates)
     }
 
-  }, [mapCenter, zoom, radarOverlay, weatherData, coordinates])
+    // Add layer controls
+    addLayerControls(map)
+  }, [mapCenter, zoom, weatherData, coordinates])
+
+  const addRadarLayersOSM = (map) => {
+    // NOAA Wind Radar
+    const noaaLayer = window.L.tileLayer('https://tile.openweathermap.org/weather/v2/wind/{z}/{x}/{y}.png?appid=YOUR_OPENWEATHER_KEY&size=2x', {
+      attribution: '© OpenWeatherMap',
+      opacity: 0.8
+    }).addTo(map)
+
+    // NWS Precipitation Radar
+    const precipLayer = window.L.tileLayer('https://tile.openweathermap.org/weather/v2/rain/{z}/{x}/{y}.png?appid=YOUR_OPENWEATHER_KEY&size=2x', {
+      attribution: '© OpenWeatherMap',
+      opacity: 0.7
+    }).addTo(map)
+
+    // NWS Clouds Radar
+    const cloudsLayer = window.L.tileLayer('https://tile.openweathermap.org/weather/v2/clouds/{z}/{x}/{y}.png?appid=YOUR_OPENWEATHER_KEY&size=2x', {
+      attribution: '© OpenWeatherMap',
+      opacity: 0.6
+    }).addTo(map)
+
+    // NWS Temperature Radar
+    const tempLayer = window.L.tileLayer('https://tile.openweathermap.org/weather/v2/temp/{z}/{x}/{y}.png?appid=YOUR_OPENWEATHER_KEY&size=2x', {
+      attribution: '© OpenWeatherMap',
+      opacity: 0.7
+    }).addTo(map)
+
+    // NEXRAD Radar
+    const nexradLayer = window.L.tileLayer('https://radar.weather.gov/ridge/Conus/Loop/NEXRAD.gif', {
+      attribution: '© NOAA',
+      opacity: 0.9
+    }).addTo(map)
+
+    return {
+      noaa: noaaLayer,
+      precipitation: precipLayer,
+      clouds: cloudsLayer,
+      temperature: tempLayer,
+      nexrad: nexradLayer
+    }
+  }
 
   const addWeatherLayers = (map) => {
     // Weather radar layer
@@ -320,6 +370,58 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
     return markers
   }
 
+  const addWeatherMarkersOSM = (map, data) => {
+    // Current weather marker
+    const currentMarker = window.L.marker([data.coord.lat, data.coord.lon], {
+      title: data.name,
+      icon: window.L.divIcon({
+        html: `<div style="background: #007bff; color: white; padding: 5px; border-radius: 50%; font-weight: bold;">${getWeatherIcon(data.weather[0].icon)}</div>`,
+        className: 'weather-marker',
+        iconSize: [50, 50]
+      })
+    }).addTo(map)
+
+    // Popup for current weather
+    const popupContent = `
+      <div class="weather-info-window">
+        <h3>${data.name}</h3>
+        <p><strong>${data.weather[0].description}</strong></p>
+        <p>Temperature: ${Math.round(data.main.temp)}°F</p>
+        <p>Humidity: ${data.main.humidity}%</p>
+        <p>Wind: ${data.wind.speed} mph</p>
+      </div>
+    `
+    
+    currentMarker.bindPopup(popupContent)
+
+    // Add nearby weather stations
+    if (data.weather && data.coord) {
+      const nearbyStations = getNearbyWeatherStations(data.coord.lat, data.coord.lon)
+      nearbyStations.forEach(station => {
+        const stationMarker = window.L.marker([station.lat, station.lon], {
+          title: station.name,
+          icon: window.L.circleMarker(station.lat, station.lon, {
+            radius: 5000,
+            fillColor: '#FF0000',
+            fillOpacity: 0.3,
+            strokeColor: '#FFFFFF',
+            strokeWeight: 2
+          })
+        })
+
+        const stationPopup = `
+          <div class="station-info-window">
+            <h4>${station.name}</h4>
+            <p>Temperature: ${station.temp}°F</p>
+            <p>Humidity: ${station.humidity}%</p>
+          </div>
+        `
+
+        stationMarker.bindPopup(stationPopup)
+      })
+    }
+  }
+
   const addLocationMarker = (map, coords) => {
     const locationMarker = new window.google.maps.Marker({
       position: { lat: coords.latitude, lng: coords.longitude },
@@ -351,6 +453,27 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
     })
 
     return locationMarker
+  }
+
+  const addLocationMarkerOSM = (map, coords) => {
+    const locationMarker = window.L.marker([coords.latitude, coords.longitude], {
+      title: 'Your Location',
+      icon: window.L.divIcon({
+        html: '<div style="background: #4285F4; color: white; padding: 8px; border-radius: 50%; font-weight: bold;">📍</div>',
+        className: 'location-marker',
+        iconSize: [40, 40]
+      })
+    }).addTo(map)
+
+    const locationPopup = `
+      <div class="location-info-window">
+        <h4>📍 Your Location</h4>
+        <p>Lat: ${coords.latitude.toFixed(4)}</p>
+        <p>Lng: ${coords.longitude.toFixed(4)}</p>
+      </div>
+    `
+
+    locationMarker.bindPopup(locationPopup)
   }
 
   const getWeatherIcon = (iconCode) => {
