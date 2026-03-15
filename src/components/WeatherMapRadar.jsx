@@ -230,48 +230,85 @@ const WeatherMapRadar = ({ weatherData, coordinates }) => {
     if (coordinates) {
       addLocationMarkerOSM(map, coordinates)
     }
-
-    // Add layer controls
-    addLayerControls(map)
   }, [mapCenter, zoom, weatherData, coordinates])
 
   const addRadarLayersOSM = (map) => {
+    // Real NEXRAD radar from NOAA
+    const nexradLayer = window.L.tileLayer('https://radar.weather.gov/ridge/Conus/Loop/NEXRAD.gif', {
+      attribution: '© NOAA NWS',
+      opacity: 0.9,
+      maxZoom: 12,
+      minZoom: 4
+    }).addTo(map)
+
+    // Regional NEXRAD radar tiles
+    const nexradTilesLayer = window.L.tileLayer('https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png', {
+      attribution: '© NOAA NWS',
+      opacity: 0.8,
+      maxZoom: 12,
+      minZoom: 4
+    }).addTo(map)
+
     // NOAA Wind Radar
     const noaaLayer = window.L.tileLayer('https://tile.openweathermap.org/weather/v2/wind/{z}/{x}/{y}.png?appid=YOUR_OPENWEATHER_KEY&size=2x', {
       attribution: '© OpenWeatherMap',
-      opacity: 0.8
+      opacity: 0.8,
+      maxZoom: 12,
+      minZoom: 4
     }).addTo(map)
 
     // NWS Precipitation Radar
     const precipLayer = window.L.tileLayer('https://tile.openweathermap.org/weather/v2/rain/{z}/{x}/{y}.png?appid=YOUR_OPENWEATHER_KEY&size=2x', {
       attribution: '© OpenWeatherMap',
-      opacity: 0.7
+      opacity: 0.7,
+      maxZoom: 12,
+      minZoom: 4
     }).addTo(map)
 
     // NWS Clouds Radar
     const cloudsLayer = window.L.tileLayer('https://tile.openweathermap.org/weather/v2/clouds/{z}/{x}/{y}.png?appid=YOUR_OPENWEATHER_KEY&size=2x', {
       attribution: '© OpenWeatherMap',
-      opacity: 0.6
+      opacity: 0.6,
+      maxZoom: 12,
+      minZoom: 4
     }).addTo(map)
 
     // NWS Temperature Radar
     const tempLayer = window.L.tileLayer('https://tile.openweathermap.org/weather/v2/temp/{z}/{x}/{y}.png?appid=YOUR_OPENWEATHER_KEY&size=2x', {
       attribution: '© OpenWeatherMap',
-      opacity: 0.7
+      opacity: 0.7,
+      maxZoom: 12,
+      minZoom: 4
     }).addTo(map)
 
-    // NEXRAD Radar
-    const nexradLayer = window.L.tileLayer('https://radar.weather.gov/ridge/Conus/Loop/NEXRAD.gif', {
-      attribution: '© NOAA',
-      opacity: 0.9
+    // Add layer control for toggling radar layers
+    const baseMaps = {
+      'OpenStreetMap': window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 19
+      })
+    }
+
+    const overlayMaps = {
+      '🛡️ NEXRAD Radar': nexradTilesLayer,
+      '🛡️ NEXRAD Loop': nexradLayer,
+      '💨 Wind Speed': noaaLayer,
+      '💧 Precipitation': precipLayer,
+      '☁️ Cloud Coverage': cloudsLayer,
+      '🌡 Temperature': tempLayer
+    }
+
+    window.L.control.layers(baseMaps, overlayMaps, {
+      position: 'topright'
     }).addTo(map)
 
     return {
+      nexrad: nexradLayer,
+      nexradTiles: nexradTilesLayer,
       noaa: noaaLayer,
       precipitation: precipLayer,
       clouds: cloudsLayer,
-      temperature: tempLayer,
-      nexrad: nexradLayer
+      temperature: tempLayer
     }
   }
 
