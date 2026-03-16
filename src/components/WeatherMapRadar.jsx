@@ -91,12 +91,12 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
             <!-- Large Radar Visualization - FULL SCREEN -->
             <div style="position: relative; width: 100%; height: 100%; max-width: none; max-height: none;">
               <!-- Radar Background - FULL SCREEN -->
-              <div style="position: absolute; inset: 0; background: radial-gradient(circle at center, rgba(52, 152, 219, 0.1) 0%, rgba(0, 0, 0, 0.3) 50%, rgba(0, 0, 0, 0.5) 100%); border-radius: 0; transform: scale(2.2);"></div>
+              <div style="position: absolute; inset: 0; background: radial-gradient(circle at center, rgba(52, 152, 219, 0.1) 0%, rgba(0, 0, 0, 0.3) 50%, rgba(0, 0, 0, 0.5) 100%); border-radius: 0; transform: scale(4.0);"></div>
               
               <!-- Animated Radar Sweep - FULL SCREEN -->
               <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;">
-                <div style="width: 98%; height: 98%; border: 3px solid rgba(52, 152, 219, 0.3); border-radius: 0; position: relative; animation: radar-sweep-${timestamp} 4s linear infinite;">
-                  <div style="position: absolute; top: 50%; left: 50%; width: 2px; height: 55%; background: linear-gradient(to top, transparent, rgba(52, 152, 219, 0.8)); transform-origin: bottom; transform: translateX(-50%) translateY(-100%) rotate(0deg); animation: sweep-${timestamp} 2s linear infinite;"></div>
+                <div style="width: 99%; height: 99%; border: 3px solid rgba(52, 152, 219, 0.3); border-radius: 0; position: relative; animation: radar-sweep-${timestamp} 4s linear infinite;">
+                  <div style="position: absolute; top: 50%; left: 50%; width: 2px; height: 60%; background: linear-gradient(to top, transparent, rgba(52, 152, 219, 0.8)); transform-origin: bottom; transform: translateX(-50%) translateY(-100%) rotate(0deg); animation: sweep-${timestamp} 2s linear infinite;"></div>
                 </div>
               </div>
               
