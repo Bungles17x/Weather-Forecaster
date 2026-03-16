@@ -1102,7 +1102,7 @@ const WeatherApp = () => {
                               spcOutlook.tornado?.risk === 'ENHANCED' ? 126 :
                               spcOutlook.tornado?.risk === 'SLIGHT' ? 76 :
                               spcOutlook.tornado?.risk === 'MARGINAL' ? 26 : 0} 565`}
-                            transform="rotate(90 40 40)"
+                            transform="rotate(180 40 40)"
                             className="risk-progress"
                           />
                         </svg>
@@ -1137,7 +1137,7 @@ const WeatherApp = () => {
                               spcOutlook.hail?.risk === 'ENHANCED' ? 126 :
                               spcOutlook.hail?.risk === 'SLIGHT' ? 76 :
                               spcOutlook.hail?.risk === 'MARGINAL' ? 26 : 0} 565`}
-                            transform="rotate(90 40 40)"
+                            transform="rotate(180 40 40)"
                             className="risk-progress"
                           />
                         </svg>
@@ -1172,7 +1172,7 @@ const WeatherApp = () => {
                               spcOutlook.wind?.risk === 'ENHANCED' ? 126 :
                               spcOutlook.wind?.risk === 'SLIGHT' ? 76 :
                               spcOutlook.wind?.risk === 'MARGINAL' ? 26 : 0} 565`}
-                            transform="rotate(90 40 40)"
+                            transform="rotate(180 40 40)"
                             className="risk-progress"
                           />
                         </svg>
