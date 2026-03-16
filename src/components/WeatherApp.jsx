@@ -707,31 +707,54 @@ const WeatherApp = () => {
             
             {weatherData.alerts.length > 0 && (
               <div className="alerts-section">
-                <h4>
-                  ⚠ Active Alerts ({weatherData.alerts.length})
-                  {weatherData.alerts.some(alert => alert.properties.severity === 'Extreme') && 
-                    <span className="extreme-alert-indicator">⚠ EXTREME WEATHER</span>
-                  }
-                </h4>
+                <div className="alerts-header">
+                  <h4>
+                    ⚠ Active Alerts ({weatherData.alerts.length})
+                    {weatherData.alerts.some(alert => alert.properties.severity === 'Extreme') && 
+                      <span className="extreme-alert-indicator">⚠ EXTREME WEATHER</span>
+                    }
+                  </h4>
+                  <div className="alert-summary">
+                    {weatherData.alerts.filter(alert => alert.properties.severity === 'Extreme').length > 0 && (
+                      <span className="alert-count extreme">
+                        {weatherData.alerts.filter(alert => alert.properties.severity === 'Extreme').length} Extreme
+                      </span>
+                    )}
+                    {weatherData.alerts.filter(alert => alert.properties.severity === 'Severe').length > 0 && (
+                      <span className="alert-count severe">
+                        {weatherData.alerts.filter(alert => alert.properties.severity === 'Severe').length} Severe
+                      </span>
+                    )}
+                    {weatherData.alerts.filter(alert => alert.properties.severity === 'Moderate').length > 0 && (
+                      <span className="alert-count moderate">
+                        {weatherData.alerts.filter(alert => alert.properties.severity === 'Moderate').length} Moderate
+                      </span>
+                    )}
+                  </div>
+                </div>
                 <div className="alerts-list">
                   {weatherData.alerts.map((alert, index) => {
                     const severityColor = getSeverityColor(alert.properties.severity)
                     const alertIcon = getAlertIcon(alert.properties.event)
                     const expires = formatAlertTime(alert.properties.expires)
+                    const isExpired = new Date(alert.properties.expires) < new Date()
                     
                     return (
                       <div 
                         key={index} 
-                        className="alert-item"
+                        className={`alert-item ${isExpired ? 'expired' : ''}`}
                         style={{ 
                           borderLeft: `4px solid ${severityColor}`,
-                          backgroundColor: `${severityColor}10`
+                          backgroundColor: `${severityColor}15`
                         }}
                       >
                         <div className="alert-header">
                           <div className="alert-title">
                             <span className="alert-icon">{alertIcon}</span>
-                            <span className="alert-event">{alert.properties.event}</span>
+                            <div className="alert-title-text">
+                              <span className="alert-event">{alert.properties.event}</span>
+                              <span className="alert-urgency">{alert.properties.urgency || 'Unknown'}</span>
+                            </div>
                           </div>
                           <div className="alert-meta">
                             <span 
@@ -741,21 +764,36 @@ const WeatherApp = () => {
                               {alert.properties.severity}
                             </span>
                             {expires && (
-                              <span className="alert-expires">Until {expires}</span>
+                              <span className={`alert-expires ${isExpired ? 'expired' : ''}`}>
+                                {isExpired ? 'Expired' : `Until ${expires}`}
+                              </span>
                             )}
                           </div>
                         </div>
                         <div className="alert-description">
                           {alert.properties.description}
                         </div>
-                        <div className="alert-areas">
-                          <strong>Affected Areas:</strong> {alert.properties.areaDesc}
-                        </div>
-                        {alert.properties.instruction && (
-                          <div className="alert-instructions">
-                            <strong>Safety Instructions:</strong> {alert.properties.instruction}
+                        <div className="alert-details">
+                          <div className="alert-areas">
+                            <strong>📍 Affected Areas:</strong> {alert.properties.areaDesc}
                           </div>
-                        )}
+                          {alert.properties.instruction && (
+                            <div className="alert-instructions">
+                              <strong>🛡️ Safety Instructions:</strong> {alert.properties.instruction}
+                            </div>
+                          )}
+                          <div className="alert-contact">
+                            <strong>📞 Contact:</strong> {alert.properties.contact || 'Local Emergency Management'}
+                          </div>
+                          <div className="alert-web">
+                            <strong>🌐 More Info:</strong> 
+                            {alert.properties.web && (
+                              <a href={alert.properties.web} target="_blank" rel="noopener noreferrer">
+                                View Full Alert
+                              </a>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     )
                   })}
