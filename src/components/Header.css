@@ -952,7 +952,7 @@
 }
 
 /* Enhanced Mobile Styles - Layout Only */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .weather-header {
     padding: 4px 0;
   }
@@ -1026,6 +1026,25 @@
   
   .header-right {
     gap: 6px;
+  }
+  
+  .mobile-bottom-nav {
+    display: flex; /* Ensure mobile nav is shown */
+    justify-content: space-around;
+    align-items: center;
+  }
+  
+  .mobile-nav-btn {
+    padding: 6px 8px;
+    max-width: 70px;
+  }
+  
+  .mobile-nav-icon {
+    font-size: 1rem;
+  }
+  
+  .mobile-nav-label {
+    font-size: 0.65rem;
   }
   
   .search-container {
