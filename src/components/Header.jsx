@@ -92,6 +92,11 @@ const Header = ({ onLocationChange }) => {
   const handleLocationSubmit = (e) => {
     e.preventDefault()
     if (locationInput.trim()) {
+      // Save to location history
+      const history = JSON.parse(localStorage.getItem('weatherLocationHistory') || '[]')
+      const newHistory = [locationInput, ...history.filter(loc => loc !== locationInput)].slice(0, 10)
+      localStorage.setItem('weatherLocationHistory', JSON.stringify(newHistory))
+      
       onLocationChange && onLocationChange(locationInput)
       setIsLocationModalOpen(false)
     }
@@ -102,8 +107,10 @@ const Header = ({ onLocationChange }) => {
     setSearchInput(query)
     
     if (query.length > 0) {
-      // Generate search suggestions
+      // Get location history from localStorage
+      const history = JSON.parse(localStorage.getItem('weatherLocationHistory') || '[]')
       const suggestions = [
+        ...history,
         'New York, NY',
         'Los Angeles, CA',
         'Chicago, IL',
@@ -115,7 +122,7 @@ const Header = ({ onLocationChange }) => {
         'Dallas, TX'
       ].filter(city => 
         city.toLowerCase().includes(query.toLowerCase())
-      )
+      ).slice(0, 5) // Limit to 5 suggestions
       setSearchSuggestions(suggestions)
       setShowSuggestions(true)
     } else {
@@ -127,6 +134,11 @@ const Header = ({ onLocationChange }) => {
   const handleSearchSubmit = (e) => {
     e.preventDefault()
     if (searchInput.trim()) {
+      // Save to location history
+      const history = JSON.parse(localStorage.getItem('weatherLocationHistory') || '[]')
+      const newHistory = [searchInput, ...history.filter(loc => loc !== searchInput)].slice(0, 10)
+      localStorage.setItem('weatherLocationHistory', JSON.stringify(newHistory))
+      
       onLocationChange && onLocationChange(searchInput)
       setSearchInput('')
       setSearchSuggestions([])
@@ -135,6 +147,11 @@ const Header = ({ onLocationChange }) => {
   }
 
   const handleSuggestionClick = (suggestion) => {
+    // Save to location history
+    const history = JSON.parse(localStorage.getItem('weatherLocationHistory') || '[]')
+    const newHistory = [suggestion, ...history.filter(loc => loc !== suggestion)].slice(0, 10)
+    localStorage.setItem('weatherLocationHistory', JSON.stringify(newHistory))
+    
     setLocationInput(suggestion)
     setSearchSuggestions([])
     setShowSuggestions(false)
@@ -160,12 +177,13 @@ const Header = ({ onLocationChange }) => {
 
   const clearSearchHistory = () => {
     setSearchSuggestions([])
+    localStorage.removeItem('weatherLocationHistory')
     localStorage.removeItem('weatherSearchHistory')
   }
 
-  // Load search history from localStorage
+  // Load location history from localStorage
   useEffect(() => {
-    const history = localStorage.getItem('weatherSearchHistory')
+    const history = localStorage.getItem('weatherLocationHistory')
     if (history) {
       setSearchSuggestions(JSON.parse(history))
     }
@@ -203,7 +221,7 @@ const Header = ({ onLocationChange }) => {
               {showSuggestions && searchSuggestions.length > 0 && (
                 <div className="search-suggestions">
                   <div className="suggestions-header">
-                    <span>Suggestions</span>
+                    <span>📍 Recent Locations</span>
                     <button className="clear-history-btn" onClick={clearSearchHistory}>
                       Clear History
                     </button>

@@ -6,13 +6,50 @@ import './WeatherApp.css'
 // Cache busting timestamp - FORCE RELOAD
 console.log('🔄 WeatherApp.jsx loaded at:', new Date().toISOString(), 'CACHE BUST: 2024-03-15-18-27')
 
+// Location persistence utilities
+const saveLocationToHistory = (location) => {
+  try {
+    const history = JSON.parse(localStorage.getItem('weatherLocationHistory') || '[]')
+    const newHistory = [location, ...history.filter(loc => loc !== location)].slice(0, 10)
+    localStorage.setItem('weatherLocationHistory', JSON.stringify(newHistory))
+  } catch (error) {
+    console.error('Failed to save location history:', error)
+  }
+}
+
+const getLocationHistory = () => {
+  try {
+    return JSON.parse(localStorage.getItem('weatherLocationHistory') || '[]')
+  } catch (error) {
+    console.error('Failed to get location history:', error)
+    return []
+  }
+}
+
+const getLastLocation = () => {
+  try {
+    return localStorage.getItem('lastWeatherLocation') || 'New York, NY'
+  } catch (error) {
+    console.error('Failed to get last location:', error)
+    return 'New York, NY'
+  }
+}
+
+const saveLastLocation = (location) => {
+  try {
+    localStorage.setItem('lastWeatherLocation', location)
+  } catch (error) {
+    console.error('Failed to save last location:', error)
+  }
+}
+
 const WeatherApp = () => {
   // Core state
   const [weatherData, setWeatherData] = useState(null)
   const [forecastData, setForecastData] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [location, setLocation] = useState('New York, NY')
+  const [location, setLocation] = useState(getLastLocation())
   const [lastUpdate, setLastUpdate] = useState(null)
 
   // NWS API endpoints
@@ -451,6 +488,12 @@ const WeatherApp = () => {
   const handleLocationChange = useCallback((newLocation) => {
     console.log('📍 Location change requested:', newLocation)
     if (newLocation && newLocation !== location) {
+      // Save to history
+      saveLocationToHistory(newLocation)
+      // Save as last location
+      saveLastLocation(newLocation)
+      // Update state and fetch data
+      setLocation(newLocation)
       fetchNWSData(newLocation)
     }
   }, [location, fetchNWSData])
