@@ -1083,7 +1083,7 @@ const WeatherApp = () => {
                         className="risk-indicator" 
                         data-risk={spcOutlook.tornado?.risk || 'UNKNOWN'}
                       >
-                        {spcOutlook.tornado?.label || 'No Data'}
+                        <span>{spcOutlook.tornado?.label || 'No Data'}</span>
                       </div>
                     </div>
                     
@@ -1093,7 +1093,7 @@ const WeatherApp = () => {
                         className="risk-indicator" 
                         data-risk={spcOutlook.hail?.risk || 'UNKNOWN'}
                       >
-                        {spcOutlook.hail?.label || 'No Data'}
+                        <span>{spcOutlook.hail?.label || 'No Data'}</span>
                       </div>
                     </div>
                     
@@ -1103,7 +1103,7 @@ const WeatherApp = () => {
                         className="risk-indicator" 
                         data-risk={spcOutlook.wind?.risk || 'UNKNOWN'}
                       >
-                        {spcOutlook.wind?.label || 'No Data'}
+                        <span>{spcOutlook.wind?.label || 'No Data'}</span>
                       </div>
                     </div>
                   </div>

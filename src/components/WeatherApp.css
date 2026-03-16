@@ -85,19 +85,52 @@
 }
 
 .risk-indicator {
-  padding: 0.8rem 1rem;
-  border-radius: 6px;
+  position: relative;
+  width: 80px;
+  height: 80px;
+  margin: 0 auto;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
-  letter-spacing: 0.8px;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+  letter-spacing: 0.6px;
   transition: all 0.3s ease;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  background: conic-gradient(
+    from 0deg,
+    var(--risk-color) 0deg,
+    var(--risk-color) var(--fill-amount),
+    rgba(255, 255, 255, 0.1) var(--fill-amount),
+    rgba(255, 255, 255, 0.1) 360deg
+  );
+}
+
+.risk-indicator::before {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  right: 3px;
+  bottom: 3px;
+  border-radius: 50%;
+  background: #1a1a2e;
+  z-index: 1;
+}
+
+.risk-indicator span {
+  position: relative;
+  z-index: 2;
+  color: #ffffff;
+  text-align: center;
+  line-height: 1.2;
+  padding: 0.5rem;
 }
 
 .risk-indicator:hover {
-  transform: translateY(-2px);
+  transform: translateY(-2px) scale(1.05);
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 }
 
@@ -171,35 +204,35 @@
   text-decoration: none;
 }
 
-/* Risk Level Specific Colors */
+/* Risk Level Specific Colors for Circular Indicators */
 .risk-indicator[data-risk="HIGH"] {
-  background: linear-gradient(135deg, #d32f2f, #b71c1c);
-  color: #ffffff;
+  --risk-color: #d32f2f;
+  --fill-amount: 324deg; /* 90% fill */
 }
 
 .risk-indicator[data-risk="MODERATE"] {
-  background: linear-gradient(135deg, #f57c00, #e65100);
-  color: #ffffff;
+  --risk-color: #f57c00;
+  --fill-amount: 252deg; /* 70% fill */
 }
 
 .risk-indicator[data-risk="ENHANCED"] {
-  background: linear-gradient(135deg, #fbc02d, #f57f17);
-  color: #000000;
+  --risk-color: #fbc02d;
+  --fill-amount: 180deg; /* 50% fill */
 }
 
 .risk-indicator[data-risk="SLIGHT"] {
-  background: linear-gradient(135deg, #388e3c, #2e7d32);
-  color: #ffffff;
+  --risk-color: #388e3c;
+  --fill-amount: 108deg; /* 30% fill */
 }
 
 .risk-indicator[data-risk="MARGINAL"] {
-  background: linear-gradient(135deg, #1976d2, #1565c0);
-  color: #ffffff;
+  --risk-color: #1976d2;
+  --fill-amount: 36deg; /* 10% fill */
 }
 
 .risk-indicator[data-risk="UNKNOWN"] {
-  background: linear-gradient(135deg, #616161, #424242);
-  color: #ffffff;
+  --risk-color: #616161;
+  --fill-amount: 0deg; /* 0% fill */
 }
 
 /* Loading and Error States */
