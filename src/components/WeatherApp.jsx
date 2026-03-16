@@ -51,6 +51,8 @@ const WeatherApp = () => {
   const [error, setError] = useState(null)
   const [location, setLocation] = useState(getLastLocation())
   const [lastUpdate, setLastUpdate] = useState(null)
+  const [spcOutlook, setSpcOutlook] = useState(null)
+  const [loadingSpc, setLoadingSpc] = useState(false)
 
   // NWS API endpoints
   const NWS_BASE_URL = 'https://api.weather.gov'
@@ -478,6 +480,10 @@ const WeatherApp = () => {
       const alerts = await getAlerts(latitude, longitude)
       console.log('⚠️ Alerts:', alerts)
       
+      // Step 6: Get SPC outlook
+      const spcData = await getSPCOutlook()
+      console.log('🌪 SPC Outlook:', spcData)
+      
       // Process and set data
       const processedWeatherData = {
         location: displayName || locationName,
@@ -499,12 +505,17 @@ const WeatherApp = () => {
           forecastZone: nwsInfo.forecastZone,
           county: nwsInfo.county
         },
+        spcOutlook: spcData,
         alerts: alerts,
         dataSource: 'NWS',
         lastUpdated: new Date().toISOString()
       }
       
       setWeatherData(processedWeatherData)
+      setSpcOutlook(spcData)
+      setForecastData(forecast)
+      setLastUpdate(new Date())
+      setLocation(displayName || locationName)
       console.log('📅 Setting forecast data:', forecast)
       console.log('📅 Forecast data is array:', Array.isArray(forecast))
       
@@ -542,8 +553,67 @@ const WeatherApp = () => {
       setError(`Failed to fetch NWS data: ${error.message}`)
     } finally {
       setLoading(false)
+      setLoadingSpc(false)
     }
-  }, [getCoordinatesFromLocation, getNWSOffice, getCurrentWeather, getForecast, getAlerts])
+  }, [])
+
+  // Fetch SPC outlook data
+  const getSPCOutlook = useCallback(async () => {
+    try {
+      setLoadingSpc(true)
+      console.log('🌪 Fetching SPC Outlook data...')
+      
+      // Fetch SPC Convective Outlook
+      const spcResponse = await fetch('https://www.spc.noaa.gov/products/outlook/day1otlk.json')
+      if (spcResponse.ok) {
+        const spcData = await spcResponse.json()
+        console.log('🌪 SPC Outlook:', spcData)
+        
+        // Process SPC data for display
+        const processedSpcData = {
+          tornado: {
+            risk: spcData.tornado || 'UNKNOWN',
+            label: spcData.tornado || 'No Risk',
+            color: getRiskColor(spcData.tornado)
+          },
+          hail: {
+            risk: spcData.hail || 'UNKNOWN',
+            label: spcData.hail || 'No Risk',
+            color: getRiskColor(spcData.hail)
+          },
+          wind: {
+            risk: spcData.wind || 'UNKNOWN',
+            label: spcData.wind || 'No Risk',
+            color: getRiskColor(spcData.wind)
+          },
+          forecast: spcData.forecast || 'No forecast available',
+          updated: new Date().toLocaleString()
+        }
+        
+        return processedSpcData
+      }
+      
+      return null
+    } catch (error) {
+      console.error('❌ Error fetching SPC outlook:', error)
+      return null
+    } finally {
+      setLoadingSpc(false)
+    }
+  }, [])
+
+  // Get risk color based on risk level
+  const getRiskColor = (risk) => {
+    const riskColors = {
+      'HIGH': '#ff4444',
+      'MODERATE': '#ff9800',
+      'ENHANCED': '#ffeb3b',
+      'SLIGHT': '#4caf50',
+      'MARGINAL': '#2196f3',
+      'UNKNOWN': '#9e9e9e'
+    }
+    return riskColors[risk] || '#9e9e9e'
+  }
 
   // Handle location change from Header
   const handleLocationChange = useCallback((newLocation) => {
@@ -898,6 +968,71 @@ const WeatherApp = () => {
                       </div>
                     )
                   })}
+                </div>
+              </div>
+            )}
+            
+            {/* SPC Outlook Section */}
+            {spcOutlook && (
+              <div className="spc-outlook">
+                <div className="spc-header">
+                  <h2>🌪 Storm Prediction Center Outlook</h2>
+                  <p className="data-source">🇺🇸 NOAA SPC Convective Outlook</p>
+                </div>
+                
+                <div className="spc-content">
+                  <div className="spc-risk-levels">
+                    <div className="risk-category">
+                      <h3>Tornado Risk</h3>
+                      <div className="risk-indicator" style={{ 
+                        backgroundColor: spcOutlook.tornado?.color || '#ccc',
+                        color: spcOutlook.tornado?.color ? '#fff' : '#333'
+                      }}>
+                        {spcOutlook.tornado?.label || 'No Data'}
+                      </div>
+                    </div>
+                    
+                    <div className="risk-category">
+                      <h3>Hail Risk</h3>
+                      <div className="risk-indicator" style={{ 
+                        backgroundColor: spcOutlook.hail?.color || '#ccc',
+                        color: spcOutlook.hail?.color ? '#fff' : '#333'
+                      }}>
+                        {spcOutlook.hail?.label || 'No Data'}
+                      </div>
+                    </div>
+                    
+                    <div className="risk-category">
+                      <h3>Wind Risk</h3>
+                      <div className="risk-indicator" style={{ 
+                        backgroundColor: spcOutlook.wind?.color || '#ccc',
+                        color: spcOutlook.wind?.color ? '#fff' : '#333'
+                      }}>
+                        {spcOutlook.wind?.label || 'No Data'}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="spc-details">
+                    <div className="spc-forecast">
+                      <h4>Day 1 Outlook</h4>
+                      <p>{spcOutlook.forecast || 'No forecast available'}</p>
+                      <div className="spc-updated">
+                        <small>Updated: {spcOutlook.updated || 'Unknown'}</small>
+                      </div>
+                    </div>
+                    
+                    <div className="spc-map-link">
+                      <a 
+                        href="https://www.spc.noaa.gov/products/outlook/" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="spc-link-btn"
+                      >
+                        🗺️ View Full SPC Map
+                      </a>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
