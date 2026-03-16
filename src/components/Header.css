@@ -15,7 +15,7 @@
 .weather-header {
   background: rgba(26, 26, 46, 0.95);
   backdrop-filter: blur(10px);
-  padding: 16px 0;
+  padding: 6px 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   position: sticky;
   top: 0;
@@ -26,9 +26,9 @@
 .header-left .logo {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   color: white;
-  font-size: 1.5rem;
+  font-size: 1rem;
   font-weight: 600;
   text-decoration: none;
   transition: transform 0.2s ease;
@@ -40,7 +40,7 @@
 
 .logo-text {
   color: white;
-  font-size: 1.5rem;
+  font-size: 1rem;
   font-weight: 600;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
@@ -896,7 +896,7 @@
 /* Enhanced Mobile Styles - Layout Only */
 @media (max-width: 768px) {
   .weather-header {
-    padding: 12px 0;
+    padding: 4px 0;
   }
   
   .header-center {
@@ -956,7 +956,7 @@
 
 @media (max-width: 480px) {
   .weather-header {
-    padding: 10px 0;
+    padding: 3px 0;
   }
   
   .header-nav {
