@@ -101,53 +101,53 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
               </div>
               
               <!-- Weather Data Grid - FULL SCREEN -->
-              <div style="position: absolute; inset: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 3rem; padding: 2rem; align-items: center; justify-items: center;">
+              <div style="position: absolute; inset: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 3.5rem; padding: 1.5rem; align-items: center; justify-items: center;">
                 <!-- NEXRAD Radar - MUCH LARGER -->
-                <div style="background: linear-gradient(135deg, #2c3e50, #34495e); padding: 5rem; border-radius: 30px; text-align: center; box-shadow: 0 20px 80px rgba(0,0,0,0.5); border: 3px solid rgba(255,255,255,0.2); transform: scale(2.5); transition: transform 0.3s ease;">
-                  <div style="font-size: 12rem; margin-bottom: 3rem; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.6)); animation: pulse-${timestamp} 2s ease-in-out infinite;">🛡️</div>
-                  <div style="font-weight: 700; font-size: 4rem; margin-bottom: 1.5rem;">NEXRAD</div>
-                  <div style="font-size: 3rem; opacity: 0.9;">Doppler Radar</div>
-                  <div style="margin-top: 3rem; padding: 1.5rem 3rem; background: rgba(46, 204, 113, 0.4); border-radius: 40px; font-size: 2.5rem; color: #2ecc71; font-weight: 600;">ACTIVE</div>
+                <div style="background: linear-gradient(135deg, #2c3e50, #34495e); padding: 6rem; border-radius: 35px; text-align: center; box-shadow: 0 25px 100px rgba(0,0,0,0.6); border: 4px solid rgba(255,255,255,0.3); transform: scale(3.2); transition: transform 0.3s ease;">
+                  <div style="font-size: 15rem; margin-bottom: 3.5rem; filter: drop-shadow(0 12px 24px rgba(0,0,0,0.7)); animation: pulse-${timestamp} 2s ease-in-out infinite;">🛡️</div>
+                  <div style="font-weight: 700; font-size: 5rem; margin-bottom: 2rem;">NEXRAD</div>
+                  <div style="font-size: 3.5rem; opacity: 0.9;">Doppler Radar</div>
+                  <div style="margin-top: 3.5rem; padding: 2rem 4rem; background: rgba(46, 204, 113, 0.5); border-radius: 50px; font-size: 3rem; color: #2ecc71; font-weight: 600;">ACTIVE</div>
                 </div>
                 
                 <!-- Precipitation - MUCH LARGER -->
-                <div style="background: linear-gradient(135deg, #3498db, #2980b9); padding: 5rem; border-radius: 30px; text-align: center; box-shadow: 0 20px 80px rgba(0,0,0,0.5); border: 3px solid rgba(255,255,255,0.2); transform: scale(2.5); transition: transform 0.3s ease;">
-                  <div style="font-size: 12rem; margin-bottom: 3rem; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.6)); animation: pulse-${timestamp} 2s ease-in-out infinite 0.5s;">💧</div>
-                  <div style="font-weight: 700; font-size: 4rem; margin-bottom: 1.5rem;">Precipitation</div>
-                  <div style="font-size: 3rem; opacity: 0.9;">Rain/Snow</div>
-                  <div style="margin-top: 3rem; padding: 1.5rem 3rem; background: rgba(52, 152, 219, 0.4); border-radius: 40px; font-size: 2.5rem; color: #3498db; font-weight: 600;">ACTIVE</div>
+                <div style="background: linear-gradient(135deg, #3498db, #2980b9); padding: 6rem; border-radius: 35px; text-align: center; box-shadow: 0 25px 100px rgba(0,0,0,0.6); border: 4px solid rgba(255,255,255,0.3); transform: scale(3.2); transition: transform 0.3s ease;">
+                  <div style="font-size: 15rem; margin-bottom: 3.5rem; filter: drop-shadow(0 12px 24px rgba(0,0,0,0.7)); animation: pulse-${timestamp} 2s ease-in-out infinite 0.5s;">💧</div>
+                  <div style="font-weight: 700; font-size: 5rem; margin-bottom: 2rem;">Precipitation</div>
+                  <div style="font-size: 3.5rem; opacity: 0.9;">Rain/Snow</div>
+                  <div style="margin-top: 3.5rem; padding: 2rem 4rem; background: rgba(52, 152, 219, 0.5); border-radius: 50px; font-size: 3rem; color: #3498db; font-weight: 600;">ACTIVE</div>
                 </div>
                 
                 <!-- Wind - MUCH LARGER -->
-                <div style="background: linear-gradient(135deg, #16a085, #27ae60); padding: 5rem; border-radius: 30px; text-align: center; box-shadow: 0 20px 80px rgba(0,0,0,0.5); border: 3px solid rgba(255,255,255,0.2); transform: scale(2.5); transition: transform 0.3s ease;">
-                  <div style="font-size: 12rem; margin-bottom: 3rem; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.6)); animation: pulse-${timestamp} 2s ease-in-out infinite 1s;">💨</div>
-                  <div style="font-weight: 700; font-size: 4rem; margin-bottom: 1.5rem;">Wind</div>
-                  <div style="font-size: 3rem; opacity: 0.9;">Speed/Direction</div>
-                  <div style="margin-top: 3rem; padding: 1.5rem 3rem; background: rgba(39, 174, 96, 0.4); border-radius: 40px; font-size: 2.5rem; color: #27ae60; font-weight: 600;">ACTIVE</div>
+                <div style="background: linear-gradient(135deg, #16a085, #27ae60); padding: 6rem; border-radius: 35px; text-align: center; box-shadow: 0 25px 100px rgba(0,0,0,0.6); border: 4px solid rgba(255,255,255,0.3); transform: scale(3.2); transition: transform 0.3s ease;">
+                  <div style="font-size: 15rem; margin-bottom: 3.5rem; filter: drop-shadow(0 12px 24px rgba(0,0,0,0.7)); animation: pulse-${timestamp} 2s ease-in-out infinite 1s;">💨</div>
+                  <div style="font-weight: 700; font-size: 5rem; margin-bottom: 2rem;">Wind</div>
+                  <div style="font-size: 3.5rem; opacity: 0.9;">Speed/Direction</div>
+                  <div style="margin-top: 3.5rem; padding: 2rem 4rem; background: rgba(39, 174, 96, 0.5); border-radius: 50px; font-size: 3rem; color: #27ae60; font-weight: 600;">ACTIVE</div>
                 </div>
                 
                 <!-- Clouds - MUCH LARGER -->
-                <div style="background: linear-gradient(135deg, #95a5a6, #7f8c8d); padding: 5rem; border-radius: 30px; text-align: center; box-shadow: 0 20px 80px rgba(0,0,0,0.5); border: 3px solid rgba(255,255,255,0.2); transform: scale(2.5); transition: transform 0.3s ease;">
-                  <div style="font-size: 12rem; margin-bottom: 3rem; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.6)); animation: pulse-${timestamp} 2s ease-in-out infinite 1.5s;">☁️</div>
-                  <div style="font-weight: 700; font-size: 4rem; margin-bottom: 1.5rem;">Clouds</div>
-                  <div style="font-size: 3rem; opacity: 0.9;">Coverage</div>
-                  <div style="margin-top: 3rem; padding: 1.5rem 3rem; background: rgba(149, 165, 166, 0.4); border-radius: 40px; font-size: 2.5rem; color: #95a5a6; font-weight: 600;">ACTIVE</div>
+                <div style="background: linear-gradient(135deg, #95a5a6, #7f8c8d); padding: 6rem; border-radius: 35px; text-align: center; box-shadow: 0 25px 100px rgba(0,0,0,0.6); border: 4px solid rgba(255,255,255,0.3); transform: scale(3.2); transition: transform 0.3s ease;">
+                  <div style="font-size: 15rem; margin-bottom: 3.5rem; filter: drop-shadow(0 12px 24px rgba(0,0,0,0.7)); animation: pulse-${timestamp} 2s ease-in-out infinite 1.5s;">☁️</div>
+                  <div style="font-weight: 700; font-size: 5rem; margin-bottom: 2rem;">Clouds</div>
+                  <div style="font-size: 3.5rem; opacity: 0.9;">Coverage</div>
+                  <div style="margin-top: 3.5rem; padding: 2rem 4rem; background: rgba(149, 165, 166, 0.5); border-radius: 50px; font-size: 3rem; color: #95a5a6; font-weight: 600;">ACTIVE</div>
                 </div>
                 
                 <!-- Temperature - MUCH LARGER -->
-                <div style="background: linear-gradient(135deg, #e74c3c, #c0392b); padding: 5rem; border-radius: 30px; text-align: center; box-shadow: 0 20px 80px rgba(0,0,0,0.5); border: 3px solid rgba(255,255,255,0.2); transform: scale(2.5); transition: transform 0.3s ease;">
-                  <div style="font-size: 12rem; margin-bottom: 3rem; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.6)); animation: pulse-${timestamp} 2s ease-in-out infinite 2s;">🌡</div>
-                  <div style="font-weight: 700; font-size: 4rem; margin-bottom: 1.5rem;">Temperature</div>
-                  <div style="font-size: 3rem; opacity: 0.9;">Heat Map</div>
-                  <div style="margin-top: 3rem; padding: 1.5rem 3rem; background: rgba(231, 76, 60, 0.4); border-radius: 40px; font-size: 2.5rem; color: #e74c3c; font-weight: 600;">ACTIVE</div>
+                <div style="background: linear-gradient(135deg, #e74c3c, #c0392b); padding: 6rem; border-radius: 35px; text-align: center; box-shadow: 0 25px 100px rgba(0,0,0,0.6); border: 4px solid rgba(255,255,255,0.3); transform: scale(3.2); transition: transform 0.3s ease;">
+                  <div style="font-size: 15rem; margin-bottom: 3.5rem; filter: drop-shadow(0 12px 24px rgba(0,0,0,0.7)); animation: pulse-${timestamp} 2s ease-in-out infinite 2s;">🌡</div>
+                  <div style="font-weight: 700; font-size: 5rem; margin-bottom: 2rem;">Temperature</div>
+                  <div style="font-size: 3.5rem; opacity: 0.9;">Heat Map</div>
+                  <div style="margin-top: 3.5rem; padding: 2rem 4rem; background: rgba(231, 76, 60, 0.5); border-radius: 50px; font-size: 3rem; color: #e74c3c; font-weight: 600;">ACTIVE</div>
                 </div>
                 
                 <!-- Pressure - MUCH LARGER -->
-                <div style="background: linear-gradient(135deg, #8e44ad, #9b59b6); padding: 5rem; border-radius: 30px; text-align: center; box-shadow: 0 20px 80px rgba(0,0,0,0.5); border: 3px solid rgba(255,255,255,0.2); transform: scale(2.5); transition: transform 0.3s ease;">
-                  <div style="font-size: 12rem; margin-bottom: 3rem; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.6)); animation: pulse-${timestamp} 2s ease-in-out infinite 2.5s;">🔵</div>
-                  <div style="font-weight: 700; font-size: 4rem; margin-bottom: 1.5rem;">Pressure</div>
-                  <div style="font-size: 3rem; opacity: 0.9;">Systems</div>
-                  <div style="margin-top: 3rem; padding: 1.5rem 3rem; background: rgba(155, 89, 182, 0.4); border-radius: 40px; font-size: 2.5rem; color: #9b59b6; font-weight: 600;">ACTIVE</div>
+                <div style="background: linear-gradient(135deg, #8e44ad, #9b59b6); padding: 6rem; border-radius: 35px; text-align: center; box-shadow: 0 25px 100px rgba(0,0,0,0.6); border: 4px solid rgba(255,255,255,0.3); transform: scale(3.2); transition: transform 0.3s ease;">
+                  <div style="font-size: 15rem; margin-bottom: 3.5rem; filter: drop-shadow(0 12px 24px rgba(0,0,0,0.7)); animation: pulse-${timestamp} 2s ease-in-out infinite 2.5s;">🔵</div>
+                  <div style="font-weight: 700; font-size: 5rem; margin-bottom: 2rem;">Pressure</div>
+                  <div style="font-size: 3.5rem; opacity: 0.9;">Systems</div>
+                  <div style="margin-top: 3.5rem; padding: 2rem 4rem; background: rgba(155, 89, 182, 0.5); border-radius: 50px; font-size: 3rem; color: #9b59b6; font-weight: 600;">ACTIVE</div>
                 </div>
               </div>
             </div>
@@ -173,7 +173,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
           }
           
           .weather-card:hover {
-            transform: scale(3.0) !important;
+            transform: scale(4.0) !important;
           }
         </style>
       `
