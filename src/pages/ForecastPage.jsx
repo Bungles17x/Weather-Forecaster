@@ -12,8 +12,14 @@ const ForecastPage = () => {
   const [error, setError] = useState(null)
   const [location, setLocation] = useState('New York, NY')
 
-  // Mock comprehensive forecast data
-  const generateMockForecastData = useCallback(() => {
+  // Mock comprehensive forecast data with consistent generation
+  const generateMockForecastData = useCallback((seed = null) => {
+    // Use seed for consistent data generation
+    const random = seed ? () => {
+      const x = Math.sin(seed++) * 10000
+      return x - Math.floor(x)
+    } : Math.random
+    
     const today = new Date()
     const hourly = []
     const daily = []
@@ -23,12 +29,12 @@ const ForecastPage = () => {
       const hour = new Date(today.getTime() + i * 60 * 60 * 1000)
       hourly.push({
         time: hour.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-        temperature: Math.floor(65 + Math.random() * 15),
-        condition: ['Partly Cloudy', 'Sunny', 'Mostly Cloudy', 'Clear', 'Light Rain'][Math.floor(Math.random() * 5)],
-        precipitation: Math.random() > 0.7 ? Math.floor(Math.random() * 100) : 0,
-        windSpeed: Math.floor(5 + Math.random() * 15),
-        windDirection: ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'][Math.floor(Math.random() * 8)],
-        humidity: Math.floor(40 + Math.random() * 40)
+        temperature: Math.floor(65 + random() * 15),
+        condition: ['Partly Cloudy', 'Sunny', 'Mostly Cloudy', 'Clear', 'Light Rain'][Math.floor(random() * 5)],
+        precipitation: random() > 0.7 ? Math.floor(random() * 100) : 0,
+        windSpeed: Math.floor(5 + random() * 15),
+        windDirection: ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'][Math.floor(random() * 8)],
+        humidity: Math.floor(40 + random() * 40)
       })
     }
     
@@ -37,32 +43,41 @@ const ForecastPage = () => {
       const date = new Date(today.getTime() + i * 24 * 60 * 60 * 1000)
       const dayName = date.toLocaleDateString('en-US', { weekday: 'long' })
       const conditions = ['Sunny', 'Partly Cloudy', 'Mostly Cloudy', 'Rainy', 'Thunderstorms', 'Clear', 'Light Rain', 'Foggy', 'Windy', 'Mixed Conditions']
-      const condition = conditions[Math.floor(Math.random() * conditions.length)]
+      const condition = conditions[Math.floor(random() * conditions.length)]
       
       daily.push({
         date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
         dayName: dayName,
-        high: Math.floor(70 + Math.random() * 25),
-        low: Math.floor(50 + Math.random() * 15),
+        high: Math.floor(70 + random() * 25),
+        low: Math.floor(50 + random() * 15),
         condition: condition,
-        precipitation: Math.random() > 0.6 ? Math.floor(Math.random() * 80) : 0,
-        windSpeed: Math.floor(5 + Math.random() * 20),
-        humidity: Math.floor(30 + Math.random() * 50)
+        precipitation: random() > 0.6 ? Math.floor(random() * 80) : 0,
+        windSpeed: Math.floor(5 + random() * 20),
+        humidity: Math.floor(30 + random() * 50)
       })
     }
     
     return { hourly, daily }
   }, [])
 
-  useEffect(() => {
-    // Simulate loading and generate data
+  // Refresh function
+  const handleRefresh = useCallback(() => {
+    setLoading(true)
+    setError(null)
+    
+    // Simulate API call with consistent data
     setTimeout(() => {
-      const data = generateMockForecastData()
+      const data = generateMockForecastData(Date.now())
       setHourlyData(data.hourly)
       setForecastData(data.daily)
       setLoading(false)
-    }, 1000)
+    }, 500)
   }, [generateMockForecastData])
+
+  useEffect(() => {
+    // Initial load
+    handleRefresh()
+  }, [handleRefresh])
 
   const tabs = [
     { id: 'today', label: 'Today', icon: '☀️' },
@@ -134,7 +149,7 @@ const ForecastPage = () => {
       <div className="hourly-header">
         <h3>⏰ Hourly Forecast</h3>
         <div className="hourly-controls">
-          <button className="control-btn btn-primary">🔄 Refresh</button>
+          <button className="control-btn btn-primary" onClick={handleRefresh}>🔄 Refresh</button>
           <button className="control-btn btn-secondary">📊 Export</button>
         </div>
       </div>
@@ -167,7 +182,7 @@ const ForecastPage = () => {
       <div className="daily-header">
         <h3>📅 Daily Forecast</h3>
         <div className="daily-controls">
-          <button className="control-btn btn-primary">🔄 Refresh</button>
+          <button className="control-btn btn-primary" onClick={handleRefresh}>🔄 Refresh</button>
           <button className="control-btn btn-secondary">📊 Export</button>
           <button className="control-btn btn-secondary">📧 Share</button>
         </div>
@@ -210,7 +225,7 @@ const ForecastPage = () => {
       <div className="extended-header">
         <h3>📆 Extended Forecast</h3>
         <div className="extended-controls">
-          <button className="control-btn btn-primary">🔄 Refresh</button>
+          <button className="control-btn btn-primary" onClick={handleRefresh}>🔄 Refresh</button>
           <button className="control-btn btn-secondary">📊 Export</button>
           <button className="control-btn btn-secondary">📧 Share</button>
           <button className="control-btn btn-secondary">📅 Calendar</button>
@@ -248,7 +263,7 @@ const ForecastPage = () => {
       <div className="ten-day-header">
         <h3>🗓️ 10-Day Forecast</h3>
         <div className="ten-day-controls">
-          <button className="control-btn btn-primary">🔄 Refresh</button>
+          <button className="control-btn btn-primary" onClick={handleRefresh}>🔄 Refresh</button>
           <button className="control-btn btn-secondary">📊 Export</button>
           <button className="control-btn btn-secondary">📧 Share</button>
           <button className="control-btn btn-secondary">📅 Calendar</button>
@@ -295,7 +310,7 @@ const ForecastPage = () => {
         <div className="summary-header">
           <h3>📊 Forecast Summary</h3>
           <div className="summary-controls">
-            <button className="control-btn btn-primary">🔄 Refresh</button>
+            <button className="control-btn btn-primary" onClick={handleRefresh}>🔄 Refresh</button>
             <button className="control-btn btn-secondary">📊 Export</button>
             <button className="control-btn btn-secondary">📧 Share</button>
             <button className="control-btn btn-secondary">📈 Analysis</button>
