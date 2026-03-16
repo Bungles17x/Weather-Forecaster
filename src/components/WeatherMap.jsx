@@ -174,72 +174,51 @@ const WeatherMap = ({ data, onLocationChange }) => {
 
   return (
     <section className="weather-map-section">
-      <div className="container">
-        <div className="map-header">
-          <h2 className="section-title">
-            <span className="map-icon">🗺️</span>
-            Weather Map & Radar
-          </h2>
-          <div className="map-controls">
-            <button 
-              onClick={handleLocateMe} 
-              className={`locate-btn ${locating ? 'locating' : ''}`}
-              disabled={locating}
-            >
-              <span className="locate-icon">{locating ? '🔄' : '📍'}</span>
-              <span className="locate-text">
-                {locating ? 'Locating...' : 'Locate Me'}
-              </span>
-            </button>
-          </div>
+      <div className="map-display" ref={mapRef}>
+        <div className="map-container">
+          <WeatherMapRadar 
+            weatherData={data} 
+            coordinates={currentLocation}
+            onLocationChange={onLocationChange}
+          />
         </div>
+      </div>
 
-        {loading && (
-          <div className="map-loading">
-            <div className="loading-spinner"></div>
-            <p>Loading weather map...</p>
+      {loading && (
+        <div className="map-loading">
+          <div className="loading-spinner"></div>
+          <p>Loading weather map...</p>
+        </div>
+      )}
+
+      {error && (
+        <div className="map-error">
+          <div className="error-icon">⚠️</div>
+          <h3>Map Loading Error</h3>
+          <p>{error}</p>
+          <button onClick={() => setError(null)} className="retry-btn">
+            Retry
+          </button>
+        </div>
+      )}
+
+      <div className="map-info-panel">
+        <div className="info-grid">
+          <div className="info-item">
+            <span className="info-label">Coverage:</span>
+            <span className="info-value">United States</span>
           </div>
-        )}
-
-        {!loading && !error && (
-          <div className="map-container">
-            <WeatherMapRadar 
-              weatherData={data} 
-              coordinates={currentLocation}
-              onLocationChange={onLocationChange}
-            />
+          <div className="info-item">
+            <span className="info-label">Update Frequency:</span>
+            <span className="info-value">Every 10 minutes</span>
           </div>
-        )}
-
-        {error && (
-          <div className="map-error">
-            <div className="error-icon">⚠️</div>
-            <h3>Map Loading Error</h3>
-            <p>{error}</p>
-            <button onClick={() => setError(null)} className="retry-btn">
-              Retry
-            </button>
+          <div className="info-item">
+            <span className="info-label">Data Source:</span>
+            <span className="info-value">OpenWeatherMap & NWS</span>
           </div>
-        )}
-
-        <div className="map-info-panel">
-          <div className="info-grid">
-            <div className="info-item">
-              <span className="info-label">Coverage:</span>
-              <span className="info-value">United States</span>
-            </div>
-            <div className="info-item">
-              <span className="info-label">Update Frequency:</span>
-              <span className="info-value">Every 10 minutes</span>
-            </div>
-            <div className="info-item">
-              <span className="info-label">Data Source:</span>
-              <span className="info-value">OpenWeatherMap & NWS</span>
-            </div>
-            <div className="info-item">
-              <span className="info-label">Resolution:</span>
-              <span className="info-value">High Definition</span>
-            </div>
+          <div className="info-item">
+            <span className="info-label">Resolution:</span>
+            <span className="info-value">High Definition</span>
           </div>
         </div>
       </div>
