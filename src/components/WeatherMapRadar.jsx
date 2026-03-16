@@ -76,7 +76,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
     console.log('🗺️ Initializing weather map')
     if (mapRef.current) {
       mapRef.current.innerHTML = `
-        <div style="display: flex; flex-direction: column; height: 100%; width: 100%; background: linear-gradient(135deg, #1e3c72, #2a5298); color: white; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; position: relative; overflow: hidden;">
+        <div style="display: flex; flex-direction: column; height: 100%; width: 100%; background: transparent; color: white; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; position: relative; overflow: hidden;">
           <!-- Map Header -->
           <div style="padding: 1rem; background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.1); flex-shrink: 0;">
             <h3 style="margin: 0; font-size: 1.25rem; font-weight: 600;">🗺️ Weather Radar Map</h3>
