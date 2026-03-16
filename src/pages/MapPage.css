@@ -1,4 +1,4 @@
-/* Enhanced MapPage Styles - FULL SCREEN MAP */
+/* Enhanced MapPage Styles - NO BLACK BOX */
 .map-page {
   min-height: 100vh;
   background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #1e3c72 100%);
@@ -7,18 +7,18 @@
 }
 
 .map-content {
-  padding: 0.5rem;
+  padding: 0;
   max-width: 100%;
-  margin: 0 auto;
-  height: calc(100vh - 60px);
-  min-height: calc(100vh - 60px);
+  margin: 0;
+  height: 100vh; /* FULL VIEWPORT HEIGHT */
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
 /* Enhanced Header - COMPACT */
 .map-header {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0;
   flex-shrink: 0;
 }
 
@@ -28,9 +28,9 @@
   justify-content: space-between;
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
-  border-radius: 12px;
+  border-radius: 0;
   padding: 0.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: none;
 }
 
 .back-link {
@@ -215,19 +215,18 @@
   font-size: 0.9rem;
 }
 
-/* Enhanced Map Container - FULL SCREEN */
+/* Enhanced Map Container - NO BLACK BOX */
 .map-container.enhanced {
   display: grid;
   grid-template-columns: 1fr; /* FULL WIDTH MAP */
-  gap: 0.5rem;
+  gap: 0;
   flex: 1;
   min-height: 0;
-  height: calc(100vh - 120px); /* MAXIMUM HEIGHT */
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
-  border-radius: 12px;
-  padding: 0.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  height: calc(100vh - 60px); /* FULL REMAINING HEIGHT */
+  background: transparent; /* REMOVE BACKGROUND */
+  border-radius: 0; /* REMOVE BORDER RADIUS */
+  padding: 0; /* REMOVE PADDING */
+  border: none; /* REMOVE BORDER */
   overflow: hidden;
 }
 
@@ -381,14 +380,13 @@
 .map-main {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0;
   height: 100%;
   min-height: 0;
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 0.5rem;
+  background: transparent; /* REMOVE BACKGROUND */
+  border: none; /* REMOVE BORDER */
+  border-radius: 0; /* REMOVE BORDER RADIUS */
+  padding: 0; /* REMOVE PADDING */
 }
 
 .map-wrapper {
@@ -396,8 +394,8 @@
   height: 100%;
   min-height: 0;
   position: relative;
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 12px;
+  background: transparent; /* REMOVE BACKGROUND */
+  border-radius: 0; /* REMOVE BORDER RADIUS */
   overflow: hidden;
   display: flex;
   flex-direction: column;

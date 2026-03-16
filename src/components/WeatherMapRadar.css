@@ -1,13 +1,12 @@
-/* Weather Map and Radar Styles */
+/* Weather Map and Radar Styles - NO BLACK BOX */
 .weather-map-radar {
   display: flex;
   flex-direction: column;
   height: 100%;
   width: 100%;
-  background: linear-gradient(135deg, #1e3c72, #2a5298);
-  border-radius: 12px;
+  background: transparent; /* REMOVE BACKGROUND */
+  border-radius: 0; /* REMOVE BORDER RADIUS */
   overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   position: relative;
   min-height: 400px;
   flex: 1;
@@ -25,9 +24,9 @@
 .map-canvas {
   width: 100%;
   height: 100%;
-  border-radius: 12px;
+  border-radius: 0; /* REMOVE BORDER RADIUS */
   overflow: hidden;
-  background: #1a1a1a;
+  background: transparent; /* REMOVE BACKGROUND */
   position: relative;
 }
 
