@@ -91,66 +91,66 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
               <div style="opacity: 0.7;">Last updated: Just now</div>
             </div>
             
-            <!-- Large Radar Visualization -->
-            <div style="position: relative; width: 100%; height: 100%; max-width: 1200px; max-height: 800px;">
-              <!-- Radar Background -->
-              <div style="position: absolute; inset: 0; background: radial-gradient(circle at center, rgba(52, 152, 219, 0.1) 0%, rgba(0, 0, 0, 0.3) 50%, rgba(0, 0, 0, 0.5) 100%); border-radius: 50%; transform: scale(1.2);"></div>
+            <!-- Large Radar Visualization - FULL SCREEN -->
+            <div style="position: relative; width: 100%; height: 100%; max-width: none; max-height: none;">
+              <!-- Radar Background - FULL SCREEN -->
+              <div style="position: absolute; inset: 0; background: radial-gradient(circle at center, rgba(52, 152, 219, 0.1) 0%, rgba(0, 0, 0, 0.3) 50%, rgba(0, 0, 0, 0.5) 100%); border-radius: 0; transform: scale(2);"></div>
               
-              <!-- Animated Radar Sweep -->
+              <!-- Animated Radar Sweep - FULL SCREEN -->
               <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;">
-                <div style="width: 90%; height: 90%; border: 3px solid rgba(52, 152, 219, 0.3); border-radius: 50%; position: relative; animation: radar-sweep 4s linear infinite;">
-                  <div style="position: absolute; top: 50%; left: 50%; width: 2px; height: 45%; background: linear-gradient(to top, transparent, rgba(52, 152, 219, 0.8)); transform-origin: bottom; transform: translateX(-50%) translateY(-100%) rotate(0deg); animation: sweep 2s linear infinite;"></div>
+                <div style="width: 95%; height: 95%; border: 3px solid rgba(52, 152, 219, 0.3); border-radius: 0; position: relative; animation: radar-sweep 4s linear infinite;">
+                  <div style="position: absolute; top: 50%; left: 50%; width: 2px; height: 50%; background: linear-gradient(to top, transparent, rgba(52, 152, 219, 0.8)); transform-origin: bottom; transform: translateX(-50%) translateY(-100%) rotate(0deg); animation: sweep 2s linear infinite;"></div>
                 </div>
               </div>
               
-              <!-- Weather Data Grid - ENLARGED -->
-              <div style="position: absolute; inset: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; padding: 2rem; align-items: center; justify-items: center;">
-                <!-- NEXRAD Radar -->
-                <div style="background: linear-gradient(135deg, #2c3e50, #34495e); padding: 2rem; border-radius: 16px; text-align: center; box-shadow: 0 8px 32px rgba(0,0,0,0.4); border: 2px solid rgba(255,255,255,0.1); transform: scale(1.1); transition: transform 0.3s ease;">
-                  <div style="font-size: 4rem; margin-bottom: 1rem; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5)); animation: pulse 2s ease-in-out infinite;">🛡️</div>
-                  <div style="font-weight: 700; font-size: 1.5rem; margin-bottom: 0.5rem;">NEXRAD</div>
-                  <div style="font-size: 1rem; opacity: 0.9;">Doppler Radar</div>
-                  <div style="margin-top: 1rem; padding: 0.5rem 1rem; background: rgba(46, 204, 113, 0.3); border-radius: 20px; font-size: 0.875rem; color: #2ecc71; font-weight: 600;">ACTIVE</div>
+              <!-- Weather Data Grid - FULL SCREEN -->
+              <div style="position: absolute; inset: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; padding: 4rem; align-items: center; justify-items: center;">
+                <!-- NEXRAD Radar - MUCH LARGER -->
+                <div style="background: linear-gradient(135deg, #2c3e50, #34495e); padding: 4rem; border-radius: 24px; text-align: center; box-shadow: 0 16px 64px rgba(0,0,0,0.4); border: 2px solid rgba(255,255,255,0.1); transform: scale(1.5); transition: transform 0.3s ease;">
+                  <div style="font-size: 8rem; margin-bottom: 2rem; filter: drop-shadow(0 8px 16px rgba(0,0,0,0.5)); animation: pulse 2s ease-in-out infinite;">🛡️</div>
+                  <div style="font-weight: 700; font-size: 3rem; margin-bottom: 1rem;">NEXRAD</div>
+                  <div style="font-size: 2rem; opacity: 0.9;">Doppler Radar</div>
+                  <div style="margin-top: 2rem; padding: 1rem 2rem; background: rgba(46, 204, 113, 0.3); border-radius: 30px; font-size: 1.75rem; color: #2ecc71; font-weight: 600;">ACTIVE</div>
                 </div>
                 
-                <!-- Precipitation -->
-                <div style="background: linear-gradient(135deg, #3498db, #2980b9); padding: 2rem; border-radius: 16px; text-align: center; box-shadow: 0 8px 32px rgba(0,0,0,0.4); border: 2px solid rgba(255,255,255,0.1); transform: scale(1.1); transition: transform 0.3s ease;">
-                  <div style="font-size: 4rem; margin-bottom: 1rem; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5)); animation: pulse 2s ease-in-out infinite 0.5s;">💧</div>
-                  <div style="font-weight: 700; font-size: 1.5rem; margin-bottom: 0.5rem;">Precipitation</div>
-                  <div style="font-size: 1rem; opacity: 0.9;">Rain/Snow</div>
-                  <div style="margin-top: 1rem; padding: 0.5rem 1rem; background: rgba(52, 152, 219, 0.3); border-radius: 20px; font-size: 0.875rem; color: #3498db; font-weight: 600;">ACTIVE</div>
+                <!-- Precipitation - MUCH LARGER -->
+                <div style="background: linear-gradient(135deg, #3498db, #2980b9); padding: 4rem; border-radius: 24px; text-align: center; box-shadow: 0 16px 64px rgba(0,0,0,0.4); border: 2px solid rgba(255,255,255,0.1); transform: scale(1.5); transition: transform 0.3s ease;">
+                  <div style="font-size: 8rem; margin-bottom: 2rem; filter: drop-shadow(0 8px 16px rgba(0,0,0,0.5)); animation: pulse 2s ease-in-out infinite 0.5s;">💧</div>
+                  <div style="font-weight: 700; font-size: 3rem; margin-bottom: 1rem;">Precipitation</div>
+                  <div style="font-size: 2rem; opacity: 0.9;">Rain/Snow</div>
+                  <div style="margin-top: 2rem; padding: 1rem 2rem; background: rgba(52, 152, 219, 0.3); border-radius: 30px; font-size: 1.75rem; color: #3498db; font-weight: 600;">ACTIVE</div>
                 </div>
                 
-                <!-- Wind -->
-                <div style="background: linear-gradient(135deg, #16a085, #27ae60); padding: 2rem; border-radius: 16px; text-align: center; box-shadow: 0 8px 32px rgba(0,0,0,0.4); border: 2px solid rgba(255,255,255,0.1); transform: scale(1.1); transition: transform 0.3s ease;">
-                  <div style="font-size: 4rem; margin-bottom: 1rem; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5)); animation: pulse 2s ease-in-out infinite 1s;">💨</div>
-                  <div style="font-weight: 700; font-size: 1.5rem; margin-bottom: 0.5rem;">Wind</div>
-                  <div style="font-size: 1rem; opacity: 0.9;">Speed/Direction</div>
-                  <div style="margin-top: 1rem; padding: 0.5rem 1rem; background: rgba(39, 174, 96, 0.3); border-radius: 20px; font-size: 0.875rem; color: #27ae60; font-weight: 600;">ACTIVE</div>
+                <!-- Wind - MUCH LARGER -->
+                <div style="background: linear-gradient(135deg, #16a085, #27ae60); padding: 4rem; border-radius: 24px; text-align: center; box-shadow: 0 16px 64px rgba(0,0,0,0.4); border: 2px solid rgba(255,255,255,0.1); transform: scale(1.5); transition: transform 0.3s ease;">
+                  <div style="font-size: 8rem; margin-bottom: 2rem; filter: drop-shadow(0 8px 16px rgba(0,0,0,0.5)); animation: pulse 2s ease-in-out infinite 1s;">💨</div>
+                  <div style="font-weight: 700; font-size: 3rem; margin-bottom: 1rem;">Wind</div>
+                  <div style="font-size: 2rem; opacity: 0.9;">Speed/Direction</div>
+                  <div style="margin-top: 2rem; padding: 1rem 2rem; background: rgba(39, 174, 96, 0.3); border-radius: 30px; font-size: 1.75rem; color: #27ae60; font-weight: 600;">ACTIVE</div>
                 </div>
                 
-                <!-- Clouds -->
-                <div style="background: linear-gradient(135deg, #95a5a6, #7f8c8d); padding: 2rem; border-radius: 16px; text-align: center; box-shadow: 0 8px 32px rgba(0,0,0,0.4); border: 2px solid rgba(255,255,255,0.1); transform: scale(1.1); transition: transform 0.3s ease;">
-                  <div style="font-size: 4rem; margin-bottom: 1rem; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5)); animation: pulse 2s ease-in-out infinite 1.5s;">☁️</div>
-                  <div style="font-weight: 700; font-size: 1.5rem; margin-bottom: 0.5rem;">Clouds</div>
-                  <div style="font-size: 1rem; opacity: 0.9;">Coverage</div>
-                  <div style="margin-top: 1rem; padding: 0.5rem 1rem; background: rgba(149, 165, 166, 0.3); border-radius: 20px; font-size: 0.875rem; color: #95a5a6; font-weight: 600;">ACTIVE</div>
+                <!-- Clouds - MUCH LARGER -->
+                <div style="background: linear-gradient(135deg, #95a5a6, #7f8c8d); padding: 4rem; border-radius: 24px; text-align: center; box-shadow: 0 16px 64px rgba(0,0,0,0.4); border: 2px solid rgba(255,255,255,0.1); transform: scale(1.5); transition: transform 0.3s ease;">
+                  <div style="font-size: 8rem; margin-bottom: 2rem; filter: drop-shadow(0 8px 16px rgba(0,0,0,0.5)); animation: pulse 2s ease-in-out infinite 1.5s;">☁️</div>
+                  <div style="font-weight: 700; font-size: 3rem; margin-bottom: 1rem;">Clouds</div>
+                  <div style="font-size: 2rem; opacity: 0.9;">Coverage</div>
+                  <div style="margin-top: 2rem; padding: 1rem 2rem; background: rgba(149, 165, 166, 0.3); border-radius: 30px; font-size: 1.75rem; color: #95a5a6; font-weight: 600;">ACTIVE</div>
                 </div>
                 
-                <!-- Temperature -->
-                <div style="background: linear-gradient(135deg, #e74c3c, #c0392b); padding: 2rem; border-radius: 16px; text-align: center; box-shadow: 0 8px 32px rgba(0,0,0,0.4); border: 2px solid rgba(255,255,255,0.1); transform: scale(1.1); transition: transform 0.3s ease;">
-                  <div style="font-size: 4rem; margin-bottom: 1rem; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5)); animation: pulse 2s ease-in-out infinite 2s;">🌡</div>
-                  <div style="font-weight: 700; font-size: 1.5rem; margin-bottom: 0.5rem;">Temperature</div>
-                  <div style="font-size: 1rem; opacity: 0.9;">Heat Map</div>
-                  <div style="margin-top: 1rem; padding: 0.5rem 1rem; background: rgba(231, 76, 60, 0.3); border-radius: 20px; font-size: 0.875rem; color: #e74c3c; font-weight: 600;">ACTIVE</div>
+                <!-- Temperature - MUCH LARGER -->
+                <div style="background: linear-gradient(135deg, #e74c3c, #c0392b); padding: 4rem; border-radius: 24px; text-align: center; box-shadow: 0 16px 64px rgba(0,0,0,0.4); border: 2px solid rgba(255,255,255,0.1); transform: scale(1.5); transition: transform 0.3s ease;">
+                  <div style="font-size: 8rem; margin-bottom: 2rem; filter: drop-shadow(0 8px 16px rgba(0,0,0,0.5)); animation: pulse 2s ease-in-out infinite 2s;">🌡</div>
+                  <div style="font-weight: 700; font-size: 3rem; margin-bottom: 1rem;">Temperature</div>
+                  <div style="font-size: 2rem; opacity: 0.9;">Heat Map</div>
+                  <div style="margin-top: 2rem; padding: 1rem 2rem; background: rgba(231, 76, 60, 0.3); border-radius: 30px; font-size: 1.75rem; color: #e74c3c; font-weight: 600;">ACTIVE</div>
                 </div>
                 
-                <!-- Pressure -->
-                <div style="background: linear-gradient(135deg, #8e44ad, #9b59b6); padding: 2rem; border-radius: 16px; text-align: center; box-shadow: 0 8px 32px rgba(0,0,0,0.4); border: 2px solid rgba(255,255,255,0.1); transform: scale(1.1); transition: transform 0.3s ease;">
-                  <div style="font-size: 4rem; margin-bottom: 1rem; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5)); animation: pulse 2s ease-in-out infinite 2.5s;">🔵</div>
-                  <div style="font-weight: 700; font-size: 1.5rem; margin-bottom: 0.5rem;">Pressure</div>
-                  <div style="font-size: 1rem; opacity: 0.9;">Systems</div>
-                  <div style="margin-top: 1rem; padding: 0.5rem 1rem; background: rgba(155, 89, 182, 0.3); border-radius: 20px; font-size: 0.875rem; color: #9b59b6; font-weight: 600;">ACTIVE</div>
+                <!-- Pressure - MUCH LARGER -->
+                <div style="background: linear-gradient(135deg, #8e44ad, #9b59b6); padding: 4rem; border-radius: 24px; text-align: center; box-shadow: 0 16px 64px rgba(0,0,0,0.4); border: 2px solid rgba(255,255,255,0.1); transform: scale(1.5); transition: transform 0.3s ease;">
+                  <div style="font-size: 8rem; margin-bottom: 2rem; filter: drop-shadow(0 8px 16px rgba(0,0,0,0.5)); animation: pulse 2s ease-in-out infinite 2.5s;">🔵</div>
+                  <div style="font-weight: 700; font-size: 3rem; margin-bottom: 1rem;">Pressure</div>
+                  <div style="font-size: 2rem; opacity: 0.9;">Systems</div>
+                  <div style="margin-top: 2rem; padding: 1rem 2rem; background: rgba(155, 89, 182, 0.3); border-radius: 30px; font-size: 1.75rem; color: #9b59b6; font-weight: 600;">ACTIVE</div>
                 </div>
               </div>
             </div>
