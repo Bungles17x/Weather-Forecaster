@@ -580,7 +580,7 @@ const WeatherApp = () => {
           <div className="loading-overlay">
             <div className="loading-content">
               <div className="loading-spinner"></div>
-              <h3>Fetching NWS Weather Data...</h3>
+              <h3>⚑ Fetching NWS Weather Data...</h3>
               <p>Getting data from National Weather Service</p>
             </div>
           </div>
@@ -591,13 +591,13 @@ const WeatherApp = () => {
             <div className="error-content">
               <div className="error-icon">⚠️</div>
               <div className="error-message">
-                <h4>NWS Data Error</h4>
+                <h4>⚠️ NWS Data Error</h4>
                 <p>{error}</p>
                 <button 
                   onClick={() => fetchNWSData(location)} 
                   className="retry-btn"
                 >
-                  Retry
+                  ↻ Retry
                 </button>
               </div>
             </div>
@@ -607,13 +607,13 @@ const WeatherApp = () => {
         {weatherData && !loading && !error && (
           <div className="nws-weather-display">
             <div className="nws-header">
-              <h2>National Weather Service Data</h2>
-              <p className="data-source">⚑ Official U.S. Weather Data</p>
+              <h2>⚑ National Weather Service Data</h2>
+              <p className="data-source">🇺🇸 Official U.S. Weather Data</p>
             </div>
             
             <div className="current-weather">
               <div className="current-weather-header">
-                <h3>Current Conditions in {weatherData.location}</h3>
+                <h3>🌤️ Current Conditions in {weatherData.location}</h3>
                 <div className="weather-icon-large">
                   {getWeatherIcon(weatherData.current.description)}
                 </div>
@@ -662,22 +662,22 @@ const WeatherApp = () => {
             </div>
             
             <div className="nws-info">
-              <h4>⚑ NWS Office Information</h4>
+              <h4>🏢 ⚑ NWS Office Information</h4>
               <div className="office-details">
                 <div className="office-item">
-                  <span className="office-label">Office:</span>
+                  <span className="office-label">📍 Office:</span>
                   <span className="office-value">{weatherData.nwsInfo.office}</span>
                 </div>
                 <div className="office-item">
-                  <span className="office-label">Grid:</span>
+                  <span className="office-label">📊 Grid:</span>
                   <span className="office-value">{weatherData.nwsInfo.gridX}, {weatherData.nwsInfo.gridY}</span>
                 </div>
                 <div className="office-item">
-                  <span className="office-label">Zone:</span>
+                  <span className="office-label">🗺️ Zone:</span>
                   <span className="office-value">{weatherData.nwsInfo.forecastZone.split('/').pop()}</span>
                 </div>
                 <div className="office-item">
-                  <span className="office-label">County:</span>
+                  <span className="office-label">🏛️ County:</span>
                   <span className="office-value">{weatherData.nwsInfo.county.split('/').pop()}</span>
                 </div>
               </div>
@@ -686,7 +686,7 @@ const WeatherApp = () => {
             {/* Add forecast display */}
             {forecastData.length > 0 && (
               <div className="forecast-section">
-                <h4>⚑ Extended Forecast</h4>
+                <h4>📅 ⚑ Extended Forecast</h4>
                 <div className="forecast-grid">
                   {forecastData.slice(0, 7).map((period, index) => (
                     <div key={index} className="forecast-item">
@@ -804,7 +804,7 @@ const WeatherApp = () => {
             {lastUpdate && (
               <div className="update-info">
                 <div className="update-header">
-                  <span className="update-time">Last updated: {lastUpdate.toLocaleString()}</span>
+                  <span className="update-time">🕐 Last updated: {lastUpdate.toLocaleString()}</span>
                   <span className="data-source">⚑ {weatherData.dataSource}</span>
                 </div>
                 <div className="update-actions">
