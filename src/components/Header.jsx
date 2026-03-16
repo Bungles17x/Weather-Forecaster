@@ -324,22 +324,11 @@ const Header = ({ onLocationChange }) => {
               </button>
               
               <button
-                onClick={handleLocationChange}
-                className="location-btn"
-                title="Change location"
-              >
-                <span className="location-icon">📍</span>
-                <span>Location</span>
-              </button>
-              
-              <button
                 onClick={handleMenuToggle}
                 className={`menu-toggle ${isMenuOpen ? 'open' : ''}`}
                 title="Toggle menu"
               >
-                <span className="hamburger-line"></span>
-                <span className="hamburger-line"></span>
-                <span className="hamburger-line"></span>
+                <span className="menu-icon">☰</span>
               </button>
             </nav>
           </div>
@@ -358,15 +347,6 @@ const Header = ({ onLocationChange }) => {
           <span className="mobile-nav-label">
             {locating ? 'Locating...' : 'Locate'}
           </span>
-        </button>
-        
-        <button
-          onClick={handleLocationChange}
-          className="mobile-nav-btn"
-          title="Change location"
-        >
-          <span className="mobile-nav-icon">📍</span>
-          <span className="mobile-nav-label">Location</span>
         </button>
         
         <button
