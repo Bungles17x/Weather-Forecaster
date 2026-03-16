@@ -357,6 +357,25 @@ const Header = ({ onLocationChange }) => {
           <span className="mobile-nav-icon">☰</span>
           <span className="mobile-nav-label">Menu</span>
         </button>
+        
+        <Link to="/map" className="mobile-nav-btn" title="View weather map">
+          <span className="mobile-nav-icon">🗺️</span>
+          <span className="mobile-nav-label">Map</span>
+        </Link>
+        
+        <Link to="/hourly" className="mobile-nav-btn" title="View hourly forecast">
+          <span className="mobile-nav-icon">⏰</span>
+          <span className="mobile-nav-label">Hourly</span>
+        </Link>
+        
+        <button
+          className="mobile-nav-btn"
+          onClick={() => window.location.reload()}
+          title="Refresh weather data"
+        >
+          <span className="mobile-nav-icon">🔄</span>
+          <span className="mobile-nav-label">Refresh</span>
+        </button>
       </div>
 
       {/* Mobile Menu Overlay */}

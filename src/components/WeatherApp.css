@@ -9,7 +9,16 @@
   position: relative;
   min-height: calc(100vh - 40px);
   padding: 2rem;
-  padding-bottom: 80px; /* Add space for mobile bottom nav */
+  padding-bottom: 100px; /* Add space for mobile bottom nav */
+}
+
+/* Mobile adjustments */
+@media (max-width: 1024px) {
+  .weather-content {
+    padding: 1rem;
+    padding-bottom: 100px;
+    min-height: 100vh; /* Full height since no top nav */
+  }
 }
 
 /* SPC Outlook Styles - Professional Weather Display */
