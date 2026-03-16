@@ -8,7 +8,52 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
   const [radarOverlay, setRadarOverlay] = useState(true)
   const [weatherLayer, setWeatherLayer] = useState(true)
   const [loading, setLoading] = useState(true)
+  const [spcOutlook, setSpcOutlook] = useState(null)
+  const [weatherAlerts, setWeatherAlerts] = useState([])
+  const [loadingSpc, setLoadingSpc] = useState(true)
   const mapRef = useRef(null)
+
+  // Fetch SPC outlook data
+  useEffect(() => {
+    const fetchSPCOutlook = async () => {
+      try {
+        setLoadingSpc(true)
+        console.log('🌪 Fetching SPC Outlook data...')
+        
+        // Fetch SPC Convective Outlook
+        const spcResponse = await fetch('https://www.spc.noaa.gov/products/outlook/day1otlk.json')
+        if (spcResponse.ok) {
+          const spcData = await spcResponse.json()
+          console.log('🌪 SPC Outlook:', spcData)
+          setSpcOutlook(spcData)
+        }
+        
+        // Fetch active weather alerts
+        const alertsResponse = await fetch('https://api.weather.gov/alerts/active?area=US')
+        if (alertsResponse.ok) {
+          const alertsData = await alertsResponse.json()
+          console.log('⚠️ Weather Alerts:', alertsData)
+          setWeatherAlerts(alertsData.features || [])
+        }
+        
+        // Fetch NWS radar data for current location
+        if (coordinates) {
+          const radarResponse = await fetch(`https://api.weather.gov/radar/stations`)
+          if (radarResponse.ok) {
+            const radarData = await radarResponse.json()
+            console.log('📡️ NWS Radar Stations:', radarData)
+          }
+        }
+        
+      } catch (error) {
+        console.error('❌ Error fetching weather channel data:', error)
+      } finally {
+        setLoadingSpc(false)
+      }
+    }
+    
+    fetchSPCOutlook()
+  }, [coordinates])
 
   // Initialize map
   useEffect(() => {
@@ -148,6 +193,26 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
                   <div style="font-weight: 700; font-size: 5rem; margin-bottom: 2rem;">Pressure</div>
                   <div style="font-size: 3.5rem; opacity: 0.9;">Systems</div>
                   <div style="margin-top: 3.5rem; padding: 2rem 4rem; background: rgba(155, 89, 182, 0.5); border-radius: 50px; font-size: 3rem; color: #9b59b6; font-weight: 600;">ACTIVE</div>
+                </div>
+                
+                <!-- SPC Outlook - WEATHER CHANNEL -->
+                <div style="background: linear-gradient(135deg, #ff6b6b, #c92a2a); padding: 6rem; border-radius: 35px; text-align: center; box-shadow: 0 25px 100px rgba(0,0,0,0.6); border: 4px solid rgba(255,255,255,0.3); transform: scale(2.2); transition: transform 0.3s ease;">
+                  <div style="font-size: 15rem; margin-bottom: 3.5rem; filter: drop-shadow(0 12px 24px rgba(0,0,0,0.7)); animation: pulse-${timestamp} 2s ease-in-out infinite 3s;">🌪</div>
+                  <div style="font-weight: 700; font-size: 5rem; margin-bottom: 2rem;">SPC Outlook</div>
+                  <div style="font-size: 3.5rem; opacity: 0.9;">Storm Prediction</div>
+                  <div style="margin-top: 3.5rem; padding: 2rem 4rem; background: rgba(255, 107, 107, 0.5); border-radius: 50px; font-size: 3rem; color: #ff6b6b; font-weight: 600;">
+                    ${loadingSpc ? 'LOADING...' : spcOutlook ? 'ACTIVE' : 'NO DATA'}
+                  </div>
+                </div>
+                
+                <!-- Weather Alerts - WEATHER CHANNEL -->
+                <div style="background: linear-gradient(135deg, #ff9f43, #e67e22); padding: 6rem; border-radius: 35px; text-align: center; box-shadow: 0 25px 100px rgba(0,0,0,0.6); border: 4px solid rgba(255,255,255,0.3); transform: scale(2.2); transition: transform 0.3s ease;">
+                  <div style="font-size: 15rem; margin-bottom: 3.5rem; filter: drop-shadow(0 12px 24px rgba(0,0,0,0.7)); animation: pulse-${timestamp} 2s ease-in-out infinite 3.5s;">⚠️</div>
+                  <div style="font-weight: 700; font-size: 5rem; margin-bottom: 2rem;">Weather Alerts</div>
+                  <div style="font-size: 3.5rem; opacity: 0.9;">Active Warnings</div>
+                  <div style="margin-top: 3.5rem; padding: 2rem 4rem; background: rgba(255, 159, 67, 0.5); border-radius: 50px; font-size: 3rem; color: #ff9f43; font-weight: 600;">
+                    ${weatherAlerts.length > 0 ? `${weatherAlerts.length} ALERTS` : 'NO ALERTS'}
+                  </div>
                 </div>
               </div>
             </div>
