@@ -11,117 +11,134 @@
   padding: 2rem;
 }
 
-/* SPC Outlook Styles */
+/* SPC Outlook Styles - Professional Weather Display */
 .spc-outlook {
-  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-  border-radius: 15px;
-  padding: 2rem;
-  margin: 2rem 0;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  border: 2px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
 }
 
 .spc-header {
-  text-align: center;
-  margin-bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
   padding-bottom: 1rem;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .spc-header h2 {
   color: #ffffff;
-  font-size: 2.5rem;
-  margin: 0 0 0.5rem 0;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  font-size: 1.8rem;
+  margin: 0;
+  font-weight: 600;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .spc-header .data-source {
-  color: #bdc3c7;
-  font-size: 0.9rem;
+  color: #64b5f6;
+  font-size: 0.85rem;
   margin: 0;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .spc-content {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 .spc-risk-levels {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 
 .risk-category {
   text-align: center;
-  padding: 1.5rem;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.3s ease;
+}
+
+.risk-category:hover {
+  background: rgba(255, 255, 255, 0.06);
+  transform: translateY(-1px);
 }
 
 .risk-category h3 {
-  color: #ffffff;
-  font-size: 1.2rem;
-  margin: 0 0 1rem 0;
-  font-weight: 600;
+  color: #b3b3b3;
+  font-size: 0.9rem;
+  margin: 0 0 0.8rem 0;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .risk-indicator {
-  padding: 1rem 2rem;
-  border-radius: 8px;
+  padding: 0.8rem 1rem;
+  border-radius: 6px;
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  letter-spacing: 0.8px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
   transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .risk-indicator:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 }
 
 .spc-details {
-  grid-column: 1 / -1;
   display: grid;
-  grid-template-rows: auto 1fr;
+  grid-template-columns: 1fr auto;
   gap: 1.5rem;
+  align-items: start;
 }
 
 .spc-forecast {
-  background: rgba(255, 255, 255, 0.05);
-  padding: 2rem;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .spc-forecast h4 {
   color: #ffffff;
-  font-size: 1.5rem;
-  margin: 0 0 1rem 0;
+  font-size: 1.2rem;
+  margin: 0 0 0.8rem 0;
   font-weight: 600;
 }
 
 .spc-forecast p {
-  color: #bdc3c7;
-  font-size: 1rem;
-  line-height: 1.6;
+  color: #cccccc;
+  font-size: 0.9rem;
+  line-height: 1.5;
   margin: 0 0 1rem 0;
 }
 
 .spc-updated {
   text-align: right;
-  margin-top: 1rem;
+  margin-top: 0.8rem;
 }
 
 .spc-updated small {
-  color: #7f8c8d;
-  font-size: 0.8rem;
+  color: #888888;
+  font-size: 0.75rem;
   opacity: 0.8;
+  font-weight: 500;
 }
 
 .spc-map-link {
@@ -134,21 +151,55 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  background: linear-gradient(135deg, #3498db, #2980b9);
+  background: linear-gradient(135deg, #1976d2, #1565c0);
   color: #ffffff;
   text-decoration: none;
-  padding: 1rem 2rem;
-  border-radius: 8px;
+  padding: 0.8rem 1.5rem;
+  border-radius: 6px;
   font-weight: 600;
-  font-size: 1rem;
+  font-size: 0.9rem;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+  box-shadow: 0 3px 10px rgba(25, 118, 210, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .spc-link-btn:hover {
-  background: linear-gradient(135deg, #2980b9, #21618c);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+  background: linear-gradient(135deg, #1565c0, #0d47a1);
+  transform: translateY(-1px);
+  box-shadow: 0 5px 15px rgba(25, 118, 210, 0.4);
+  color: #ffffff;
+  text-decoration: none;
+}
+
+/* Risk Level Specific Colors */
+.risk-indicator[data-risk="HIGH"] {
+  background: linear-gradient(135deg, #d32f2f, #b71c1c);
+  color: #ffffff;
+}
+
+.risk-indicator[data-risk="MODERATE"] {
+  background: linear-gradient(135deg, #f57c00, #e65100);
+  color: #ffffff;
+}
+
+.risk-indicator[data-risk="ENHANCED"] {
+  background: linear-gradient(135deg, #fbc02d, #f57f17);
+  color: #000000;
+}
+
+.risk-indicator[data-risk="SLIGHT"] {
+  background: linear-gradient(135deg, #388e3c, #2e7d32);
+  color: #ffffff;
+}
+
+.risk-indicator[data-risk="MARGINAL"] {
+  background: linear-gradient(135deg, #1976d2, #1565c0);
+  color: #ffffff;
+}
+
+.risk-indicator[data-risk="UNKNOWN"] {
+  background: linear-gradient(135deg, #616161, #424242);
+  color: #ffffff;
 }
 
 /* Loading and Error States */

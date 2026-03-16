@@ -1079,30 +1079,30 @@ const WeatherApp = () => {
                   <div className="spc-risk-levels">
                     <div className="risk-category">
                       <h3>Tornado Risk</h3>
-                      <div className="risk-indicator" style={{ 
-                        backgroundColor: spcOutlook.tornado?.color || '#ccc',
-                        color: spcOutlook.tornado?.color ? '#fff' : '#333'
-                      }}>
+                      <div 
+                        className="risk-indicator" 
+                        data-risk={spcOutlook.tornado?.risk || 'UNKNOWN'}
+                      >
                         {spcOutlook.tornado?.label || 'No Data'}
                       </div>
                     </div>
                     
                     <div className="risk-category">
                       <h3>Hail Risk</h3>
-                      <div className="risk-indicator" style={{ 
-                        backgroundColor: spcOutlook.hail?.color || '#ccc',
-                        color: spcOutlook.hail?.color ? '#fff' : '#333'
-                      }}>
+                      <div 
+                        className="risk-indicator" 
+                        data-risk={spcOutlook.hail?.risk || 'UNKNOWN'}
+                      >
                         {spcOutlook.hail?.label || 'No Data'}
                       </div>
                     </div>
                     
                     <div className="risk-category">
                       <h3>Wind Risk</h3>
-                      <div className="risk-indicator" style={{ 
-                        backgroundColor: spcOutlook.wind?.color || '#ccc',
-                        color: spcOutlook.wind?.color ? '#fff' : '#333'
-                      }}>
+                      <div 
+                        className="risk-indicator" 
+                        data-risk={spcOutlook.wind?.risk || 'UNKNOWN'}
+                      >
                         {spcOutlook.wind?.label || 'No Data'}
                       </div>
                     </div>
