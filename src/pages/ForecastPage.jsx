@@ -15,10 +15,11 @@ const ForecastPage = () => {
   // Mock comprehensive forecast data with consistent generation
   const generateMockForecastData = useCallback((seed = null) => {
     // Use seed for consistent data generation
-    const random = seed ? () => {
-      const x = Math.sin(seed++) * 10000
+    let seedValue = seed || Date.now()
+    const random = () => {
+      const x = Math.sin(seedValue++) * 10000
       return x - Math.floor(x)
-    } : Math.random
+    }
     
     const today = new Date()
     const hourly = []

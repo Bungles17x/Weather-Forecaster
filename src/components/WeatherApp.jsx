@@ -783,6 +783,29 @@ const WeatherApp = () => {
               </div>
             </div>
             
+            {forecastData && forecastData.length > 0 && (
+              <div className="forecast-section">
+                <h3>📅 ⚑ Extended Forecast</h3>
+                <div className="forecast-grid">
+                  {forecastData.slice(0, 7).map((period, index) => (
+                    <div key={index} className="forecast-item">
+                      <div className="forecast-period">{period.name}</div>
+                      <div className="forecast-icon">
+                        {getWeatherIcon(period.shortForecast)}
+                      </div>
+                      <div className="forecast-temp">
+                        <span className="forecast-high">{period.temperature || '--'}°</span>
+                        {period.temperatureUnit && (
+                          <span className="forecast-unit">{period.temperatureUnit}</span>
+                        )}
+                      </div>
+                      <div className="forecast-desc">{period.shortForecast}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
             {weatherData.alerts.length > 0 && (
               <div className="alerts-section">
                 <div className="alerts-header">
