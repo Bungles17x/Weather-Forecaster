@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import Header from './Header'
+import { WeatherIcon } from './WeatherIcons'
 import './WeatherApp.css'
 
 // Cache busting timestamp - FORCE RELOAD
@@ -529,17 +530,17 @@ const WeatherApp = () => {
 
   const getAlertIcon = (event) => {
     const lowerEvent = event.toLowerCase()
-    if (lowerEvent.includes('tornado')) return 'fas fa-tornado'
-    if (lowerEvent.includes('thunderstorm') || lowerEvent.includes('storm')) return 'fas fa-bolt'
-    if (lowerEvent.includes('flood')) return 'fas fa-water'
-    if (lowerEvent.includes('wind')) return 'fas fa-wind'
-    if (lowerEvent.includes('snow') || lowerEvent.includes('blizzard')) return 'fas fa-snowflake'
-    if (lowerEvent.includes('ice') || lowerEvent.includes('freezing')) return 'fas fa-icicles'
-    if (lowerEvent.includes('heat')) return 'fas fa-temperature-high'
-    if (lowerEvent.includes('cold') || lowerEvent.includes('freeze')) return 'fas fa-temperature-low'
-    if (lowerEvent.includes('fog')) return 'fas fa-smog'
-    if (lowerEvent.includes('fire') || lowerEvent.includes('red flag')) return 'fas fa-fire'
-    return 'fas fa-exclamation-triangle'
+    if (lowerEvent.includes('tornado')) return '⚡'
+    if (lowerEvent.includes('thunderstorm') || lowerEvent.includes('storm')) return '⛈'
+    if (lowerEvent.includes('flood')) return '🌊'
+    if (lowerEvent.includes('wind')) return '💨'
+    if (lowerEvent.includes('snow') || lowerEvent.includes('blizzard')) return '❄'
+    if (lowerEvent.includes('ice') || lowerEvent.includes('freezing')) return '🧊'
+    if (lowerEvent.includes('heat')) return '🔥'
+    if (lowerEvent.includes('cold') || lowerEvent.includes('freeze')) return '🥶'
+    if (lowerEvent.includes('fog')) return '🌫'
+    if (lowerEvent.includes('fire') || lowerEvent.includes('red flag')) return '🔥'
+    return '⚠'
   }
 
   const formatAlertTime = (expires) => {
@@ -555,15 +556,7 @@ const WeatherApp = () => {
   }
 
   const getWeatherIcon = (description) => {
-    const lowerDesc = description.toLowerCase()
-    if (lowerDesc.includes('thunderstorm') || lowerDesc.includes('storm')) return 'fas fa-bolt'
-    if (lowerDesc.includes('rain') || lowerDesc.includes('shower')) return 'fas fa-cloud-rain'
-    if (lowerDesc.includes('snow')) return 'fas fa-snowflake'
-    if (lowerDesc.includes('fog') || lowerDesc.includes('mist')) return 'fas fa-smog'
-    if (lowerDesc.includes('cloud')) return 'fas fa-cloud'
-    if (lowerDesc.includes('sun') || lowerDesc.includes('clear')) return 'fas fa-sun'
-    if (lowerDesc.includes('wind')) return 'fas fa-wind'
-    return 'fas fa-cloud-sun'
+    return <WeatherIcon condition={description} size={48} />
   }
 
   const getTemperatureColor = (temp) => {
@@ -615,14 +608,14 @@ const WeatherApp = () => {
           <div className="nws-weather-display">
             <div className="nws-header">
               <h2>National Weather Service Data</h2>
-              <p className="data-source"><i className="fas fa-flag-usa"></i> Official U.S. Weather Data</p>
+              <p className="data-source">⚑ Official U.S. Weather Data</p>
             </div>
             
             <div className="current-weather">
               <div className="current-weather-header">
                 <h3>Current Conditions in {weatherData.location}</h3>
                 <div className="weather-icon-large">
-                  <i className={getWeatherIcon(weatherData.current.description)}></i>
+                  {getWeatherIcon(weatherData.current.description)}
                 </div>
               </div>
               <div className="weather-main">
@@ -638,28 +631,28 @@ const WeatherApp = () => {
                 
                 <div className="weather-details">
                   <div className="detail-item">
-                    <span className="detail-label"><i className="fas fa-tint"></i> Humidity:</span>
+                    <span className="detail-label">Humidity:</span>
                     <span className="detail-value">
                       {formatHumidity(weatherData.current.humidity)}
                     </span>
                   </div>
                   
                   <div className="detail-item">
-                    <span className="detail-label"><i className="fas fa-wind"></i> Wind:</span>
+                    <span className="detail-label">Wind:</span>
                     <span className="detail-value">
                       {getWindSpeedWithDirection(weatherData.current.windSpeed, weatherData.current.windDirection)}
                     </span>
                   </div>
                   
                   <div className="detail-item">
-                    <span className="detail-label"><i className="fas fa-eye"></i> Visibility:</span>
+                    <span className="detail-label">Visibility:</span>
                     <span className="detail-value">
                       {formatVisibility(weatherData.current.visibility)}
                     </span>
                   </div>
                   
                   <div className="detail-item">
-                    <span className="detail-label"><i className="fas fa-tachometer-alt"></i> Pressure:</span>
+                    <span className="detail-label">Pressure:</span>
                     <span className="detail-value">
                       {formatPressure(weatherData.current.pressure)}
                     </span>
@@ -669,22 +662,22 @@ const WeatherApp = () => {
             </div>
             
             <div className="nws-info">
-              <h4><i className="fas fa-building"></i> NWS Office Information</h4>
+              <h4>⚑ NWS Office Information</h4>
               <div className="office-details">
                 <div className="office-item">
-                  <span className="office-label"><i className="fas fa-map-marker-alt"></i> Office:</span>
+                  <span className="office-label">Office:</span>
                   <span className="office-value">{weatherData.nwsInfo.office}</span>
                 </div>
                 <div className="office-item">
-                  <span className="office-label"><i className="fas fa-th"></i> Grid:</span>
+                  <span className="office-label">Grid:</span>
                   <span className="office-value">{weatherData.nwsInfo.gridX}, {weatherData.nwsInfo.gridY}</span>
                 </div>
                 <div className="office-item">
-                  <span className="office-label"><i className="fas fa-map"></i> Zone:</span>
+                  <span className="office-label">Zone:</span>
                   <span className="office-value">{weatherData.nwsInfo.forecastZone.split('/').pop()}</span>
                 </div>
                 <div className="office-item">
-                  <span className="office-label"><i className="fas fa-city"></i> County:</span>
+                  <span className="office-label">County:</span>
                   <span className="office-value">{weatherData.nwsInfo.county.split('/').pop()}</span>
                 </div>
               </div>
@@ -693,12 +686,12 @@ const WeatherApp = () => {
             {/* Add forecast display */}
             {forecastData.length > 0 && (
               <div className="forecast-section">
-                <h4><i className="fas fa-calendar-alt"></i> Extended Forecast</h4>
+                <h4>⚑ Extended Forecast</h4>
                 <div className="forecast-grid">
                   {forecastData.slice(0, 7).map((period, index) => (
                     <div key={index} className="forecast-item">
                       <div className="forecast-period">{period.name}</div>
-                      <div className="forecast-icon"><i className={getWeatherIcon(period.shortForecast)}></i></div>
+                      <div className="forecast-icon"><WeatherIcon condition={period.shortForecast} size={32} /></div>
                       <div className="forecast-temp">
                         <span className="forecast-high">{period.temperature || '--'}°</span>
                         {period.temperatureUnit && (
@@ -715,9 +708,9 @@ const WeatherApp = () => {
             {weatherData.alerts.length > 0 && (
               <div className="alerts-section">
                 <h4>
-                  <i className="fas fa-exclamation-triangle"></i> Active Alerts ({weatherData.alerts.length})
+                  ⚠ Active Alerts ({weatherData.alerts.length})
                   {weatherData.alerts.some(alert => alert.properties.severity === 'Extreme') && 
-                    <span className="extreme-alert-indicator"><i className="fas fa-exclamation-circle"></i> EXTREME WEATHER</span>
+                    <span className="extreme-alert-indicator">⚠ EXTREME WEATHER</span>
                   }
                 </h4>
                 <div className="alerts-list">
@@ -737,7 +730,7 @@ const WeatherApp = () => {
                       >
                         <div className="alert-header">
                           <div className="alert-title">
-                            <span className="alert-icon"><i className={alertIcon}></i></span>
+                            <span className="alert-icon">{alertIcon}</span>
                             <span className="alert-event">{alert.properties.event}</span>
                           </div>
                           <div className="alert-meta">
@@ -756,11 +749,11 @@ const WeatherApp = () => {
                           {alert.properties.description}
                         </div>
                         <div className="alert-areas">
-                          <strong><i className="fas fa-map-marked-alt"></i> Affected Areas:</strong> {alert.properties.areaDesc}
+                          <strong>Affected Areas:</strong> {alert.properties.areaDesc}
                         </div>
                         {alert.properties.instruction && (
                           <div className="alert-instructions">
-                            <strong><i className="fas fa-shield-alt"></i> Safety Instructions:</strong> {alert.properties.instruction}
+                            <strong>Safety Instructions:</strong> {alert.properties.instruction}
                           </div>
                         )}
                       </div>
@@ -773,8 +766,8 @@ const WeatherApp = () => {
             {lastUpdate && (
               <div className="update-info">
                 <div className="update-header">
-                  <span className="update-time"><i className="fas fa-clock"></i> Last updated: {lastUpdate.toLocaleString()}</span>
-                  <span className="data-source"><i className="fas fa-flag-usa"></i> {weatherData.dataSource}</span>
+                  <span className="update-time">Last updated: {lastUpdate.toLocaleString()}</span>
+                  <span className="data-source">⚑ {weatherData.dataSource}</span>
                 </div>
                 <div className="update-actions">
                   <button 
@@ -782,7 +775,7 @@ const WeatherApp = () => {
                     className="refresh-btn"
                     disabled={loading}
                   >
-                    {loading ? <><i className="fas fa-sync fa-spin"></i> Refreshing...</> : <><i className="fas fa-sync"></i> Refresh Data</>}
+                    {loading ? '↻ Refreshing...' : '↻ Refresh Data'}
                   </button>
                 </div>
               </div>

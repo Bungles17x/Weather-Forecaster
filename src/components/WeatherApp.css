@@ -225,14 +225,6 @@
   color: rgba(255, 255, 255, 0.7);
   font-weight: 600;
   font-size: 0.9rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.detail-label i {
-  font-size: 0.8rem;
-  opacity: 0.8;
 }
 
 .detail-value {
@@ -258,16 +250,6 @@
   margin: 0 0 1.5rem 0;
   font-size: 1.3rem;
   font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.nws-info h4 i,
-.forecast-section h4 i,
-.alerts-section h4 i {
-  font-size: 1.1rem;
-  opacity: 0.9;
 }
 
 .office-details {
@@ -295,14 +277,6 @@
   color: rgba(255, 255, 255, 0.7);
   font-weight: 600;
   font-size: 0.9rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.office-label i {
-  font-size: 0.8rem;
-  opacity: 0.8;
 }
 
 .office-value {
@@ -327,14 +301,6 @@
   margin: 0 0 1.5rem 0;
   font-size: 1.3rem;
   font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.forecast-section h4 i {
-  font-size: 1.1rem;
-  opacity: 0.9;
 }
 
 .forecast-grid {
@@ -409,15 +375,7 @@
   margin: 0 0 1.5rem 0;
   font-size: 1.3rem;
   font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
   flex-wrap: wrap;
-}
-
-.alerts-section h4 i {
-  font-size: 1.1rem;
-  opacity: 0.9;
 }
 
 .extreme-alert-indicator {
@@ -556,15 +514,6 @@
 .update-time,
 .data-source {
   color: rgba(255, 255, 255, 0.8);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.update-time i,
-.data-source i {
-  font-size: 0.8rem;
-  opacity: 0.8;
 }
 
 .update-actions {
