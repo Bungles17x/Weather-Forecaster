@@ -777,37 +777,11 @@ const WeatherApp = () => {
                   <span className="office-value">{weatherData.nwsInfo.gridX}, {weatherData.nwsInfo.gridY}</span>
                 </div>
                 <div className="office-item">
-                  <span className="office-label">🗺️ Zone:</span>
-                  <span className="office-value">{weatherData.nwsInfo.forecastZone.split('/').pop()}</span>
-                </div>
-                <div className="office-item">
                   <span className="office-label">🏛️ County:</span>
                   <span className="office-value">{weatherData.nwsInfo.county.split('/').pop()}</span>
                 </div>
               </div>
             </div>
-            
-            {/* Add forecast display */}
-            {forecastData && forecastData.length > 0 && (
-              <div className="forecast-section">
-                <h4>📅 ⚑ Extended Forecast</h4>
-                <div className="forecast-grid">
-                  {forecastData.slice(0, 7).map((period, index) => (
-                    <div key={index} className="forecast-item">
-                      <div className="forecast-period">{period.name}</div>
-                      <div className="forecast-icon"><WeatherIcon condition={period.shortForecast} size={32} /></div>
-                      <div className="forecast-temp">
-                        <span className="forecast-high">{period.temperature || '--'}°</span>
-                        {period.temperatureUnit && (
-                          <span className="forecast-unit">{period.temperatureUnit}</span>
-                        )}
-                      </div>
-                      <div className="forecast-desc">{period.shortForecast}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
             
             {weatherData.alerts.length > 0 && (
               <div className="alerts-section">
