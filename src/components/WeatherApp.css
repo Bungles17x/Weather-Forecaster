@@ -98,7 +98,18 @@
   text-transform: uppercase;
   letter-spacing: 0.6px;
   transition: all 0.3s ease;
-  border: 3px solid rgba(255, 255, 255, 0.1);
+  background: #1a1a2e;
+}
+
+.risk-indicator::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 50%;
+  border: 8px solid transparent;
   background: conic-gradient(
     from 0deg,
     var(--risk-color) 0deg,
@@ -106,18 +117,21 @@
     rgba(255, 255, 255, 0.1) var(--fill-amount),
     rgba(255, 255, 255, 0.1) 360deg
   );
+  mask: radial-gradient(circle, transparent 32px, black 32px);
+  -webkit-mask: radial-gradient(circle, transparent 32px, black 32px);
+  z-index: 1;
 }
 
-.risk-indicator::before {
+.risk-indicator::after {
   content: '';
   position: absolute;
-  top: 3px;
-  left: 3px;
-  right: 3px;
-  bottom: 3px;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
   border-radius: 50%;
   background: #1a1a2e;
-  z-index: 1;
+  z-index: 0;
 }
 
 .risk-indicator span {
@@ -127,11 +141,16 @@
   text-align: center;
   line-height: 1.2;
   padding: 0.5rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .risk-indicator:hover {
   transform: translateY(-2px) scale(1.05);
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.risk-indicator:hover::before {
+  border-width: 10px;
 }
 
 .spc-details {
