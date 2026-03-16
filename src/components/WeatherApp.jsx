@@ -1079,31 +1079,106 @@ const WeatherApp = () => {
                   <div className="spc-risk-levels">
                     <div className="risk-category">
                       <h3>Tornado Risk</h3>
-                      <div 
-                        className="risk-indicator" 
-                        data-risk={spcOutlook.tornado?.risk || 'UNKNOWN'}
-                      >
-                        <span>{spcOutlook.tornado?.label || 'No Data'}</span>
+                      <div className="risk-indicator-container">
+                        <svg className="risk-circle" viewBox="0 0 80 80">
+                          <circle
+                            cx="40"
+                            cy="40"
+                            r="36"
+                            fill="none"
+                            stroke="rgba(255, 255, 255, 0.1)"
+                            strokeWidth="8"
+                          />
+                          <circle
+                            cx="40"
+                            cy="40"
+                            r="36"
+                            fill="none"
+                            stroke={spcOutlook.tornado?.color || '#616161'}
+                            strokeWidth="8"
+                            strokeLinecap="round"
+                            strokeDasharray={`${spcOutlook.tornado?.risk === 'HIGH' ? 226 : 
+                              spcOutlook.tornado?.risk === 'MODERATE' ? 176 :
+                              spcOutlook.tornado?.risk === 'ENHANCED' ? 126 :
+                              spcOutlook.tornado?.risk === 'SLIGHT' ? 76 :
+                              spcOutlook.tornado?.risk === 'MARGINAL' ? 26 : 0} 565`}
+                            transform="rotate(-90 40 40)"
+                            className="risk-progress"
+                          />
+                        </svg>
+                        <div className="risk-label">
+                          {spcOutlook.tornado?.label || 'No Data'}
+                        </div>
                       </div>
                     </div>
                     
                     <div className="risk-category">
                       <h3>Hail Risk</h3>
-                      <div 
-                        className="risk-indicator" 
-                        data-risk={spcOutlook.hail?.risk || 'UNKNOWN'}
-                      >
-                        <span>{spcOutlook.hail?.label || 'No Data'}</span>
+                      <div className="risk-indicator-container">
+                        <svg className="risk-circle" viewBox="0 0 80 80">
+                          <circle
+                            cx="40"
+                            cy="40"
+                            r="36"
+                            fill="none"
+                            stroke="rgba(255, 255, 255, 0.1)"
+                            strokeWidth="8"
+                          />
+                          <circle
+                            cx="40"
+                            cy="40"
+                            r="36"
+                            fill="none"
+                            stroke={spcOutlook.hail?.color || '#616161'}
+                            strokeWidth="8"
+                            strokeLinecap="round"
+                            strokeDasharray={`${spcOutlook.hail?.risk === 'HIGH' ? 226 : 
+                              spcOutlook.hail?.risk === 'MODERATE' ? 176 :
+                              spcOutlook.hail?.risk === 'ENHANCED' ? 126 :
+                              spcOutlook.hail?.risk === 'SLIGHT' ? 76 :
+                              spcOutlook.hail?.risk === 'MARGINAL' ? 26 : 0} 565`}
+                            transform="rotate(-90 40 40)"
+                            className="risk-progress"
+                          />
+                        </svg>
+                        <div className="risk-label">
+                          {spcOutlook.hail?.label || 'No Data'}
+                        </div>
                       </div>
                     </div>
                     
                     <div className="risk-category">
                       <h3>Wind Risk</h3>
-                      <div 
-                        className="risk-indicator" 
-                        data-risk={spcOutlook.wind?.risk || 'UNKNOWN'}
-                      >
-                        <span>{spcOutlook.wind?.label || 'No Data'}</span>
+                      <div className="risk-indicator-container">
+                        <svg className="risk-circle" viewBox="0 0 80 80">
+                          <circle
+                            cx="40"
+                            cy="40"
+                            r="36"
+                            fill="none"
+                            stroke="rgba(255, 255, 255, 0.1)"
+                            strokeWidth="8"
+                          />
+                          <circle
+                            cx="40"
+                            cy="40"
+                            r="36"
+                            fill="none"
+                            stroke={spcOutlook.wind?.color || '#616161'}
+                            strokeWidth="8"
+                            strokeLinecap="round"
+                            strokeDasharray={`${spcOutlook.wind?.risk === 'HIGH' ? 226 : 
+                              spcOutlook.wind?.risk === 'MODERATE' ? 176 :
+                              spcOutlook.wind?.risk === 'ENHANCED' ? 126 :
+                              spcOutlook.wind?.risk === 'SLIGHT' ? 76 :
+                              spcOutlook.wind?.risk === 'MARGINAL' ? 26 : 0} 565`}
+                            transform="rotate(-90 40 40)"
+                            className="risk-progress"
+                          />
+                        </svg>
+                        <div className="risk-label">
+                          {spcOutlook.wind?.label || 'No Data'}
+                        </div>
                       </div>
                     </div>
                   </div>

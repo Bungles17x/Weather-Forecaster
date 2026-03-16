@@ -84,73 +84,56 @@
   letter-spacing: 0.5px;
 }
 
-.risk-indicator {
+.risk-indicator-container {
   position: relative;
   width: 80px;
   height: 80px;
   margin: 0 auto;
-  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.risk-circle {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.risk-progress {
+  transition: stroke-dasharray 0.5s ease;
+  animation: fillProgress 1s ease-out;
+}
+
+.risk-label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   font-weight: 700;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.6px;
-  transition: all 0.3s ease;
-  background: #1a1a2e;
-}
-
-.risk-indicator::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  border-radius: 50%;
-  border: 8px solid transparent;
-  background: conic-gradient(
-    from 0deg,
-    var(--risk-color) 0deg,
-    var(--risk-color) var(--fill-amount),
-    rgba(255, 255, 255, 0.1) var(--fill-amount),
-    rgba(255, 255, 255, 0.1) 360deg
-  );
-  mask: radial-gradient(circle, transparent 32px, black 32px);
-  -webkit-mask: radial-gradient(circle, transparent 32px, black 32px);
-  z-index: 1;
-}
-
-.risk-indicator::after {
-  content: '';
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  right: 8px;
-  bottom: 8px;
-  border-radius: 50%;
-  background: #1a1a2e;
-  z-index: 0;
-}
-
-.risk-indicator span {
-  position: relative;
-  z-index: 2;
   color: #ffffff;
   text-align: center;
-  line-height: 1.2;
-  padding: 0.5rem;
+  line-height: 1.1;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
 }
 
-.risk-indicator:hover {
+.risk-indicator-container:hover {
   transform: translateY(-2px) scale(1.05);
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
 }
 
-.risk-indicator:hover::before {
-  border-width: 10px;
+@keyframes fillProgress {
+  from {
+    stroke-dasharray: 0 565;
+  }
+  to {
+    stroke-dasharray: inherit;
+  }
 }
 
 .spc-details {
@@ -221,37 +204,6 @@
   box-shadow: 0 5px 15px rgba(25, 118, 210, 0.4);
   color: #ffffff;
   text-decoration: none;
-}
-
-/* Risk Level Specific Colors for Circular Indicators */
-.risk-indicator[data-risk="HIGH"] {
-  --risk-color: #d32f2f;
-  --fill-amount: 324deg; /* 90% fill */
-}
-
-.risk-indicator[data-risk="MODERATE"] {
-  --risk-color: #f57c00;
-  --fill-amount: 252deg; /* 70% fill */
-}
-
-.risk-indicator[data-risk="ENHANCED"] {
-  --risk-color: #fbc02d;
-  --fill-amount: 180deg; /* 50% fill */
-}
-
-.risk-indicator[data-risk="SLIGHT"] {
-  --risk-color: #388e3c;
-  --fill-amount: 108deg; /* 30% fill */
-}
-
-.risk-indicator[data-risk="MARGINAL"] {
-  --risk-color: #1976d2;
-  --fill-amount: 36deg; /* 10% fill */
-}
-
-.risk-indicator[data-risk="UNKNOWN"] {
-  --risk-color: #616161;
-  --fill-amount: 0deg; /* 0% fill */
 }
 
 /* Loading and Error States */
