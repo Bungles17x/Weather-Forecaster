@@ -385,14 +385,25 @@ const WeatherApp = () => {
   const getForecast = useCallback(async (office, gridX, gridY) => {
     try {
       const forecastUrl = `${NWS_BASE_URL}/gridpoints/${office}/${gridX},${gridY}/forecast`
+      console.log('📅 Fetching forecast from:', forecastUrl)
       const response = await fetch(forecastUrl)
       
       if (!response.ok) {
-        throw new Error('Failed to get forecast')
+        console.log('⚠️ Forecast API failed with status:', response.status)
+        throw new Error(`Failed to get forecast: ${response.status}`)
       }
       
       const data = await response.json()
-      return data.properties.periods
+      console.log('📅 Raw forecast data:', data)
+      
+      if (!data.properties || !data.properties.periods) {
+        console.log('⚠️ No forecast properties or periods found')
+        return []
+      }
+      
+      const periods = data.properties.periods
+      console.log('📅 Forecast periods:', periods)
+      return periods
     } catch (error) {
       console.error('Forecast error:', error)
       throw error
@@ -439,7 +450,9 @@ const WeatherApp = () => {
       
       // Step 4: Get forecast
       const forecast = await getForecast(nwsInfo.office, nwsInfo.gridX, nwsInfo.gridY)
-      console.log('📅 Forecast:', forecast)
+      console.log('📅 Forecast received:', forecast)
+      console.log('📅 Forecast length:', forecast?.length)
+      console.log('📅 Forecast data type:', typeof forecast)
       
       // Step 5: Get alerts
       const alerts = await getAlerts(latitude, longitude)
@@ -472,7 +485,9 @@ const WeatherApp = () => {
       }
       
       setWeatherData(processedWeatherData)
-      setForecastData(forecast)
+      console.log('📅 Setting forecast data:', forecast)
+      console.log('📅 Forecast data is array:', Array.isArray(forecast))
+      setForecastData(forecast || [])
       setLastUpdate(new Date())
       setLocation(displayName || locationName)
       
@@ -727,7 +742,12 @@ const WeatherApp = () => {
             </div>
             
             {/* Add forecast display */}
-            {forecastData.length > 0 && (
+            {(() => {
+              console.log('📅 Rendering forecast - forecastData:', forecastData)
+              console.log('📅 Rendering forecast - length:', forecastData?.length)
+              console.log('📅 Rendering forecast - type:', typeof forecastData)
+              return forecastData && forecastData.length > 0
+            })() && (
               <div className="forecast-section">
                 <h4>📅 ⚑ Extended Forecast</h4>
                 <div className="forecast-grid">
