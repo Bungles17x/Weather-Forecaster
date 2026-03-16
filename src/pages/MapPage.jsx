@@ -142,48 +142,11 @@ const MapPage = () => {
             <div className="map-wrapper">
               <WeatherMap />
             </div>
-            <div className="map-footer">
-              <div className="footer-info">
-                <div className="data-status">
-                  <span className="status-indicator live"></span>
-                  <span className="status-text">Live Data</span>
-                </div>
-                <div className="last-update">
-                  Last updated: {new Date().toLocaleTimeString()}
-                </div>
-              </div>
-              <div className="footer-actions">
-                <button className="footer-btn">🔄 Refresh</button>
-                <button className="footer-btn">⬇️ Download</button>
-                <button className="footer-btn">🔗 Copy Link</button>
-              </div>
-            </div>
+            {/* REMOVE MAP FOOTER - TAKING UP SPACE */}
           </div>
         </div>
 
-        <div className="map-legend-bar">
-          <div className="legend-section">
-            <h4>Weather Intensity</h4>
-            <div className="intensity-scale">
-              <div className="scale-item light">
-                <div className="scale-color"></div>
-                <span>Light</span>
-              </div>
-              <div className="scale-item moderate">
-                <div className="scale-color"></div>
-                <span>Moderate</span>
-              </div>
-              <div className="scale-item heavy">
-                <div className="scale-color"></div>
-                <span>Heavy</span>
-              </div>
-              <div className="scale-item severe">
-                <div className="scale-color"></div>
-                <span>Severe</span>
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* REMOVE MAP LEGEND BAR - TAKING UP SPACE */}
       </div>
     </div>
   )

@@ -215,14 +215,14 @@
   font-size: 0.9rem;
 }
 
-/* Enhanced Map Container - NO BLACK BOX */
+/* Enhanced Map Container - FULL SCREEN */
 .map-container.enhanced {
   display: grid;
   grid-template-columns: 1fr; /* FULL WIDTH MAP */
   gap: 0;
   flex: 1;
   min-height: 0;
-  height: calc(100vh - 60px); /* FULL REMAINING HEIGHT */
+  height: calc(100vh - 50px); /* FULL HEIGHT - ONLY HEADER */
   background: transparent; /* REMOVE BACKGROUND */
   border-radius: 0; /* REMOVE BORDER RADIUS */
   padding: 0; /* REMOVE PADDING */
