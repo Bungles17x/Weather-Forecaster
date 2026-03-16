@@ -567,29 +567,56 @@ const WeatherApp = () => {
       const spcResponse = await fetch('https://www.spc.noaa.gov/products/outlook/day1otlk.json')
       if (spcResponse.ok) {
         const spcData = await spcResponse.json()
-        console.log('🌪 SPC Outlook:', spcData)
+        console.log('🌪 SPC Outlook RAW DATA:', spcData)
+        console.log('🌪 SPC Outlook KEYS:', Object.keys(spcData))
         
-        // Process SPC data for display
+        // Process SPC data for display - handle actual API structure
         const processedSpcData = {
           tornado: {
-            risk: spcData.tornado || 'UNKNOWN',
-            label: spcData.tornado || 'No Risk',
-            color: getRiskColor(spcData.tornado)
+            risk: 'UNKNOWN',
+            label: 'No Risk Data',
+            color: getRiskColor('UNKNOWN')
           },
           hail: {
-            risk: spcData.hail || 'UNKNOWN',
-            label: spcData.hail || 'No Risk',
-            color: getRiskColor(spcData.hail)
+            risk: 'UNKNOWN', 
+            label: 'No Risk Data',
+            color: getRiskColor('UNKNOWN')
           },
           wind: {
-            risk: spcData.wind || 'UNKNOWN',
-            label: spcData.wind || 'No Risk',
-            color: getRiskColor(spcData.wind)
+            risk: 'UNKNOWN',
+            label: 'No Risk Data', 
+            color: getRiskColor('UNKNOWN')
           },
-          forecast: spcData.forecast || 'No forecast available',
-          updated: new Date().toLocaleString()
+          forecast: 'SPC Day 1 Convective Outlook - No detailed forecast available',
+          updated: new Date().toLocaleString(),
+          rawData: spcData
         }
         
+        // Try to extract risk categories from actual SPC data structure
+        if (spcData && spcData.outlook) {
+          console.log('🌪 SPC OUTLOOK STRUCTURE:', spcData.outlook)
+          processedSpcData.tornado = {
+            risk: spcData.outlook.tornado || 'UNKNOWN',
+            label: spcData.outlook.tornado || 'No Risk',
+            color: getRiskColor(spcData.outlook.tornado)
+          }
+          
+          processedSpcData.hail = {
+            risk: spcData.outlook.hail || 'UNKNOWN',
+            label: spcData.outlook.hail || 'No Risk',
+            color: getRiskColor(spcData.outlook.hail)
+          }
+          
+          processedSpcData.wind = {
+            risk: spcData.outlook.wind || 'UNKNOWN',
+            label: spcData.outlook.wind || 'No Risk',
+            color: getRiskColor(spcData.outlook.wind)
+          }
+          
+          processedSpcData.forecast = spcData.outlook.text || spcData.outlook.forecast || 'SPC Convective Outlook Available'
+        }
+        
+        console.log('🌪 PROCESSED SPC DATA:', processedSpcData)
         return processedSpcData
       }
       
