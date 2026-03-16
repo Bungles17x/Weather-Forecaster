@@ -1012,9 +1012,6 @@
   z-index: 1000;
   padding: 12px 0;
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4), 0 0 40px rgba(100, 100, 255, 0.1);
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
 }
 
 .mobile-nav-btn {
@@ -1090,6 +1087,21 @@
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
+}
+
+/* Desktop Styles - Ensure desktop navigation shows on PC */
+@media (min-width: 1025px) {
+  .header-nav {
+    display: flex; /* Show desktop navigation on desktop */
+  }
+  
+  .mobile-bottom-nav {
+    display: none; /* Hide mobile navigation on desktop */
+  }
+  
+  .header-right {
+    display: flex; /* Show right section on desktop */
+  }
 }
 
 /* Enhanced Mobile Styles - Layout Only */
