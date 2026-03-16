@@ -397,9 +397,9 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
       '🚨 Alerts': alertsLayerGroup
     }
 
-    // Add layer control
+    // Add layer control - MOVE TO BOTTOM LEFT TO AVOID MAP
     const layerControl = window.L.control.layers(baseMaps, overlayMaps, {
-      position: 'topright',
+      position: 'bottomleft', /* MOVED FROM TOPRIGHT */
       collapsed: false
     }).addTo(map)
 

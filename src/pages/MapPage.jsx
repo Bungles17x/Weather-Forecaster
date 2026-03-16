@@ -83,7 +83,32 @@ const MapPage = () => {
         )}
 
         <div className="map-container enhanced">
-          <div className="map-sidebar">
+          {/* EXTERNAL MAP CONTROLS - OUTSIDE MAP */}
+          <div className="external-map-controls">
+            <div className="control-section">
+              <h4>🗺️ Map Layers</h4>
+              <div className="layer-buttons">
+                <button className="layer-btn active">🛡️ Radar</button>
+                <button className="layer-btn">💧 Precipitation</button>
+                <button className="layer-btn">💨 Wind</button>
+                <button className="layer-btn">☁️ Clouds</button>
+                <button className="layer-btn">🌡️ Temperature</button>
+                <button className="layer-btn">🔵 Pressure</button>
+              </div>
+            </div>
+            <div className="control-section">
+              <h4>📡 Base Map</h4>
+              <div className="basemap-buttons">
+                <button className="basemap-btn active">🗺️ Street</button>
+                <button className="basemap-btn">🛰️ Satellite</button>
+                <button className="basemap-btn">🏔️ Terrain</button>
+                <button className="basemap-btn">🌙 Dark</button>
+              </div>
+            </div>
+          </div>
+          
+          {/* HIDDEN SIDEBAR FOR MAXIMUM MAP SPACE */}
+          <div className="map-sidebar" style={{display: 'none'}}>
             <div className="location-info">
               <h3>📍 Current Location</h3>
               <div className="location-display">
