@@ -1,11 +1,14 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
+import Header from '../components/Header'
 import WeatherAlerts from '../components/WeatherAlerts'
 import './AlertsPage.css'
 
 const AlertsPage = () => {
   return (
     <div className="alerts-page">
+      <Header />
+      
       <div className="alerts-page-header">
         <Link to="/" className="back-link">
           <span className="back-icon">←</span>
