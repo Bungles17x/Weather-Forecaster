@@ -91,7 +91,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
             <!-- Large Radar Visualization - FULL SCREEN -->
             <div style="position: relative; width: 100%; height: 100%; max-width: none; max-height: none;">
               <!-- Radar Background - FULL SCREEN -->
-              <div style="position: absolute; inset: 0; background: radial-gradient(circle at center, rgba(52, 152, 219, 0.1) 0%, rgba(0, 0, 0, 0.3) 50%, rgba(0, 0, 0, 0.5) 100%); border-radius: 0; transform: scale(2.5);"></div>
+              <div style="position: absolute; inset: 0; background: radial-gradient(circle at center, rgba(52, 152, 219, 0.1) 0%, rgba(0, 0, 0, 0.3) 50%, rgba(0, 0, 0, 0.5) 100%); border-radius: 0; transform: scale(2.2);"></div>
               
               <!-- Animated Radar Sweep - FULL SCREEN -->
               <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;">
@@ -101,9 +101,9 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
               </div>
               
               <!-- Weather Data Grid - FULL SCREEN -->
-              <div style="position: absolute; inset: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2.5rem; padding: 0.5rem; align-items: center; justify-items: center;">
+              <div style="position: absolute; inset: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; padding: 0; align-items: center; justify-items: center;">
                 <!-- NEXRAD Radar - MUCH LARGER -->
-                <div style="background: linear-gradient(135deg, #2c3e50, #34495e); padding: 6rem; border-radius: 35px; text-align: center; box-shadow: 0 25px 100px rgba(0,0,0,0.6); border: 4px solid rgba(255,255,255,0.3); transform: scale(2.5); transition: transform 0.3s ease;">
+                <div style="background: linear-gradient(135deg, #2c3e50, #34495e); padding: 6rem; border-radius: 35px; text-align: center; box-shadow: 0 25px 100px rgba(0,0,0,0.6); border: 4px solid rgba(255,255,255,0.3); transform: scale(2.2); transition: transform 0.3s ease;">
                   <div style="font-size: 15rem; margin-bottom: 3.5rem; filter: drop-shadow(0 12px 24px rgba(0,0,0,0.7)); animation: pulse-${timestamp} 2s ease-in-out infinite;">🛡️</div>
                   <div style="font-weight: 700; font-size: 5rem; margin-bottom: 2rem;">NEXRAD</div>
                   <div style="font-size: 3.5rem; opacity: 0.9;">Doppler Radar</div>
@@ -111,7 +111,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
                 </div>
                 
                 <!-- Precipitation - MUCH LARGER -->
-                <div style="background: linear-gradient(135deg, #3498db, #2980b9); padding: 6rem; border-radius: 35px; text-align: center; box-shadow: 0 25px 100px rgba(0,0,0,0.6); border: 4px solid rgba(255,255,255,0.3); transform: scale(2.5); transition: transform 0.3s ease;">
+                <div style="background: linear-gradient(135deg, #3498db, #2980b9); padding: 6rem; border-radius: 35px; text-align: center; box-shadow: 0 25px 100px rgba(0,0,0,0.6); border: 4px solid rgba(255,255,255,0.3); transform: scale(2.2); transition: transform 0.3s ease;">
                   <div style="font-size: 15rem; margin-bottom: 3.5rem; filter: drop-shadow(0 12px 24px rgba(0,0,0,0.7)); animation: pulse-${timestamp} 2s ease-in-out infinite 0.5s;">💧</div>
                   <div style="font-weight: 700; font-size: 5rem; margin-bottom: 2rem;">Precipitation</div>
                   <div style="font-size: 3.5rem; opacity: 0.9;">Rain/Snow</div>
@@ -119,7 +119,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
                 </div>
                 
                 <!-- Wind - MUCH LARGER -->
-                <div style="background: linear-gradient(135deg, #16a085, #27ae60); padding: 6rem; border-radius: 35px; text-align: center; box-shadow: 0 25px 100px rgba(0,0,0,0.6); border: 4px solid rgba(255,255,255,0.3); transform: scale(2.5); transition: transform 0.3s ease;">
+                <div style="background: linear-gradient(135deg, #16a085, #27ae60); padding: 6rem; border-radius: 35px; text-align: center; box-shadow: 0 25px 100px rgba(0,0,0,0.6); border: 4px solid rgba(255,255,255,0.3); transform: scale(2.2); transition: transform 0.3s ease;">
                   <div style="font-size: 15rem; margin-bottom: 3.5rem; filter: drop-shadow(0 12px 24px rgba(0,0,0,0.7)); animation: pulse-${timestamp} 2s ease-in-out infinite 1s;">💨</div>
                   <div style="font-weight: 700; font-size: 5rem; margin-bottom: 2rem;">Wind</div>
                   <div style="font-size: 3.5rem; opacity: 0.9;">Speed/Direction</div>
@@ -127,7 +127,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
                 </div>
                 
                 <!-- Clouds - MUCH LARGER -->
-                <div style="background: linear-gradient(135deg, #95a5a6, #7f8c8d); padding: 6rem; border-radius: 35px; text-align: center; box-shadow: 0 25px 100px rgba(0,0,0,0.6); border: 4px solid rgba(255,255,255,0.3); transform: scale(2.5); transition: transform 0.3s ease;">
+                <div style="background: linear-gradient(135deg, #95a5a6, #7f8c8d); padding: 6rem; border-radius: 35px; text-align: center; box-shadow: 0 25px 100px rgba(0,0,0,0.6); border: 4px solid rgba(255,255,255,0.3); transform: scale(2.2); transition: transform 0.3s ease;">
                   <div style="font-size: 15rem; margin-bottom: 3.5rem; filter: drop-shadow(0 12px 24px rgba(0,0,0,0.7)); animation: pulse-${timestamp} 2s ease-in-out infinite 1.5s;">☁️</div>
                   <div style="font-weight: 700; font-size: 5rem; margin-bottom: 2rem;">Clouds</div>
                   <div style="font-size: 3.5rem; opacity: 0.9;">Coverage</div>
@@ -135,7 +135,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
                 </div>
                 
                 <!-- Temperature - MUCH LARGER -->
-                <div style="background: linear-gradient(135deg, #e74c3c, #c0392b); padding: 6rem; border-radius: 35px; text-align: center; box-shadow: 0 25px 100px rgba(0,0,0,0.6); border: 4px solid rgba(255,255,255,0.3); transform: scale(2.5); transition: transform 0.3s ease;">
+                <div style="background: linear-gradient(135deg, #e74c3c, #c0392b); padding: 6rem; border-radius: 35px; text-align: center; box-shadow: 0 25px 100px rgba(0,0,0,0.6); border: 4px solid rgba(255,255,255,0.3); transform: scale(2.2); transition: transform 0.3s ease;">
                   <div style="font-size: 15rem; margin-bottom: 3.5rem; filter: drop-shadow(0 12px 24px rgba(0,0,0,0.7)); animation: pulse-${timestamp} 2s ease-in-out infinite 2s;">🌡</div>
                   <div style="font-weight: 700; font-size: 5rem; margin-bottom: 2rem;">Temperature</div>
                   <div style="font-size: 3.5rem; opacity: 0.9;">Heat Map</div>
@@ -143,7 +143,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
                 </div>
                 
                 <!-- Pressure - MUCH LARGER -->
-                <div style="background: linear-gradient(135deg, #8e44ad, #9b59b6); padding: 6rem; border-radius: 35px; text-align: center; box-shadow: 0 25px 100px rgba(0,0,0,0.6); border: 4px solid rgba(255,255,255,0.3); transform: scale(2.5); transition: transform 0.3s ease;">
+                <div style="background: linear-gradient(135deg, #8e44ad, #9b59b6); padding: 6rem; border-radius: 35px; text-align: center; box-shadow: 0 25px 100px rgba(0,0,0,0.6); border: 4px solid rgba(255,255,255,0.3); transform: scale(2.2); transition: transform 0.3s ease;">
                   <div style="font-size: 15rem; margin-bottom: 3.5rem; filter: drop-shadow(0 12px 24px rgba(0,0,0,0.7)); animation: pulse-${timestamp} 2s ease-in-out infinite 2.5s;">🔵</div>
                   <div style="font-weight: 700; font-size: 5rem; margin-bottom: 2rem;">Pressure</div>
                   <div style="font-size: 3.5rem; opacity: 0.9;">Systems</div>
