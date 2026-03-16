@@ -346,6 +346,39 @@ const Header = ({ onLocationChange }) => {
         </div>
       </header>
 
+      {/* Mobile Bottom Navigation */}
+      <div className="mobile-bottom-nav">
+        <button
+          onClick={handleLocateMe}
+          className={`mobile-nav-btn ${locating ? 'locating' : ''}`}
+          disabled={locating}
+          title="Find my current location"
+        >
+          <span className="mobile-nav-icon">{locating ? '🔄' : '📍'}</span>
+          <span className="mobile-nav-label">
+            {locating ? 'Locating...' : 'Locate'}
+          </span>
+        </button>
+        
+        <button
+          onClick={handleLocationChange}
+          className="mobile-nav-btn"
+          title="Change location"
+        >
+          <span className="mobile-nav-icon">📍</span>
+          <span className="mobile-nav-label">Location</span>
+        </button>
+        
+        <button
+          onClick={handleMenuToggle}
+          className={`mobile-nav-btn ${isMenuOpen ? 'open' : ''}`}
+          title="Toggle menu"
+        >
+          <span className="mobile-nav-icon">☰</span>
+          <span className="mobile-nav-label">Menu</span>
+        </button>
+      </div>
+
       {/* Mobile Menu Overlay */}
       {isMenuOpen && (
         <div className="menu-overlay" onClick={handleMenuClose}>
