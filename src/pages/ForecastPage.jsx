@@ -134,7 +134,8 @@ const ForecastPage = () => {
       <div className="hourly-header">
         <h3>⏰ Hourly Forecast</h3>
         <div className="hourly-controls">
-          <button className="control-btn">🔄 Refresh</button>
+          <button className="control-btn btn-primary">🔄 Refresh</button>
+          <button className="control-btn btn-secondary">📊 Export</button>
         </div>
       </div>
       
@@ -166,7 +167,9 @@ const ForecastPage = () => {
       <div className="daily-header">
         <h3>📅 Daily Forecast</h3>
         <div className="daily-controls">
-          <button className="control-btn">🔄 Refresh</button>
+          <button className="control-btn btn-primary">🔄 Refresh</button>
+          <button className="control-btn btn-secondary">📊 Export</button>
+          <button className="control-btn btn-secondary">📧 Share</button>
         </div>
       </div>
       
@@ -207,7 +210,10 @@ const ForecastPage = () => {
       <div className="extended-header">
         <h3>📆 Extended Forecast</h3>
         <div className="extended-controls">
-          <button className="control-btn">🔄 Refresh</button>
+          <button className="control-btn btn-primary">🔄 Refresh</button>
+          <button className="control-btn btn-secondary">📊 Export</button>
+          <button className="control-btn btn-secondary">📧 Share</button>
+          <button className="control-btn btn-secondary">📅 Calendar</button>
         </div>
       </div>
       
@@ -242,7 +248,11 @@ const ForecastPage = () => {
       <div className="ten-day-header">
         <h3>🗓️ 10-Day Forecast</h3>
         <div className="ten-day-controls">
-          <button className="control-btn">🔄 Refresh</button>
+          <button className="control-btn btn-primary">🔄 Refresh</button>
+          <button className="control-btn btn-secondary">📊 Export</button>
+          <button className="control-btn btn-secondary">📧 Share</button>
+          <button className="control-btn btn-secondary">📅 Calendar</button>
+          <button className="control-btn btn-secondary">📈 Trends</button>
         </div>
       </div>
       
@@ -285,7 +295,10 @@ const ForecastPage = () => {
         <div className="summary-header">
           <h3>📊 Forecast Summary</h3>
           <div className="summary-controls">
-            <button className="control-btn">🔄 Refresh</button>
+            <button className="control-btn btn-primary">🔄 Refresh</button>
+            <button className="control-btn btn-secondary">📊 Export</button>
+            <button className="control-btn btn-secondary">📧 Share</button>
+            <button className="control-btn btn-secondary">📈 Analysis</button>
           </div>
         </div>
         
