@@ -21,15 +21,33 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         console.log('🌪 Fetching SPC Outlook data...')
         
         // Fetch SPC Convective Outlook
-        const spcResponse = await fetch('https://www.spc.noaa.gov/products/outlook/day1otlk.json')
-        if (spcResponse.ok) {
-          const spcData = await spcResponse.json()
-          console.log('🌪 SPC Outlook:', spcData)
-          setSpcOutlook(spcData)
+        const fetchSpcOutlook = async () => {
+          try {
+            console.log('🌪️ Fetching SPC convective outlook...')
+            
+            // Updated working SPC URLs
+            const outlookUrl = 'https://www.spc.noaa.gov/products/outlook/day1/otlk_lyn.json'
+            const response = await fetch(outlookUrl)
+            
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`)
+            }
+            
+            const data = await response.json()
+            console.log('🌪️ SPC Outlook data received:', data)
+            setSpcOutlook(data)
+          } catch (error) {
+            console.error('🌪️ Error fetching SPC outlook:', error)
+            // Set null to prevent errors
+            setSpcOutlook(null)
+          } finally {
+            setLoadingSpc(false)
+          }
         }
+        await fetchSpcOutlook()
         
         // Fetch active weather alerts
-        const alertsResponse = await fetch('https://api.weather.gov/alerts/active?area=US')
+        const alertsResponse = await fetch('https://api.weather.gov/alerts/active')
         if (alertsResponse.ok) {
           const alertsData = await alertsResponse.json()
           console.log('⚠️ Weather Alerts:', alertsData)
