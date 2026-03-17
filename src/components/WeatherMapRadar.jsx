@@ -222,7 +222,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
   const addNexradRadarOverlay = (map) => {
     console.log('🛡️ Adding NEXRAD radar overlay to street map...')
     
-    // Primary NEXRAD radar from Iowa State
+    // Primary NEXRAD radar from Iowa State - FIXED TMS URL
     const nexradLayer = window.L.tileLayer('https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/ridge::USCOMP-N0Q::0/256/{z}/{x}/{y}.png', {
       attribution: '© Iowa State Mesonet / NOAA NWS',
       opacity: 0.7,
@@ -233,7 +233,8 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
       crossOrigin: true,
       detectRetina: true,
       timeout: 5000,
-      retry: 2
+      retry: 2,
+      tms: false // Important: This is NOT a TMS tile server
     })
     
     nexradLayer.on('tileload', () => {
@@ -242,6 +243,8 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
     
     nexradLayer.on('tileerror', (error) => {
       console.error('❌ NEXRAD radar tile error:', error)
+      // Try alternative URL if primary fails
+      tryAlternativeRadar(map)
     })
     
     nexradLayer.addTo(map)
@@ -262,6 +265,33 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
     radarStatus.addTo(map)
     
     return nexradLayer
+  }
+
+  // Try alternative radar sources if primary fails
+  const tryAlternativeRadar = (map) => {
+    console.log('🔄 Trying alternative radar sources...')
+    
+    // Try OpenWeatherMap radar as fallback
+    const owmRadar = window.L.tileLayer('https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136', {
+      attribution: '© OpenWeatherMap',
+      opacity: 0.6,
+      maxZoom: 12,
+      minZoom: 2,
+      timeout: 5000,
+      retry: 2
+    })
+    
+    owmRadar.on('tileload', () => {
+      console.log('✅ OpenWeatherMap radar loaded as fallback')
+    })
+    
+    owmRadar.on('tileerror', (error) => {
+      console.error('❌ OpenWeatherMap radar failed:', error)
+    })
+    
+    owmRadar.addTo(map)
+    
+    return owmRadar
   }
 
   // Add severe weather polygons to street map
@@ -536,7 +566,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         }
       }
 
-      // Primary NEXRAD radar from Iowa State - ORIGINAL WORKING SOURCE
+      // Primary NEXRAD radar from Iowa State - FIXED TMS REQUEST
       const nexradLayer = window.L.tileLayer('https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/ridge::USCOMP-N0Q::0/256/{z}/{x}/{y}.png', {
         attribution: '© Iowa State Mesonet / NOAA NWS',
         opacity: 0.8,
@@ -548,7 +578,8 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         crossOrigin: true,
         detectRetina: true,
         timeout: 5000,
-        retry: 2
+        retry: 2,
+        tms: false // Explicitly set this is NOT a TMS server
       })
       
       nexradLayer.on('tileload', () => {
