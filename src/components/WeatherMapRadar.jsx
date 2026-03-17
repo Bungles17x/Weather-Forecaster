@@ -12,6 +12,8 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
   const [weatherAlerts, setWeatherAlerts] = useState([])
   const [loadingSpc, setLoadingSpc] = useState(true)
   const [radarError, setRadarError] = useState(null)
+  const [radarStatus, setRadarStatus] = useState('initializing')
+  const [activeRadarLayers, setActiveRadarLayers] = useState([])
   const mapRef = useRef(null)
 
   // Fetch SPC outlook data
@@ -442,19 +444,38 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
       console.log('🛡️ Adding NEXRAD radar layers...')
       let radarLayersLoaded = 0
       let radarLayersFailed = 0
-      const totalRadarLayers = 4  // Increased to 4 with new NOAA layer
+      const totalRadarLayers = 6  // Increased to 6 with more reliable sources
       
       // Track layer status to prevent duplicate counting
       const layerStatus = {
         openWeatherMap: 'pending',
         iowaState: 'pending', 
         ventusky: 'pending',
-        noaa: 'pending'
+        noaa: 'pending',
+        weatherGov: 'pending',
+        radarScope: 'pending'
       }
       
       // Function to check radar loading status
       const checkRadarStatus = () => {
         console.log(`🛡️ Radar status: ${radarLayersLoaded} loaded, ${radarLayersFailed} failed`)
+        
+        // Update radar status state
+        if (radarLayersLoaded > 0) {
+          setRadarStatus('active')
+          const activeLayers = []
+          if (layerStatus.openWeatherMap === 'loaded') activeLayers.push('RainViewer')
+          if (layerStatus.iowaState === 'loaded') activeLayers.push('RainViewer 2')
+          if (layerStatus.ventusky === 'loaded') activeLayers.push('Ventusky')
+          if (layerStatus.weatherGov === 'loaded') activeLayers.push('Weather.gov')
+          if (layerStatus.radarScope === 'loaded') activeLayers.push('RadarScope')
+          setActiveRadarLayers(activeLayers)
+        } else if (radarLayersFailed >= totalRadarLayers) {
+          setRadarStatus('failed')
+          setActiveRadarLayers([])
+        } else {
+          setRadarStatus('loading')
+        }
         
         if (radarLayersLoaded === 0 && radarLayersFailed >= totalRadarLayers) {
           const errorMessage = '⚠️ NEXRAD radar layers failed to load. This may be due to network issues or service outages.'
@@ -481,7 +502,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         }
       }
 
-      // Working NEXRAD radar from RainViewer (free, no API key needed)
+      // Primary NEXRAD radar from RainViewer (free, no API key needed)
       const nexradLayer = window.L.tileLayer('https://tile.rainviewer.com/v2/coverage/now/{z}/{x}/{y}/256/0/0_1.png', {
         attribution: '© RainViewer / NOAA NWS',
         opacity: 0.8,
@@ -491,7 +512,9 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         updateWhenIdle: false,
         updateWhenZooming: false,
         crossOrigin: true,
-        detectRetina: true
+        detectRetina: true,
+        timeout: 5000,  // Add timeout
+        retry: 2  // Add retry attempts
       })
       
       // Add error handling for this layer
@@ -513,7 +536,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
               console.log('🛡️ OpenWeatherMap layer failed to load')
               checkRadarStatus()
             }
-          }, 3000)
+          }, 5000)  // Increased timeout for better reliability
         }
       })
       
@@ -550,9 +573,11 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
           
           // Force error detection
           radarLayersFailed = totalRadarLayers
+          setRadarStatus('failed')
           checkRadarStatus()
         } else {
           console.log('✅ At least one radar layer loaded successfully')
+          setRadarStatus('active')
         }
       }, 5000)  // Reduced from 10000
       
@@ -568,7 +593,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         }
       }, 2000)  // Reduced from 3000
 
-      // Alternative NEXRAD from RainViewer (different layer)
+      // Backup NEXRAD from RainViewer (different layer)
       const nexradTilesLayer = window.L.tileLayer('https://tile.rainviewer.com/v2/coverage/now/{z}/{x}/{y}/256/1/0_1.png', {
         attribution: '© RainViewer / NOAA NWS',
         opacity: 0.7,
@@ -578,7 +603,9 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         updateWhenIdle: false,
         updateWhenZooming: false,
         crossOrigin: true,
-        detectRetina: true
+        detectRetina: true,
+        timeout: 5000,
+        retry: 2
       })
       
       // Add error handling for this layer
@@ -633,16 +660,18 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         updateWhenIdle: false,
         updateWhenZooming: false,
         crossOrigin: true,
-        detectRetina: true
+        detectRetina: true,
+        timeout: 5000,
+        retry: 2
       })
       
-      // Add error handling for this layer
-      ventuskyLayer.on('tileerror', (error) => {
+      // Add error handling for Ventusky layer
+      ventuskyRadar.on('tileerror', (error) => {
         // Only log first few errors to reduce console noise
-        if (!ventuskyLayer.errorCount) ventuskyLayer.errorCount = 0
-        if (ventuskyLayer.errorCount < 3) {
+        if (!ventuskyRadar.errorCount) ventuskyRadar.errorCount = 0
+        if (ventuskyRadar.errorCount < 3) {
           console.error('🛡️ Ventusky radar tile error:', error)
-          ventuskyLayer.errorCount++
+          ventuskyRadar.errorCount++
         }
         
         // Don't count individual tile errors
@@ -654,11 +683,11 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
               console.log('🛡️ Ventusky layer failed to load')
               checkRadarStatus()
             }
-          }, 3000)
+          }, 5000)
         }
       })
       
-      ventuskyLayer.on('tileload', () => {
+      ventuskyRadar.on('tileload', () => {
         if (layerStatus.ventusky === 'pending' && radarLayersLoaded === 0) {
           layerStatus.ventusky = 'loaded'
           radarLayersLoaded = 1
@@ -667,10 +696,90 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         }
       })
       
-      ventuskyLayer.on('load', () => {
+      ventuskyRadar.on('load', () => {
         if (layerStatus.ventusky === 'pending') {
           layerStatus.ventusky = 'loaded'
           console.log('✅ Ventusky radar layer fully loaded')
+          if (radarLayersLoaded === 0) {
+            radarLayersLoaded = 1
+            setRadarError(null)
+          }
+        }
+      })
+
+      // Add error handling for Weather.gov layer
+      weatherGovRadar.on('tileerror', (error) => {
+        if (!weatherGovRadar.errorCount) weatherGovRadar.errorCount = 0
+        if (weatherGovRadar.errorCount < 3) {
+          console.error('🛡️ Weather.gov radar tile error:', error)
+          weatherGovRadar.errorCount++
+        }
+        
+        if (layerStatus.weatherGov === 'pending') {
+          setTimeout(() => {
+            if (layerStatus.weatherGov === 'pending') {
+              layerStatus.weatherGov = 'failed'
+              radarLayersFailed++
+              console.log('🛡️ Weather.gov layer failed to load')
+              checkRadarStatus()
+            }
+          }, 5000)
+        }
+      })
+      
+      weatherGovRadar.on('tileload', () => {
+        if (layerStatus.weatherGov === 'pending' && radarLayersLoaded === 0) {
+          layerStatus.weatherGov = 'loaded'
+          radarLayersLoaded = 1
+          console.log('✅ Weather.gov radar loaded successfully')
+          setRadarError(null)
+        }
+      })
+      
+      weatherGovRadar.on('load', () => {
+        if (layerStatus.weatherGov === 'pending') {
+          layerStatus.weatherGov = 'loaded'
+          console.log('✅ Weather.gov radar layer fully loaded')
+          if (radarLayersLoaded === 0) {
+            radarLayersLoaded = 1
+            setRadarError(null)
+          }
+        }
+      })
+
+      // Add error handling for RadarScope layer
+      radarScopeLayer.on('tileerror', (error) => {
+        if (!radarScopeLayer.errorCount) radarScopeLayer.errorCount = 0
+        if (radarScopeLayer.errorCount < 3) {
+          console.error('🛡️ RadarScope radar tile error:', error)
+          radarScopeLayer.errorCount++
+        }
+        
+        if (layerStatus.radarScope === 'pending') {
+          setTimeout(() => {
+            if (layerStatus.radarScope === 'pending') {
+              layerStatus.radarScope = 'failed'
+              radarLayersFailed++
+              console.log('🛡️ RadarScope layer failed to load')
+              checkRadarStatus()
+            }
+          }, 5000)
+        }
+      })
+      
+      radarScopeLayer.on('tileload', () => {
+        if (layerStatus.radarScope === 'pending' && radarLayersLoaded === 0) {
+          layerStatus.radarScope = 'loaded'
+          radarLayersLoaded = 1
+          console.log('✅ RadarScope radar loaded successfully')
+          setRadarError(null)
+        }
+      })
+      
+      radarScopeLayer.on('load', () => {
+        if (layerStatus.radarScope === 'pending') {
+          layerStatus.radarScope = 'loaded'
+          console.log('✅ RadarScope radar layer fully loaded')
           if (radarLayersLoaded === 0) {
             radarLayersLoaded = 1
             setRadarError(null)
@@ -683,7 +792,31 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         opacity: 0.7,
         maxZoom: 12,
         minZoom: 2,
-        errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
+        errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+        timeout: 5000,
+        retry: 2
+      })
+
+      // Alternative radar from Weather.gov (more reliable)
+      const weatherGovRadar = window.L.tileLayer('https://radar.weather.gov/ridge/Conus/Base/NEXRAD/{z}/{x}/{y}.png', {
+        attribution: '© NOAA Weather.gov',
+        opacity: 0.8,
+        maxZoom: 10,
+        minZoom: 3,
+        errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+        timeout: 5000,
+        retry: 2
+      })
+
+      // RadarScope fallback (alternative source)
+      const radarScopeLayer = window.L.tileLayer('https://api.radarscope.io/radar/{z}/{x}/{y}.png', {
+        attribution: '© RadarScope / Aviation Weather',
+        opacity: 0.7,
+        maxZoom: 12,
+        minZoom: 2,
+        errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+        timeout: 5000,
+        retry: 2
       })
 
       // NOAA GOES Satellite/Radar from RainViewer (satellite layer)
@@ -807,9 +940,11 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
 
     // Create overlay maps - working layers only
     const overlayMaps = {
-      '🛡️ NEXRAD Radar (OpenWeatherMap)': nexradLayer,
-      '🛡️ NEXRAD (Iowa State)': nexradTilesLayer,
+      '🛡️ NEXRAD Radar (RainViewer)': nexradLayer,
+      '🛡️ NEXRAD (RainViewer 2)': nexradTilesLayer,
       '🛡️ NEXRAD (Ventusky)': ventuskyRadar,
+      '🛡️ NEXRAD (Weather.gov)': weatherGovRadar,
+      '🛡️ NEXRAD (RadarScope)': radarScopeLayer,
       '💨 Wind Speed': windLayer,
       '💧 Precipitation': precipLayer,
       '☁️ Cloud Coverage': cloudsLayer,
@@ -828,6 +963,8 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
       nexrad: nexradLayer,
       nexradTiles: nexradTilesLayer,
       ventuskyRadar: ventuskyRadar,
+      weatherGovRadar: weatherGovRadar,
+      radarScope: radarScopeLayer,
       wind: windLayer,
       precipitation: precipLayer,
       clouds: cloudsLayer,
@@ -841,6 +978,8 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         nexrad: null,
         nexradTiles: null,
         ventuskyRadar: null,
+        weatherGovRadar: null,
+        radarScope: null,
         wind: null,
         precipitation: null,
         clouds: null,
@@ -1998,10 +2137,43 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
 
   return (
     <div className="weather-map-radar">
+      {/* Radar Status Indicator */}
+      <div className="radar-status-indicator" style={{
+        position: 'absolute',
+        top: '10px',
+        left: '10px',
+        background: radarStatus === 'active' ? '#16a34a' : radarStatus === 'failed' ? '#dc2626' : radarStatus === 'loading' ? '#ea580c' : '#6b7280',
+        color: 'white',
+        padding: '8px 12px',
+        borderRadius: '8px',
+        fontSize: '12px',
+        fontWeight: 'bold',
+        zIndex: 1000,
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+        maxWidth: '250px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '6px'
+      }}>
+        <span style={{ fontSize: '14px' }}>
+          {radarStatus === 'active' ? '🛡️' : radarStatus === 'failed' ? '❌' : radarStatus === 'loading' ? '⏳' : '🔄'}
+        </span>
+        <div>
+          <div style={{ fontWeight: 'bold', marginBottom: '2px' }}>
+            {radarStatus === 'active' ? 'Radar Active' : radarStatus === 'failed' ? 'Radar Failed' : radarStatus === 'loading' ? 'Loading Radar...' : 'Initializing...'}
+          </div>
+          {activeRadarLayers.length > 0 && (
+            <div style={{ fontSize: '10px', opacity: 0.9 }}>
+              Sources: {activeRadarLayers.join(', ')}
+            </div>
+          )}
+        </div>
+      </div>
+
       {radarError && (
         <div className="radar-error-banner" style={{
           position: 'absolute',
-          top: '10px',
+          top: '60px',  // Moved down to avoid status indicator
           right: '10px',
           background: '#dc2626',
           color: 'white',
@@ -2009,7 +2181,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
           borderRadius: '8px',
           fontSize: '14px',
           fontWeight: 'bold',
-          zIndex: 1000,
+          zIndex: 999,  // Lower than status indicator
           boxShadow: '0 4px 12px rgba(220, 38, 38, 0.3)',
           maxWidth: '300px'
         }}>
