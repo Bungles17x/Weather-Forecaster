@@ -11,6 +11,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
   const [spcOutlook, setSpcOutlook] = useState(null)
   const [weatherAlerts, setWeatherAlerts] = useState([])
   const [loadingSpc, setLoadingSpc] = useState(true)
+  const [radarError, setRadarError] = useState(null)
   const mapRef = useRef(null)
 
   // Fetch SPC outlook data
@@ -416,7 +417,34 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
 
   const addRadarLayersOSM = (map) => {
     try {
-      // Working NEXRAD radar from RainViewer (updated URL)
+      console.log('🛡️ Adding NEXRAD radar layers...')
+      let radarLayersLoaded = 0
+      let radarLayersTotal = 3
+      
+      // Function to check if all radar layers failed
+      const checkRadarFailure = () => {
+        if (radarLayersLoaded === 0 && radarLayersTotal === 0) {
+          const errorMessage = '⚠️ NEXRAD radar layers failed to load. This may be due to network issues or service outages.'
+          console.error('🛡️ All NEXRAD radar layers failed to load')
+          setRadarError(errorMessage)
+          
+          // Show popup error on map
+          if (map && window.L) {
+            window.L.popup()
+              .setLatLng([mapCenter.lat, mapCenter.lng])
+              .setContent(`
+                <div style="padding: 10px;">
+                  <h4 style="color: #dc2626; margin: 0 0 8px 0;">⚠️ Radar Loading Error</h4>
+                  <p style="margin: 0; font-size: 14px;">${errorMessage}</p>
+                  <p style="margin: 8px 0 0 0; font-size: 12px; color: #666;">Try refreshing the page or check your internet connection.</p>
+                </div>
+              `)
+              .openOn(map)
+          }
+        }
+      }
+
+      // Working NEXRAD radar from OpenWeatherMap
       const nexradLayer = window.L.tileLayer('https://tile.openweathermap.org/precipitation_new/{z}/{x}/{y}.png', {
         attribution: '© OpenWeatherMap / NOAA NWS',
         opacity: 0.8,
@@ -425,7 +453,32 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
         updateWhenIdle: false,
         updateWhenZooming: false
-      }).addTo(map)
+      })
+      
+      // Add error handling for this layer
+      nexradLayer.on('tileerror', (error) => {
+        console.error('🛡️ OpenWeatherMap radar tile error:', error)
+        radarLayersTotal--
+        checkRadarFailure()
+      })
+      
+      nexradLayer.on('tileload', () => {
+        if (radarLayersLoaded === 0) {
+          radarLayersLoaded = 1
+          console.log('✅ OpenWeatherMap radar loaded successfully')
+          setRadarError(null)
+        }
+      })
+      
+      nexradLayer.addTo(map)
+
+      // Set a timeout to check if radar loads within 10 seconds
+      setTimeout(() => {
+        if (radarLayersLoaded === 0) {
+          console.warn('🛡️ Radar layers did not load within timeout period')
+          checkRadarFailure()
+        }
+      }, 10000)
 
       // Alternative NEXRAD from Iowa State Mesonet (primary backup)
       const nexradTilesLayer = window.L.tileLayer('https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png', {
@@ -436,6 +489,21 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
         updateWhenIdle: false,
         updateWhenZooming: false
+      })
+      
+      // Add error handling for this layer
+      nexradTilesLayer.on('tileerror', (error) => {
+        console.error('🛡️ Iowa State radar tile error:', error)
+        radarLayersTotal--
+        checkRadarFailure()
+      })
+      
+      nexradTilesLayer.on('tileload', () => {
+        if (radarLayersLoaded === 0) {
+          radarLayersLoaded = 1
+          console.log('✅ Iowa State radar loaded successfully')
+          setRadarError(null)
+        }
       })
 
       // Additional radar layer from Ventusky (backup)
@@ -448,6 +516,22 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         updateWhenIdle: false,
         updateWhenZooming: false
       })
+      
+      // Add error handling for this layer
+      ventuskyLayer.on('tileerror', (error) => {
+        console.error('🛡️ Ventusky radar tile error:', error)
+        radarLayersTotal--
+        checkRadarFailure()
+      })
+      
+      ventuskyLayer.on('tileload', () => {
+        if (radarLayersLoaded === 0) {
+          radarLayersLoaded = 1
+          console.log('✅ Ventusky radar loaded successfully')
+          setRadarError(null)
+        }
+      })
+      
       const ventuskyRadar = window.L.tileLayer('https://tiles.ventusky.com/radar/{z}/{x}/{y}.png', {
         attribution: '© Ventusky / NOAA NWS',
         opacity: 0.7,
@@ -1713,6 +1797,39 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
 
   return (
     <div className="weather-map-radar">
+      {radarError && (
+        <div className="radar-error-banner" style={{
+          position: 'absolute',
+          top: '10px',
+          right: '10px',
+          background: '#dc2626',
+          color: 'white',
+          padding: '10px 15px',
+          borderRadius: '8px',
+          fontSize: '14px',
+          fontWeight: 'bold',
+          zIndex: 1000,
+          boxShadow: '0 4px 12px rgba(220, 38, 38, 0.3)',
+          maxWidth: '300px'
+        }}>
+          ⚠️ {radarError}
+          <button 
+            onClick={() => setRadarError(null)}
+            style={{
+              background: 'rgba(255,255,255,0.2)',
+              border: '1px solid rgba(255,255,255,0.3)',
+              color: 'white',
+              padding: '4px 8px',
+              borderRadius: '4px',
+              fontSize: '12px',
+              marginLeft: '10px',
+              cursor: 'pointer'
+            }}
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
       <div className="map-container">
         <div ref={mapRef} className="map-canvas"></div>
       </div>
