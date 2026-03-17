@@ -803,11 +803,11 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
       '🚨 Alerts': alertsLayerGroup
     }
 
-    // Add layer control - MOVE TO BOTTOM LEFT TO AVOID MAP
-    const layerControl = window.L.control.layers(baseMaps, overlayMaps, {
-      position: 'bottomleft', /* MOVED FROM TOPRIGHT */
-      collapsed: false
-    }).addTo(map)
+    // Remove layer control to unblock radar map
+    // const layerControl = window.L.control.layers(baseMaps, overlayMaps, {
+    //   position: 'bottomleft',
+    //   collapsed: false
+    // }).addTo(map)
 
     return {
       nexrad: nexradLayer,
@@ -820,7 +820,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
       clouds: cloudsLayer,
       temperature: tempLayer,
       pressure: pressureLayer,
-      layerControl: layerControl
+      layerControl: null // Removed layer control
     }
     } catch (error) {
       console.error('🗺️ Error adding radar layers:', error)
