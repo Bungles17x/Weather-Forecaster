@@ -469,9 +469,9 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         if (radarLayersLoaded > 0) {
           setRadarStatus('active')
           const activeLayers = []
-          if (layerStatus.nexrad === 'loaded') activeLayers.push('Ventusky')
-          if (layerStatus.iowaState === 'loaded') activeLayers.push('RainViewer')
-          if (layerStatus.ventusky === 'loaded') activeLayers.push('Ventusky 2')
+          if (layerStatus.nexrad === 'loaded') activeLayers.push('RainViewer NEXRAD')
+          if (layerStatus.iowaState === 'loaded') activeLayers.push('RainViewer 2')
+          if (layerStatus.ventusky === 'loaded') activeLayers.push('Ventusky')
           if (layerStatus.weatherGov === 'loaded') activeLayers.push('Weather.gov')
           if (layerStatus.radarScope === 'loaded') activeLayers.push('RadarScope')
           setActiveRadarLayers(activeLayers)
@@ -510,9 +510,9 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         }
       }
 
-      // Primary NEXRAD radar from Ventusky (CORS-friendly)
-      const nexradLayer = window.L.tileLayer('https://tile.ventusky.com/precipitation/{z}/{x}/{y}.png', {
-        attribution: '© Ventusky',
+      // Primary NEXRAD radar from RainViewer (working URL)
+      const nexradLayer = window.L.tileLayer('https://tile.rainviewer.com/v2/radar/{z}/{x}/{y}/256/0_0.png', {
+        attribution: '© RainViewer / NOAA NWS',
         opacity: 0.8,
         maxZoom: 12,
         minZoom: 2,
@@ -530,7 +530,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         // Only log first few errors to reduce console noise
         if (!nexradLayer.errorCount) nexradLayer.errorCount = 0
         if (nexradLayer.errorCount < 3) {
-          console.error('🛡️ Ventusky radar tile error:', error)
+          console.error('🛡️ RainViewer NEXRAD tile error:', error)
           nexradLayer.errorCount++
         }
         
@@ -540,7 +540,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
             if (layerStatus.nexrad === 'pending') {
               layerStatus.nexrad = 'failed'
               radarLayersFailed++
-              console.log('🛡️ Ventusky layer failed to load')
+              console.log('🛡️ RainViewer NEXRAD layer failed to load')
               checkRadarStatus()
             }
           }, 5000)
@@ -551,7 +551,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         if (layerStatus.nexrad === 'pending' && radarLayersLoaded === 0) {
           layerStatus.nexrad = 'loaded'
           radarLayersLoaded = 1
-          console.log('✅ Ventusky radar loaded successfully')
+          console.log('✅ RainViewer NEXRAD radar loaded successfully')
           setRadarError(null)
         }
       })
@@ -559,7 +559,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
       nexradLayer.on('load', () => {
         if (layerStatus.nexrad === 'pending') {
           layerStatus.nexrad = 'loaded'
-          console.log('✅ Ventusky radar layer fully loaded')
+          console.log('✅ RainViewer NEXRAD radar layer fully loaded')
           if (radarLayersLoaded === 0) {
             radarLayersLoaded = 1
             setRadarError(null)
@@ -568,6 +568,23 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
       })
       
       nexradLayer.addTo(map)
+      
+      // Add backup NEXRAD layer with different URL format
+      const nexradBackup = window.L.tileLayer('https://tilecache.rainviewer.com/v2/radar/{z}/{x}/{y}/256/0_0.png', {
+        attribution: '© RainViewer / NOAA NWS',
+        opacity: 0.7,
+        maxZoom: 12,
+        minZoom: 2,
+        errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+        updateWhenIdle: false,
+        updateWhenZooming: false,
+        crossOrigin: true,
+        detectRetina: true,
+        timeout: 5000,
+        retry: 2
+      })
+      
+      nexradBackup.addTo(map)
 
       // Set a timeout to check if radar loads within 5 seconds (reduced from 10)
       setTimeout(() => {
