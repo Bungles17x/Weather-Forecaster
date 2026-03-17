@@ -11,6 +11,18 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    host: true
+    host: true,
+    fs: {
+      strict: false
+    }
+  },
+  assetsInclude: ['**/*.jsx'],
+  configureServer(server) {
+    server.middlewares.use((req, res, next) => {
+      if (req.url && req.url.endsWith('.jsx')) {
+        res.setHeader('Content-Type', 'application/javascript')
+      }
+      next()
+    })
   }
 })
