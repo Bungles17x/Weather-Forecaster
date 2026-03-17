@@ -43,11 +43,9 @@ const Header = ({ onLocationChange }) => {
 
     console.log('📍 Starting geolocation request...')
     
-    // Show immediate feedback that we're requesting location
-    alert('Please allow location access to get your local weather data.')
-    
     setLocating(true)
 
+    // This will automatically trigger the browser's permission popup
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         console.log('✅ GPS position obtained:', position)
