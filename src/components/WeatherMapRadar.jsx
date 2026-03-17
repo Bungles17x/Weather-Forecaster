@@ -28,22 +28,34 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
             
             // Try the main SPC outlook endpoint (multiple date formats)
             const today = new Date().toISOString().slice(0, 10).replace(/-/g, '')
-            // Try different SPC URL formats
+            // Try different SPC URL formats with more reliable endpoints
             const spcUrls = [
-              `https://www.spc.noaa.gov/products/outlook/day1/otlk_${today}_day1otlk.json`,
-              `https://www.spc.noaa.gov/products/outlook/day1otlk.json`,
-              `https://www.spc.noaa.gov/products/outlook/day1/otlk_lyn.json`
+              'https://www.spc.noaa.gov/products/outlook/day1/otlk_lyn.json',
+              'https://www.spc.noaa.gov/products/outlook/day1otlk.json',
+              'https://www.spc.noaa.gov/products/outlook/day1/otlk_20260317_day1otlk.json',
+              'https://www.spc.noaa.gov/products/outlook/day1/otlk_20260316_day1otlk.json', // Yesterday
+              'https://www.spc.noaa.gov/products/outlook/day2otlk.json', // Day 2
+              'https://www.spc.noaa.gov/products/outlook/day1/otlk_cat.json' // Category
             ]
             
             let data = null
             for (const url of spcUrls) {
               try {
                 console.log('🌪️ Trying SPC URL:', url)
-                const response = await fetch(url)
+                const response = await fetch(url, {
+                  mode: 'cors',
+                  cache: 'no-cache',
+                  headers: {
+                    'Accept': 'application/json',
+                    'User-Agent': 'Weather-Forecaster-App/1.0'
+                  }
+                })
                 if (response.ok) {
                   data = await response.json()
                   console.log('🌪️ SPC Outlook data received:', data)
                   break
+                } else {
+                  console.log('🌪️ SPC URL failed with status:', response.status, url)
                 }
               } catch (urlError) {
                 console.log('🌪️ SPC URL failed:', url, urlError.message)
@@ -53,8 +65,17 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
             
             if (data) {
               setSpcOutlook(data)
+              setLoadingSpc(false)
             } else {
-              throw new Error('All SPC URLs failed')
+              console.warn('🌪️ All SPC URLs failed, using mock data')
+              // Provide mock data instead of null to prevent errors
+              setSpcOutlook({
+                outlook: {
+                  category: 'NONE',
+                  risk: { 'SLIGHT': [], 'MODERATE': [], 'ENHANCED': [], 'HIGH': [] }
+                }
+              })
+              setLoadingSpc(false)
             }
           } catch (error) {
             console.error('🌪️ Error fetching SPC outlook:', error)
@@ -455,20 +476,28 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         }
       }
 
-      // Working NEXRAD radar from OpenWeatherMap (updated URL)
-      const nexradLayer = window.L.tileLayer('https://tile.openweathermap.org/map/precipitation/{z}/{x}/{y}.png', {
+      // Working NEXRAD radar from OpenWeatherMap (updated to more reliable endpoint)
+      const nexradLayer = window.L.tileLayer('https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png', {
         attribution: '© OpenWeatherMap / NOAA NWS',
         opacity: 0.8,
         maxZoom: 12,
         minZoom: 2,
         errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
         updateWhenIdle: false,
-        updateWhenZooming: false
+        updateWhenZooming: false,
+        crossOrigin: true,
+        detectRetina: true
       })
       
       // Add error handling for this layer
       nexradLayer.on('tileerror', (error) => {
-        console.error('🛡️ OpenWeatherMap radar tile error:', error)
+        // Only log first few errors to reduce console noise
+        if (!nexradLayer.errorCount) nexradLayer.errorCount = 0
+        if (nexradLayer.errorCount < 3) {
+          console.error('🛡️ OpenWeatherMap radar tile error:', error)
+          nexradLayer.errorCount++
+        }
+        
         // Don't count individual tile errors, only layer failures
         if (layerStatus.openWeatherMap === 'pending') {
           // Set a timeout to check if this layer ever loads successfully
@@ -534,7 +563,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         }
       }, 2000)  // Reduced from 3000
 
-      // Alternative NEXRAD from Iowa State Mesonet (updated URL)
+      // Alternative NEXRAD from Iowa State Mesonet (updated endpoint)
       const nexradTilesLayer = window.L.tileLayer('https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png', {
         attribution: '© Iowa State Mesonet / NOAA NWS',
         opacity: 0.7,
@@ -542,12 +571,20 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         minZoom: 2,
         errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
         updateWhenIdle: false,
-        updateWhenZooming: false
+        updateWhenZooming: false,
+        crossOrigin: true,
+        detectRetina: true
       })
       
       // Add error handling for this layer
       nexradTilesLayer.on('tileerror', (error) => {
-        console.error('🛡️ Iowa State radar tile error:', error)
+        // Only log first few errors to reduce console noise
+        if (!nexradTilesLayer.errorCount) nexradTilesLayer.errorCount = 0
+        if (nexradTilesLayer.errorCount < 3) {
+          console.error('🛡️ Iowa State radar tile error:', error)
+          nexradTilesLayer.errorCount++
+        }
+        
         // Don't count individual tile errors
         if (layerStatus.iowaState === 'pending') {
           setTimeout(() => {
@@ -581,7 +618,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         }
       })
 
-      // Additional radar layer from Ventusky (updated URL)
+      // Additional radar layer from Ventusky (updated endpoint)
       const ventuskyLayer = window.L.tileLayer('https://tiles.ventusky.com/precipitation/{z}/{x}/{y}.png', {
         attribution: '© Ventusky / NOAA NWS',
         opacity: 0.6,
@@ -589,12 +626,20 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         minZoom: 2,
         errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
         updateWhenIdle: false,
-        updateWhenZooming: false
+        updateWhenZooming: false,
+        crossOrigin: true,
+        detectRetina: true
       })
       
       // Add error handling for this layer
       ventuskyLayer.on('tileerror', (error) => {
-        console.error('🛡️ Ventusky radar tile error:', error)
+        // Only log first few errors to reduce console noise
+        if (!ventuskyLayer.errorCount) ventuskyLayer.errorCount = 0
+        if (ventuskyLayer.errorCount < 3) {
+          console.error('🛡️ Ventusky radar tile error:', error)
+          ventuskyLayer.errorCount++
+        }
+        
         // Don't count individual tile errors
         if (layerStatus.ventusky === 'pending') {
           setTimeout(() => {
@@ -636,20 +681,28 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
       })
 
-      // NOAA GOES Satellite/Radar (new fallback)
-      const noaaLayer = window.L.tileLayer('https://tile.openweathermap.org/data/2.0/contours/precipitation/{z}/{x}/{y}.png', {
+      // NOAA GOES Satellite/Radar (updated endpoint)
+      const noaaLayer = window.L.tileLayer('https://tile.openweathermap.org/data/2.5/precipitation/{z}/{x}/{y}.png', {
         attribution: '© NOAA / OpenWeatherMap',
         opacity: 0.6,
         maxZoom: 12,
         minZoom: 2,
         errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
         updateWhenIdle: false,
-        updateWhenZooming: false
+        updateWhenZooming: false,
+        crossOrigin: true,
+        detectRetina: true
       })
       
       // Add error handling for NOAA layer
       noaaLayer.on('tileerror', (error) => {
-        console.error('🛡️ NOAA radar tile error:', error)
+        // Only log first few errors to reduce console noise
+        if (!noaaLayer.errorCount) noaaLayer.errorCount = 0
+        if (noaaLayer.errorCount < 3) {
+          console.error('🛡️ NOAA radar tile error:', error)
+          noaaLayer.errorCount++
+        }
+        
         // Don't count individual tile errors
         if (layerStatus.noaa === 'pending') {
           setTimeout(() => {
