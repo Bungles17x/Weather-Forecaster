@@ -13,7 +13,15 @@ const WeatherApp = () => {
   const { location: globalLocation, coordinates, setLocation: setGlobalLocation, setCoordinates } = useGlobalLocation()
   
   // Use alert context
-  const { fetchWeatherAlerts, requestNotificationPermission } = useAlerts()
+  const { 
+    alerts, 
+    notifications, 
+    permission, 
+    requestNotificationPermission,
+    testNotification,
+    clearNotifications,
+    fetchWeatherAlerts
+  } = useAlerts()
   
   // Core state
   const [weatherData, setWeatherData] = useState(null)
@@ -817,6 +825,52 @@ const WeatherApp = () => {
   return (
     <div className="weather-app">
       <Header onLocationChange={handleLocationChange} />
+      
+      {/* Notification Controls */}
+      <div className="notification-controls">
+        <div className="notification-status">
+          <span className={`status-badge ${permission}`}>
+            {permission === 'granted' ? '🔔 Notifications Enabled' : 
+             permission === 'denied' ? '🔕 Notifications Disabled' : 
+             '🔔 Notifications Not Set'}
+          </span>
+          
+          {permission === 'default' && (
+            <button 
+              className="enable-notifications-btn"
+              onClick={requestNotificationPermission}
+            >
+              🔔 Enable Weather Alerts
+            </button>
+          )}
+          
+          {permission === 'granted' && (
+            <div className="notification-actions">
+              <button 
+                className="test-notification-btn"
+                onClick={testNotification}
+              >
+                🧪 Test Alert
+              </button>
+              
+              {notifications.length > 0 && (
+                <button 
+                  className="clear-notifications-btn"
+                  onClick={clearNotifications}
+                >
+                  🗑️ Clear ({notifications.length})
+                </button>
+              )}
+            </div>
+          )}
+          
+          {alerts.length > 0 && permission === 'granted' && (
+            <div className="active-alerts-indicator">
+              <span className="alert-count">⚠️ {alerts.length} Active Alert{alerts.length !== 1 ? 's' : ''}</span>
+            </div>
+          )}
+        </div>
+      </div>
       
       <main className="weather-content">
         {loading && (
