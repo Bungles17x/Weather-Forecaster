@@ -279,34 +279,6 @@ const Header = ({ onLocationChange }) => {
             </div>
           </div>
 
-          {/* Mobile App Navigation */}
-          <div className="mobile-app-nav">
-            <Link to="/" className={`app-nav-item ${currentPage === 'weather' ? 'active' : ''}`}>
-              <span className="app-nav-icon">🌤️</span>
-              <span className="app-nav-label">Weather</span>
-            </Link>
-            <Link to="/home" className={`app-nav-item ${currentPage === 'home' ? 'active' : ''}`}>
-              <span className="app-nav-icon">🏠</span>
-              <span className="app-nav-label">Home</span>
-            </Link>
-            <Link to="/forecast" className={`app-nav-item ${currentPage === 'forecast' ? 'active' : ''}`}>
-              <span className="app-nav-icon">📅</span>
-              <span className="app-nav-label">Forecast</span>
-            </Link>
-            <Link to="/map" className={`app-nav-item ${currentPage === 'map' ? 'active' : ''}`}>
-              <span className="app-nav-icon">🗺️</span>
-              <span className="app-nav-label">Map</span>
-            </Link>
-            <Link to="/alerts" className={`app-nav-item ${currentPage === 'alerts' ? 'active' : ''}`}>
-              <span className="app-nav-icon">🚨</span>
-              <span className="app-nav-label">Alerts</span>
-            </Link>
-            <Link to="/settings" className={`app-nav-item ${currentPage === 'settings' ? 'active' : ''}`}>
-              <span className="app-nav-icon">⚙️</span>
-              <span className="app-nav-label">Settings</span>
-            </Link>
-          </div>
-
           {/* Desktop Navigation */}
           <div className="desktop-nav">
             <Link to="/" className={`desktop-nav-item ${currentPage === 'weather' ? 'active' : ''}`}>
