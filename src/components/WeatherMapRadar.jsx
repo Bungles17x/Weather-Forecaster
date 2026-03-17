@@ -310,13 +310,34 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         return
       }
 
+      // Clear any existing map
+      if (container._leaflet_map) {
+        container._leaflet_map.remove()
+        container._leaflet_map = null
+      }
+
+      // Validate coordinates
+      const lat = mapCenter?.lat || 40.7128
+      const lng = mapCenter?.lng || -74.0060
+      
+      if (lat === undefined || lng === undefined || isNaN(lat) || isNaN(lng)) {
+        console.error('🗺️ Invalid coordinates:', { lat, lng, mapCenter })
+        setLoading(false)
+        return
+      }
+
+      console.log('🗺️ Initializing map with coordinates:', { lat, lng })
+
       // Initialize Leaflet map
       const map = window.L.map(container, {
-        center: [mapCenter.lat, mapCenter.lng],
-        zoom: zoom,
+        center: [lat, lng],
+        zoom: zoom || 10,
         zoomControl: true,
         attributionControl: false
       })
+
+      // Store map reference for cleanup
+      container._leaflet_map = map
 
       console.log('🗺️ Leaflet map created')
 
@@ -356,37 +377,42 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
   }
 
   const addRadarLayersOSM = (map) => {
-    // Working NEXRAD radar from RainViewer (more reliable)
-    const nexradLayer = window.L.tileLayer('https://tile.rainviewer.com/v2/radar/{z}/{x}/{y}.png', {
-      attribution: '© RainViewer / NOAA NWS',
-      opacity: 0.8,
-      maxZoom: 12,
-      minZoom: 2
-    }).addTo(map)
+    try {
+      // Working NEXRAD radar from RainViewer (more reliable)
+      const nexradLayer = window.L.tileLayer('https://tile.rainviewer.com/v2/radar/{z}/{x}/{y}.png', {
+        attribution: '© RainViewer / NOAA NWS',
+        opacity: 0.8,
+        maxZoom: 12,
+        minZoom: 2,
+        errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
+      }).addTo(map)
 
-    // Alternative NEXRAD from Iowa State Mesonet
-    const nexradTilesLayer = window.L.tileLayer('https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png', {
-      attribution: '© Iowa State Mesonet / NOAA NWS',
-      opacity: 0.7,
-      maxZoom: 12,
-      minZoom: 2
-    })
+      // Alternative NEXRAD from Iowa State Mesonet
+      const nexradTilesLayer = window.L.tileLayer('https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png', {
+        attribution: '© Iowa State Mesonet / NOAA NWS',
+        opacity: 0.7,
+        maxZoom: 12,
+        minZoom: 2,
+        errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
+      })
 
-    // Additional radar layer from Ventusky (backup)
-    const ventuskyRadar = window.L.tileLayer('https://tiles.ventusky.com/radar/{z}/{x}/{y}.png', {
-      attribution: '© Ventusky / NOAA NWS',
-      opacity: 0.7,
-      maxZoom: 12,
-      minZoom: 2
-    })
+      // Additional radar layer from Ventusky (backup)
+      const ventuskyRadar = window.L.tileLayer('https://tiles.ventusky.com/radar/{z}/{x}/{y}.png', {
+        attribution: '© Ventusky / NOAA NWS',
+        opacity: 0.7,
+        maxZoom: 12,
+        minZoom: 2,
+        errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
+      })
 
-    // Working Wind Layer using Windy API
-    const windLayer = window.L.tileLayer('https://tiles.windy.com/tiles/v2.0/overlay/wind/{z}/{x}/{y}.png?key=6LkELHlYhWkCGpOq9pGJd1f5pG0lGJGd', {
-      attribution: '© Windy.com',
-      opacity: 0.7,
-      maxZoom: 12,
-      minZoom: 4
-    })
+      // Working Wind Layer using Windy API
+      const windLayer = window.L.tileLayer('https://tiles.windy.com/tiles/v2.0/overlay/wind/{z}/{x}/{y}.png?key=6LkELHlYhWkCGpOq9pGJd1f5pG0lGJGd', {
+        attribution: '© Windy.com',
+        opacity: 0.7,
+        maxZoom: 12,
+        minZoom: 4,
+        errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
+      })
 
     // Working Precipitation Layer using RainViewer
     const precipLayer = window.L.tileLayer('https://tile.rainviewer.com/v2/radar/{z}/{x}/{y}.png', {
@@ -472,6 +498,20 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
       temperature: tempLayer,
       pressure: pressureLayer,
       layerControl: layerControl
+    }
+    } catch (error) {
+      console.error('🗺️ Error adding radar layers:', error)
+      return {
+        nexrad: null,
+        nexradTiles: null,
+        ventuskyRadar: null,
+        wind: null,
+        precipitation: null,
+        clouds: null,
+        temperature: null,
+        pressure: null,
+        layerControl: null
+      }
     }
   }
 
