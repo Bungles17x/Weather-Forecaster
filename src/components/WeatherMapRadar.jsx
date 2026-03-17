@@ -356,21 +356,29 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
   }
 
   const addRadarLayersOSM = (map) => {
-    // Real NEXRAD radar from NOAA
-    const nexradLayer = window.L.tileLayer('https://radar.weather.gov/ridge/Conus/Loop/NEXRAD.gif', {
-      attribution: '© NOAA NWS',
-      opacity: 0.9,
-      maxZoom: 12,
-      minZoom: 4
-    }).addTo(map)
-
-    // Regional NEXRAD radar tiles
-    const nexradTilesLayer = window.L.tileLayer('https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png', {
-      attribution: '© NOAA NWS',
+    // Working NEXRAD radar from RainViewer (more reliable)
+    const nexradLayer = window.L.tileLayer('https://tile.rainviewer.com/v2/radar/{z}/{x}/{y}.png', {
+      attribution: '© RainViewer / NOAA NWS',
       opacity: 0.8,
       maxZoom: 12,
-      minZoom: 4
+      minZoom: 2
     }).addTo(map)
+
+    // Alternative NEXRAD from Iowa State Mesonet
+    const nexradTilesLayer = window.L.tileLayer('https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png', {
+      attribution: '© Iowa State Mesonet / NOAA NWS',
+      opacity: 0.7,
+      maxZoom: 12,
+      minZoom: 2
+    })
+
+    // Additional radar layer from Ventusky (backup)
+    const ventuskyRadar = window.L.tileLayer('https://tiles.ventusky.com/radar/{z}/{x}/{y}.png', {
+      attribution: '© Ventusky / NOAA NWS',
+      opacity: 0.7,
+      maxZoom: 12,
+      minZoom: 2
+    })
 
     // Working Wind Layer using Windy API
     const windLayer = window.L.tileLayer('https://tiles.windy.com/tiles/v2.0/overlay/wind/{z}/{x}/{y}.png?key=6LkELHlYhWkCGpOq9pGJd1f5pG0lGJGd', {
@@ -437,8 +445,9 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
 
     // Create overlay maps - working layers only
     const overlayMaps = {
-      '🛡️ NEXRAD Radar': nexradTilesLayer,
-      '🛡️ NEXRAD Loop': nexradLayer,
+      '🛡️ NEXRAD Radar (RainViewer)': nexradLayer,
+      '🛡️ NEXRAD (Iowa State)': nexradTilesLayer,
+      '🛡️ NEXRAD (Ventusky)': ventuskyRadar,
       '💨 Wind Speed': windLayer,
       '💧 Precipitation': precipLayer,
       '☁️ Cloud Coverage': cloudsLayer,
@@ -456,6 +465,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
     return {
       nexrad: nexradLayer,
       nexradTiles: nexradTilesLayer,
+      ventuskyRadar: ventuskyRadar,
       wind: windLayer,
       precipitation: precipLayer,
       clouds: cloudsLayer,
