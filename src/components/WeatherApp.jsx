@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import Header from './Header'
 import { WeatherIcon } from './WeatherIcons'
 import { useLocation as useGlobalLocation } from '../contexts/LocationContext'
+import { useAlerts } from '../contexts/AlertContext'
 import './WeatherApp.css'
 
 // Cache busting timestamp - FORCE RELOAD
@@ -10,6 +11,9 @@ console.log('🔄 WeatherApp.jsx loaded at:', new Date().toISOString(), 'CACHE B
 const WeatherApp = () => {
   // Use global location context
   const { location: globalLocation, coordinates, setLocation: setGlobalLocation, setCoordinates } = useGlobalLocation()
+  
+  // Use alert context
+  const { fetchWeatherAlerts, requestNotificationPermission } = useAlerts()
   
   // Core state
   const [weatherData, setWeatherData] = useState(null)
@@ -512,6 +516,10 @@ const WeatherApp = () => {
       setForecastData(finalForecast)
       setLastUpdate(new Date())
       
+      // Fetch weather alerts for this location
+      console.log('🚨 Fetching weather alerts for location:', locationName)
+      fetchWeatherAlerts(locationName)
+      
     } catch (error) {
       console.error('❌ NWS fetch error:', error)
       setError(`Failed to fetch NWS data: ${error.message}`)
@@ -519,7 +527,7 @@ const WeatherApp = () => {
       setLoading(false)
       setLoadingSpc(false)
     }
-  }, [])
+  }, [fetchWeatherAlerts])
 
   // Fetch SPC outlook data
   const getSPCOutlook = useCallback(async (latitude, longitude) => {
@@ -687,7 +695,13 @@ const WeatherApp = () => {
   // Initial data fetch
   useEffect(() => {
     fetchNWSData(globalLocation)
-  }, [globalLocation])
+    
+    // Request notification permission on first load
+    if ('Notification' in window && Notification.permission === 'default') {
+      console.log('🔔 Requesting notification permission on app load...')
+      requestNotificationPermission()
+    }
+  }, [globalLocation, fetchNWSData, requestNotificationPermission])
 
   // Enhanced formatters with better data handling
   const formatTemp = (temp) => {
