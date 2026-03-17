@@ -28,15 +28,22 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
           try {
             console.log('🌪️ Fetching SPC convective outlook...')
             
-            // Try the main SPC outlook endpoint (multiple date formats)
-            const today = new Date().toISOString().slice(0, 10).replace(/-/g, '')
-            // Try different SPC URL formats with more reliable endpoints
+            // Updated SPC URLs with current date format
+            const today = new Date()
+            const year = today.getFullYear()
+            const month = String(today.getMonth() + 1).padStart(2, '0')
+            const day = String(today.getDate()).padStart(2, '0')
+            
+            // Try different SPC URL formats with current date
             const spcUrls = [
-              'https://www.spc.noaa.gov/products/outlook/day1/otlk_20260317_1200_lyr.geojson',
-              'https://www.spc.noaa.gov/products/outlook/day1/otlk_20260317_1630_lyr.geojson',
-              'https://www.spc.noaa.gov/products/outlook/day1/otlk_20260317_2000_lyr.geojson',
-              'https://www.spc.noaa.gov/products/outlook/day2/otlk_20260317_1200_lyr.geojson',
-              'https://www.spc.noaa.gov/products/outlook/day3/otlk_20260317_1200_lyr.geojson'
+              `https://www.spc.noaa.gov/products/outlook/day1/otlk_${year}${month}${day}_1200_lyr.geojson`,
+              `https://www.spc.noaa.gov/products/outlook/day1/otlk_${year}${month}${day}_1630_lyr.geojson`,
+              `https://www.spc.noaa.gov/products/outlook/day1/otlk_${year}${month}${day}_2000_lyr.geojson`,
+              `https://www.spc.noaa.gov/products/outlook/day2/otlk_${year}${month}${day}_1200_lyr.geojson`,
+              `https://www.spc.noaa.gov/products/outlook/day3/otlk_${year}${month}${day}_1200_lyr.geojson`,
+              // Fallback to generic URLs
+              'https://www.spc.noaa.gov/products/outlook/day1/otlk_lyn.json',
+              'https://www.spc.noaa.gov/products/outlook/day1otlk.json'
             ]
             
             let data = null
@@ -350,14 +357,14 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
     if (!mapRef.current || !window.L) return
 
     // Check if map is already initialized
-    if (mapRef.current._leaflet_id) {
+    if (mapRef.current._leaflet_map) {
       console.log('🗺️ Map already initialized, skipping')
       return
     }
 
     // Initialize OpenStreetMap with Leaflet
     initializeOpenStreetMap()
-  }, [mapCenter, zoom, weatherData, coordinates])
+  }, []) // Remove dependencies to prevent re-initialization
 
   const initializeOpenStreetMap = () => {
     try {
@@ -446,7 +453,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
       
       // Track layer status to prevent duplicate counting
       const layerStatus = {
-        openWeatherMap: 'pending',
+        nexrad: 'pending',
         iowaState: 'pending', 
         ventusky: 'pending',
         noaa: 'pending',
@@ -462,9 +469,9 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         if (radarLayersLoaded > 0) {
           setRadarStatus('active')
           const activeLayers = []
-          if (layerStatus.openWeatherMap === 'loaded') activeLayers.push('RainViewer')
-          if (layerStatus.iowaState === 'loaded') activeLayers.push('RainViewer 2')
-          if (layerStatus.ventusky === 'loaded') activeLayers.push('Ventusky')
+          if (layerStatus.nexrad === 'loaded') activeLayers.push('Ventusky')
+          if (layerStatus.iowaState === 'loaded') activeLayers.push('RainViewer')
+          if (layerStatus.ventusky === 'loaded') activeLayers.push('Ventusky 2')
           if (layerStatus.weatherGov === 'loaded') activeLayers.push('Weather.gov')
           if (layerStatus.radarScope === 'loaded') activeLayers.push('RadarScope')
           setActiveRadarLayers(activeLayers)
@@ -480,30 +487,32 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
           console.error('🛡️ All NEXRAD radar layers failed to load')
           setRadarError(errorMessage)
           
-          // Fix popup error by checking if map container is ready
+          // Fix popup error by checking if map container is ready and delaying popup
           if (map && window.L && map._container && map._container.parentNode) {
-            try {
-              window.L.popup()
-                .setLatLng([mapCenter.lat, mapCenter.lng])
-                .setContent(`
-                  <div style="padding: 10px; max-width: 300px;">
-                    <h4 style="color: #dc2626; margin: 0 0 8px 0;">⚠️ Radar Loading Error</h4>
-                    <p style="margin: 0; font-size: 14px;">${errorMessage}</p>
-                    <p style="margin: 8px 0 0 0; font-size: 12px; color: #666;">Try refreshing the page or check your internet connection.</p>
-                  </div>
-                `)
-                .openOn(map)
-            } catch (popupError) {
-              console.warn('🛡️ Could not show radar error popup:', popupError)
-              // Fallback: just log the error instead of showing popup
-            }
+            setTimeout(() => {
+              try {
+                window.L.popup()
+                  .setLatLng([mapCenter.lat, mapCenter.lng])
+                  .setContent(`
+                    <div style="padding: 10px; max-width: 300px;">
+                      <h4 style="color: #dc2626; margin: 0 0 8px 0;">⚠️ Radar Loading Error</h4>
+                      <p style="margin: 0; font-size: 14px;">${errorMessage}</p>
+                      <p style="margin: 8px 0 0 0; font-size: 12px; color: #666;">Try refreshing the page or check your internet connection.</p>
+                    </div>
+                  `)
+                  .openOn(map)
+              } catch (popupError) {
+                console.warn('🛡️ Could not show radar error popup:', popupError)
+                // Fallback: just log the error instead of showing popup
+              }
+            }, 1000) // Delay popup to ensure map is fully ready
           }
         }
       }
 
-      // Primary NEXRAD radar from Weather.gov (more reliable than RainViewer)
-      const nexradLayer = window.L.tileLayer('https://radar.weather.gov/ridge/Conus/Base/NEXRAD/{z}/{x}/{y}.png', {
-        attribution: '© NOAA Weather.gov',
+      // Primary NEXRAD radar from Ventusky (CORS-friendly)
+      const nexradLayer = window.L.tileLayer('https://tile.ventusky.com/precipitation/{z}/{x}/{y}.png', {
+        attribution: '© Ventusky',
         opacity: 0.8,
         maxZoom: 12,
         minZoom: 2,
@@ -512,8 +521,8 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         updateWhenZooming: false,
         crossOrigin: true,
         detectRetina: true,
-        timeout: 5000,  // Add timeout
-        retry: 2  // Add retry attempts
+        timeout: 5000,
+        retry: 2
       })
       
       // Add error handling for this layer
@@ -521,37 +530,36 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         // Only log first few errors to reduce console noise
         if (!nexradLayer.errorCount) nexradLayer.errorCount = 0
         if (nexradLayer.errorCount < 3) {
-          console.error('🛡️ OpenWeatherMap radar tile error:', error)
+          console.error('🛡️ Ventusky radar tile error:', error)
           nexradLayer.errorCount++
         }
         
-        // Don't count individual tile errors, only layer failures
-        if (layerStatus.openWeatherMap === 'pending') {
-          // Set a timeout to check if this layer ever loads successfully
+        // Don't count individual tile errors
+        if (layerStatus.nexrad === 'pending') {
           setTimeout(() => {
-            if (layerStatus.openWeatherMap === 'pending') {
-              layerStatus.openWeatherMap = 'failed'
+            if (layerStatus.nexrad === 'pending') {
+              layerStatus.nexrad = 'failed'
               radarLayersFailed++
-              console.log('🛡️ OpenWeatherMap layer failed to load')
+              console.log('🛡️ Ventusky layer failed to load')
               checkRadarStatus()
             }
-          }, 5000)  // Increased timeout for better reliability
+          }, 5000)
         }
       })
       
       nexradLayer.on('tileload', () => {
-        if (layerStatus.openWeatherMap === 'pending' && radarLayersLoaded === 0) {
-          layerStatus.openWeatherMap = 'loaded'
+        if (layerStatus.nexrad === 'pending' && radarLayersLoaded === 0) {
+          layerStatus.nexrad = 'loaded'
           radarLayersLoaded = 1
-          console.log('✅ OpenWeatherMap radar loaded successfully')
+          console.log('✅ Ventusky radar loaded successfully')
           setRadarError(null)
         }
       })
       
       nexradLayer.on('load', () => {
-        if (layerStatus.openWeatherMap === 'pending') {
-          layerStatus.openWeatherMap = 'loaded'
-          console.log('✅ OpenWeatherMap radar layer fully loaded')
+        if (layerStatus.nexrad === 'pending') {
+          layerStatus.nexrad = 'loaded'
+          console.log('✅ Ventusky radar layer fully loaded')
           if (radarLayersLoaded === 0) {
             radarLayersLoaded = 1
             setRadarError(null)
