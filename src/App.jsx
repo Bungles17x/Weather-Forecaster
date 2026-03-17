@@ -3,37 +3,10 @@ import { HashRouter, Routes, Route } from 'react-router-dom'
 import { LocationProvider } from './contexts/LocationContext'
 import { AlertProvider } from './contexts/AlertContext'
 import { SettingsProvider } from './contexts/SettingsContext'
+import WeatherApp from './components/WeatherApp'
 import './App.css'
 
 console.log('🔍 App.jsx - React imported:', React)
-
-// Simple test component to isolate the issue
-const TestComponent = () => {
-  console.log('🧪 TestComponent rendering...')
-  
-  try {
-    const [testState, setTestState] = React.useState('test')
-    console.log('✅ useState works in TestComponent')
-    return (
-      <div style={{ padding: '20px', textAlign: 'center' }}>
-        <h1>Weather App Debug</h1>
-        <p>React useState works: {testState}</p>
-        <button onClick={() => setTestState('clicked')}>
-          Click me
-        </button>
-        <p>If you can see this, React is working!</p>
-      </div>
-    )
-  } catch (error) {
-    console.error('❌ useState failed in TestComponent:', error)
-    return (
-      <div style={{ padding: '20px', textAlign: 'center', color: 'red' }}>
-        <h1>useState Error</h1>
-        <p>Error: {error.message}</p>
-      </div>
-    )
-  }
-}
 
 // Error Boundary Component
 class ErrorBoundary extends React.Component {
@@ -91,7 +64,7 @@ function App() {
             <HashRouter>
               <div className="App">
                 <Routes>
-                  <Route path="/" element={<TestComponent />} />
+                  <Route path="/" element={<WeatherApp />} />
                 </Routes>
               </div>
             </HashRouter>
