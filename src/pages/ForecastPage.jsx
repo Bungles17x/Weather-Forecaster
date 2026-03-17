@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import Header from '../components/Header'
 import { WeatherIcon } from '../components/WeatherIcons'
+import { useLocation as useGlobalLocation } from '../contexts/LocationContext'
 import './ForecastPage.css'
 
 const ForecastPage = () => {
@@ -10,38 +11,44 @@ const ForecastPage = () => {
   const [hourlyData, setHourlyData] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [location, setLocation] = useState('New York, NY')
   const [currentWeather, setCurrentWeather] = useState(null)
   
+  // Use global location context
+  const { location: globalLocation, coordinates, setLocation: setGlobalLocation } = useGlobalLocation()
   const locationState = useLocation()
   
-  // Get location from URL state or localStorage
-  useEffect(() => {
-    const savedLocation = localStorage.getItem('weatherLocation') || 'New York, NY'
-    const stateLocation = locationState.state?.location || savedLocation
-    setLocation(stateLocation)
-  }, [locationState.state])
+  // Get location from global context or URL state
+  const location = globalLocation || locationState.state?.location || 'New York, NY'
 
   // Fetch real weather data from NWS API
   const fetchWeatherData = useCallback(async () => {
-    if (!location) return
+    if (!globalLocation) return
     
     setLoading(true)
     setError(null)
     
     try {
-      console.log('🌤️ ForecastPage: Fetching weather data for:', location)
+      console.log('🌤️ ForecastPage: Fetching weather data for:', globalLocation)
       
-      // Step 1: Geocode location to get coordinates
-      const geocodeResponse = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}&limit=1`)
-      const geocodeData = await geocodeResponse.json()
-      
-      if (!geocodeData || geocodeData.length === 0) {
-        throw new Error('Location not found')
+      // Use coordinates if available, otherwise geocode the location
+      let lat, lon
+      if (coordinates) {
+        lat = coordinates.lat
+        lon = coordinates.lon
+        console.log('📍 ForecastPage: Using cached coordinates:', { lat, lon })
+      } else {
+        // Geocode location to get coordinates
+        const geocodeResponse = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(globalLocation)}&limit=1`)
+        const geocodeData = await geocodeResponse.json()
+        
+        if (!geocodeData || geocodeData.length === 0) {
+          throw new Error('Location not found')
+        }
+        
+        lat = geocodeData[0].lat
+        lon = geocodeData[0].lon
+        console.log('📍 ForecastPage: Coordinates found:', { lat, lon })
       }
-      
-      const { lat, lon } = geocodeData[0]
-      console.log('📍 ForecastPage: Coordinates found:', { lat, lon })
       
       // Step 2: Get NWS grid point
       const pointsResponse = await fetch(`https://api.weather.gov/points/${lat},${lon}`)
@@ -142,7 +149,7 @@ const ForecastPage = () => {
     } finally {
       setLoading(false)
     }
-  }, [location])
+  }, [globalLocation, coordinates])
 
   // Refresh function
   const handleRefresh = useCallback(() => {
@@ -155,8 +162,7 @@ const ForecastPage = () => {
 
   const handleLocationChange = (newLocation) => {
     console.log('📍 ForecastPage: Location changed to:', newLocation)
-    setLocation(newLocation)
-    localStorage.setItem('weatherLocation', newLocation)
+    setGlobalLocation(newLocation)
   }
 
   const tabs = [

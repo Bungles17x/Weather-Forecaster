@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { useLocation as useGlobalLocation } from '../contexts/LocationContext'
 import './Header.css'
 import { LogoIcon } from './WeatherIcons'
 
 const Header = ({ onLocationChange }) => {
+  // Use global location context
+  const { location: globalLocation, setLocation: setGlobalLocation, getLocationHistory } = useGlobalLocation()
+  
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false)
   const [locationInput, setLocationInput] = useState('New York, NY')
@@ -15,6 +19,11 @@ const Header = ({ onLocationChange }) => {
   const [showLocationSearch, setShowLocationSearch] = useState(false)
   const [locationSearchInput, setLocationSearchInput] = useState('')
   const location = useLocation()
+
+  // Sync location input with global location
+  useEffect(() => {
+    setLocationInput(globalLocation || 'New York, NY')
+  }, [globalLocation])
 
   // Get current page for active navigation
   const getCurrentPage = () => {
@@ -109,15 +118,14 @@ const Header = ({ onLocationChange }) => {
             console.log('📍 Reverse geocoded location:', locationName)
           }
           
-          // Update location display
+          // Update location display and global context
           setLocationInput(locationName)
+          setGlobalLocation(locationName)
           
-          // Pass location name to parent
+          // Also call parent callback if provided
           if (onLocationChange) {
             console.log('🔄 Calling onLocationChange with:', locationName)
             onLocationChange(locationName)
-          } else {
-            console.log('❌ onLocationChange is not available')
           }
         } catch (error) {
           console.error('❌ Reverse geocoding error:', error)
@@ -125,6 +133,7 @@ const Header = ({ onLocationChange }) => {
           const fallbackLocation = `Lat: ${latitude.toFixed(4)}, Lon: ${longitude.toFixed(4)}`
 
           setLocationInput(fallbackLocation)
+          setGlobalLocation(fallbackLocation)
           
           if (onLocationChange) {
             onLocationChange(fallbackLocation)
@@ -154,14 +163,17 @@ const Header = ({ onLocationChange }) => {
   const handleLocationSearchSubmit = (e) => {
     e.preventDefault()
     if (locationSearchInput.trim()) {
-      // Save to location history
-      const history = JSON.parse(localStorage.getItem('weatherLocationHistory') || '[]')
-      const newHistory = [locationSearchInput, ...history.filter(loc => loc !== locationSearchInput)].slice(0, 10)
-      localStorage.setItem('weatherLocationHistory', JSON.stringify(newHistory))
+      console.log('📍 Header: Location search submitted:', locationSearchInput)
       
-      onLocationChange && onLocationChange(locationSearchInput)
+      // Use global location context
+      setGlobalLocation(locationSearchInput)
       setShowLocationSearch(false)
       setLocationSearchInput('')
+      
+      // Also call parent callback if provided
+      if (onLocationChange) {
+        onLocationChange(locationSearchInput)
+      }
     }
   }
 
@@ -178,13 +190,16 @@ const Header = ({ onLocationChange }) => {
   const handleLocationSubmit = (e) => {
     e.preventDefault()
     if (locationInput.trim()) {
-      // Save to location history
-      const history = JSON.parse(localStorage.getItem('weatherLocationHistory') || '[]')
-      const newHistory = [locationInput, ...history.filter(loc => loc !== locationInput)].slice(0, 10)
-      localStorage.setItem('weatherLocationHistory', JSON.stringify(newHistory))
+      console.log('📍 Header: Location submitted:', locationInput)
       
-      onLocationChange && onLocationChange(locationInput)
+      // Use global location context
+      setGlobalLocation(locationInput)
       setIsLocationModalOpen(false)
+      
+      // Also call parent callback if provided
+      if (onLocationChange) {
+        onLocationChange(locationInput)
+      }
     }
   }
 
@@ -220,29 +235,35 @@ const Header = ({ onLocationChange }) => {
   const handleSearchSubmit = (e) => {
     e.preventDefault()
     if (searchInput.trim()) {
-      // Save to location history
-      const history = JSON.parse(localStorage.getItem('weatherLocationHistory') || '[]')
-      const newHistory = [searchInput, ...history.filter(loc => loc !== searchInput)].slice(0, 10)
-      localStorage.setItem('weatherLocationHistory', JSON.stringify(newHistory))
+      console.log('📍 Header: Search submitted:', searchInput)
       
-      onLocationChange && onLocationChange(searchInput)
+      // Use global location context
+      setGlobalLocation(searchInput)
       setSearchInput('')
       setSearchSuggestions([])
       setShowSuggestions(false)
+      
+      // Also call parent callback if provided
+      if (onLocationChange) {
+        onLocationChange(searchInput)
+      }
     }
   }
 
   const handleSuggestionClick = (suggestion) => {
-    // Save to location history
-    const history = JSON.parse(localStorage.getItem('weatherLocationHistory') || '[]')
-    const newHistory = [suggestion, ...history.filter(loc => loc !== suggestion)].slice(0, 10)
-    localStorage.setItem('weatherLocationHistory', JSON.stringify(newHistory))
+    console.log('📍 Header: Suggestion clicked:', suggestion)
     
+    // Use global location context
+    setGlobalLocation(suggestion)
     setLocationInput(suggestion)
     setSearchSuggestions([])
     setShowSuggestions(false)
-    onLocationChange && onLocationChange(suggestion)
     setIsLocationModalOpen(false)
+    
+    // Also call parent callback if provided
+    if (onLocationChange) {
+      onLocationChange(suggestion)
+    }
   }
 
   const handleMenuToggle = () => {

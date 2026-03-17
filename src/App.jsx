@@ -6,22 +6,25 @@ import ForecastPage from './pages/ForecastPage'
 import MapPage from './pages/MapPage'
 import AlertsPage from './pages/AlertsPage'
 import SettingsPage from './pages/SettingsPage'
+import { LocationProvider } from './contexts/LocationContext'
 import './App.css'
 
 function App() {
   return (
-    <BrowserRouter>
-      <div className="App">
-        <Routes>
-          <Route path="/" element={<WeatherApp />} />
-          <Route path="/home" element={<HomePage />} />
-          <Route path="/forecast" element={<ForecastPage />} />
-          <Route path="/map" element={<MapPage />} />
-          <Route path="/alerts" element={<AlertsPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-        </Routes>
-      </div>
-    </BrowserRouter>
+    <LocationProvider>
+      <BrowserRouter>
+        <div className="App">
+          <Routes>
+            <Route path="/" element={<WeatherApp />} />
+            <Route path="/home" element={<HomePage />} />
+            <Route path="/forecast" element={<ForecastPage />} />
+            <Route path="/map" element={<MapPage />} />
+            <Route path="/alerts" element={<AlertsPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+          </Routes>
+        </div>
+      </BrowserRouter>
+    </LocationProvider>
   )
 }
 

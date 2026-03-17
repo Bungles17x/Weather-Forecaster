@@ -1,55 +1,21 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import Header from './Header'
 import { WeatherIcon } from './WeatherIcons'
+import { useLocation as useGlobalLocation } from '../contexts/LocationContext'
 import './WeatherApp.css'
 
 // Cache busting timestamp - FORCE RELOAD
 console.log('🔄 WeatherApp.jsx loaded at:', new Date().toISOString(), 'CACHE BUST: 2024-03-15-18-27')
 
-// Location persistence utilities
-const saveLocationToHistory = (location) => {
-  try {
-    const history = JSON.parse(localStorage.getItem('weatherLocationHistory') || '[]')
-    const newHistory = [location, ...history.filter(loc => loc !== location)].slice(0, 10)
-    localStorage.setItem('weatherLocationHistory', JSON.stringify(newHistory))
-  } catch (error) {
-    console.error('Failed to save location history:', error)
-  }
-}
-
-const getLocationHistory = () => {
-  try {
-    return JSON.parse(localStorage.getItem('weatherLocationHistory') || '[]')
-  } catch (error) {
-    console.error('Failed to get location history:', error)
-    return []
-  }
-}
-
-const getLastLocation = () => {
-  try {
-    return localStorage.getItem('lastWeatherLocation') || 'New York, NY'
-  } catch (error) {
-    console.error('Failed to get last location:', error)
-    return 'New York, NY'
-  }
-}
-
-const saveLastLocation = (location) => {
-  try {
-    localStorage.setItem('lastWeatherLocation', location)
-  } catch (error) {
-    console.error('Failed to save last location:', error)
-  }
-}
-
 const WeatherApp = () => {
+  // Use global location context
+  const { location: globalLocation, coordinates, setLocation: setGlobalLocation, setCoordinates } = useGlobalLocation()
+  
   // Core state
   const [weatherData, setWeatherData] = useState(null)
   const [forecastData, setForecastData] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [location, setLocation] = useState(getLastLocation())
   const [lastUpdate, setLastUpdate] = useState(null)
   const [spcOutlook, setSpcOutlook] = useState(null)
   const [loadingSpc, setLoadingSpc] = useState(false)
@@ -515,7 +481,6 @@ const WeatherApp = () => {
       setSpcOutlook(spcData)
       setForecastData(forecast)
       setLastUpdate(new Date())
-      setLocation(displayName || locationName)
       console.log('📅 Setting forecast data:', forecast)
       console.log('📅 Forecast data is array:', Array.isArray(forecast))
       
@@ -546,7 +511,6 @@ const WeatherApp = () => {
       
       setForecastData(finalForecast)
       setLastUpdate(new Date())
-      setLocation(displayName || locationName)
       
     } catch (error) {
       console.error('❌ NWS fetch error:', error)
@@ -713,21 +677,17 @@ const WeatherApp = () => {
   // Handle location change from Header
   const handleLocationChange = useCallback((newLocation) => {
     console.log('📍 Location change requested:', newLocation)
-    if (newLocation && newLocation !== location) {
-      // Save to history
-      saveLocationToHistory(newLocation)
-      // Save as last location
-      saveLastLocation(newLocation)
-      // Update state and fetch data
-      setLocation(newLocation)
+    if (newLocation && newLocation !== globalLocation) {
+      // Use global location context
+      setGlobalLocation(newLocation)
       fetchNWSData(newLocation)
     }
-  }, [location, fetchNWSData])
+  }, [globalLocation, setGlobalLocation, fetchNWSData])
 
   // Initial data fetch
   useEffect(() => {
-    fetchNWSData(location)
-  }, [])
+    fetchNWSData(globalLocation)
+  }, [globalLocation])
 
   // Enhanced formatters with better data handling
   const formatTemp = (temp) => {
