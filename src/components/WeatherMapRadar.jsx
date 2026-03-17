@@ -308,7 +308,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         // Create layer group for alerts
         const alertLayer = window.L.layerGroup().addTo(map)
         
-        alertsData.features.forEach(alert => {
+        alertsData.features.forEach((alert, index) => {
           if (alert.geometry && alert.geometry.coordinates) {
             try {
               // Convert coordinates to Leaflet format
@@ -321,63 +321,99 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
               const severity = alert.properties.severity || 'unknown'
               const event = alert.properties.event || ''
               
-              if (event.includes('Warning') || severity.includes('severe') || severity.includes('extreme')) {
+              // Better severity classification
+              if (event.includes('Tornado Warning') || event.includes('Severe Thunderstorm Warning') || 
+                  event.includes('Flash Flood Warning') || event.includes('Blizzard Warning')) {
                 color = '#ff0000'
-                fillColor = 'rgba(255, 0, 0, 0.3)'
+                fillColor = 'rgba(255, 0, 0, 0.2)' // Less opacity for better visibility
+              } else if (event.includes('Warning')) {
+                color = '#ff6600'
+                fillColor = 'rgba(255, 102, 0, 0.2)'
               } else if (event.includes('Watch')) {
                 color = '#ffff00'
-                fillColor = 'rgba(255, 255, 0, 0.3)'
+                fillColor = 'rgba(255, 255, 0, 0.15)'
               } else if (event.includes('Advisory')) {
                 color = '#ff8800'
-                fillColor = 'rgba(255, 136, 0, 0.3)'
+                fillColor = 'rgba(255, 136, 0, 0.15)'
               }
               
-              // Create polygon
+              // Create polygon with better styling
               const polygon = window.L.polygon(coords, {
                 color: color,
                 fillColor: fillColor,
-                fillOpacity: 0.3,
+                fillOpacity: 0.15, // Reduced opacity
                 weight: 2,
-                opacity: 0.8
+                opacity: 0.8,
+                smoothFactor: 1
               })
               
               // Add popup with alert info
               if (alert.properties) {
                 const popupContent = `
                   <div style="padding: 8px; max-width: 300px;">
-                    <h4 style="margin: 0 0 8px 0; color: ${color};">${alert.properties.event || 'Weather Alert'}</h4>
-                    <p style="margin: 0 0 8px 0; font-size: 12px;">${alert.properties.headline || 'No headline'}</p>
-                    <p style="margin: 0; font-size: 11px; opacity: 0.8;">${alert.properties.description || 'No description available'}</p>
+                    <h4 style="margin: 0 0 8px 0; color: ${color}; font-size: 14px;">${alert.properties.event || 'Weather Alert'}</h4>
+                    <p style="margin: 0 0 8px 0; font-size: 12px; font-weight: bold;">${alert.properties.headline || 'No headline'}</p>
+                    <p style="margin: 0 0 8px 0; font-size: 11px; opacity: 0.8;">
+                      <strong>Severity:</strong> ${severity}<br>
+                      <strong>Areas:</strong> ${alert.properties.areaDesc || 'Unknown area'}
+                    </p>
+                    <p style="margin: 0; font-size: 10px; opacity: 0.6;">Click polygon for more details</p>
                   </div>
                 `
                 polygon.bindPopup(popupContent)
+                
+                // Add hover effect
+                polygon.on('mouseover', function(e) {
+                  this.setStyle({
+                    fillOpacity: 0.3,
+                    weight: 3
+                  })
+                })
+                
+                polygon.on('mouseout', function(e) {
+                  this.setStyle({
+                    fillOpacity: 0.15,
+                    weight: 2
+                  })
+                })
               }
               
               polygon.addTo(alertLayer)
+              
+              console.log(`✅ Added alert polygon: ${alert.properties.event || 'Unknown'}`)
+              
             } catch (error) {
-              console.error('❌ Error processing alert polygon:', error)
+              console.error('❌ Error processing alert polygon:', error, alert.properties?.event)
+              // Continue with other alerts even if one fails
             }
           }
         })
         
-        // Add alert legend
+        // Add improved alert legend
         const alertLegend = window.L.control({position: 'bottomright'})
         alertLegend.onAdd = function() {
           const div = window.L.DomUtil.create('div', 'alert-legend')
           div.innerHTML = `
-            <div style="background: rgba(0,0,0,0.8); padding: 8px; border-radius: 4px; color: white; font-size: 11px;">
-              <div style="font-weight: bold; margin-bottom: 4px;">Alerts</div>
-              <div style="display: flex; align-items: center; margin-bottom: 2px;">
-                <div style="width: 20px; height: 3px; background: rgba(255,255,0,0.5); margin-right: 5px;"></div>
-                <span>Watch</span>
+            <div style="background: rgba(0,0,0,0.9); padding: 10px; border-radius: 6px; color: white; font-size: 11px; border: 1px solid rgba(255,255,255,0.2);">
+              <div style="font-weight: bold; margin-bottom: 6px; font-size: 12px;">⚠️ Weather Alerts</div>
+              <div style="display: flex; align-items: center; margin-bottom: 3px;">
+                <div style="width: 20px; height: 3px; background: rgba(255,0,0,0.8); margin-right: 8px; border: 1px solid #fff;"></div>
+                <span>Tornado/Severe Warning</span>
               </div>
-              <div style="display: flex; align-items: center; margin-bottom: 2px;">
-                <div style="width: 20px; height: 3px; background: rgba(255,136,0,0.5); margin-right: 5px;"></div>
-                <span>Advisory</span>
+              <div style="display: flex; align-items: center; margin-bottom: 3px;">
+                <div style="width: 20px; height: 3px; background: rgba(255,102,0,0.8); margin-right: 8px; border: 1px solid #fff;"></div>
+                <span>Other Warnings</span>
+              </div>
+              <div style="display: flex; align-items: center; margin-bottom: 3px;">
+                <div style="width: 20px; height: 3px; background: rgba(255,255,0,0.8); margin-right: 8px; border: 1px solid #fff;"></div>
+                <span>Watches</span>
               </div>
               <div style="display: flex; align-items: center;">
-                <div style="width: 20px; height: 3px; background: rgba(255,0,0,0.5); margin-right: 5px;"></div>
-                <span>Warning</span>
+                <div style="width: 20px; height: 3px; background: rgba(255,136,0,0.8); margin-right: 8px; border: 1px solid #fff;"></div>
+                <span>Advisories</span>
+              </div>
+              <div style="margin-top: 6px; font-size: 10px; opacity: 0.7; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 4px;">
+                Click polygons for details
               </div>
             </div>
           `
@@ -385,9 +421,14 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         }
         alertLegend.addTo(map)
         
+        console.log(`✅ Successfully added ${alertsData.features.length} weather alert polygons`)
+        
+      } else {
+        console.warn('⚠️ Failed to fetch NWS alerts:', response.status)
       }
     } catch (error) {
       console.error('❌ Error loading severe weather alerts:', error)
+      // Don't show sample polygons on error - just log it
     }
   }
 
