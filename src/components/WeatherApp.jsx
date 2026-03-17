@@ -19,6 +19,7 @@ const WeatherApp = () => {
     notifications, 
     permission, 
     requestNotificationPermission,
+    testNotification,
     clearNotifications,
     fetchWeatherAlerts
   } = useAlerts()
@@ -177,6 +178,12 @@ const WeatherApp = () => {
   // Get NWS office from coordinates
   const getNWSOffice = useCallback(async (lat, lon) => {
     try {
+      // Add null checks
+      if (lat === null || lat === undefined || lon === null || lon === undefined) {
+        console.error('❌ Invalid coordinates provided to getNWSOffice:', { lat, lon })
+        return null
+      }
+      
       const pointsUrl = `${NWS_BASE_URL}/points/${lat.toFixed(4)},${lon.toFixed(4)}`
       const response = await fetch(pointsUrl)
       
@@ -434,6 +441,12 @@ const WeatherApp = () => {
   // Get alerts from NWS
   const getAlerts = useCallback(async (lat, lon) => {
     try {
+      // Add null checks
+      if (lat === null || lat === undefined || lon === null || lon === undefined) {
+        console.error('❌ Invalid coordinates provided to getAlerts:', { lat, lon })
+        return []
+      }
+      
       const alertsUrl = `${NWS_ALERTS_URL}?point=${lat.toFixed(4)},${lon.toFixed(4)}`
       const response = await fetch(alertsUrl)
       
@@ -678,7 +691,7 @@ const WeatherApp = () => {
                  locationRisks.wind === 'HIGH' ? 'High Risk' : 'Unknown Risk',
           color: getRiskColor(locationRisks.wind)
         },
-        forecast: `Day 1 Convective Outlook for ${latitude.toFixed(2)}, ${longitude.toFixed(2)}: Severe thunderstorms ${locationRisks.tornado !== 'UNKNOWN' ? 'possible' : 'unlikely'} across the region. ${locationRisks.hail !== 'UNKNOWN' ? 'Large hail' : 'Hail'} and ${locationRisks.wind !== 'UNKNOWN' ? 'damaging winds' : 'winds'} are the primary threats. ${locationRisks.tornado !== 'UNKNOWN' ? 'Tornadoes are also possible in stronger storms.' : 'Tornado threat is minimal.'}`,
+        forecast: `Day 1 Convective Outlook for ${latitude && longitude ? `${latitude.toFixed(2)}, ${longitude.toFixed(2)}` : 'unknown location'}: Severe thunderstorms ${locationRisks.tornado !== 'UNKNOWN' ? 'possible' : 'unlikely'} across the region. ${locationRisks.hail !== 'UNKNOWN' ? 'Large hail' : 'Hail'} and ${locationRisks.wind !== 'UNKNOWN' ? 'damaging winds' : 'winds'} are the primary threats. ${locationRisks.tornado !== 'UNKNOWN' ? 'Tornadoes are also possible in stronger storms.' : 'Tornado threat is minimal.'}`,
         updated: new Date().toLocaleString(),
         location: { latitude, longitude },
         rawData: spcData
@@ -820,7 +833,7 @@ const WeatherApp = () => {
   }
 
   const formatVisibility = (visibility) => {
-    if (visibility === null || visibility === undefined) return '--'
+    if (visibility === null || visibility === undefined || isNaN(visibility)) return '--'
     // Convert from meters to miles (1 meter = 0.000621371 miles)
     const visibilityMiles = visibility * 0.000621371
     if (visibilityMiles >= 10) return '10+ miles'
