@@ -1,5 +1,5 @@
 import React from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { HashRouter, Routes, Route } from 'react-router-dom'
 import WeatherApp from './components/WeatherApp'
 import HomePage from './pages/HomePage'
 import ForecastPage from './pages/ForecastPage'
@@ -16,7 +16,7 @@ function App() {
     <SettingsProvider>
       <LocationProvider>
         <AlertProvider>
-          <BrowserRouter>
+          <HashRouter>
             <div className="App">
               <Routes>
                 <Route path="/" element={<WeatherApp />} />
@@ -27,7 +27,7 @@ function App() {
                 <Route path="/settings" element={<SettingsPage />} />
               </Routes>
             </div>
-          </BrowserRouter>
+          </HashRouter>
         </AlertProvider>
       </LocationProvider>
     </SettingsProvider>
