@@ -25,8 +25,8 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
           try {
             console.log('🌪️ Fetching SPC convective outlook...')
             
-            // Updated working SPC URLs
-            const outlookUrl = 'https://www.spc.noaa.gov/products/outlook/day1/otlk_lyn.json'
+            // Try the main SPC outlook endpoint
+            const outlookUrl = 'https://www.spc.noaa.gov/products/outlook/day1otlk.json'
             const response = await fetch(outlookUrl)
             
             if (!response.ok) {
@@ -38,8 +38,20 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
             setSpcOutlook(data)
           } catch (error) {
             console.error('🌪️ Error fetching SPC outlook:', error)
-            // Set null to prevent errors
-            setSpcOutlook(null)
+            // Try alternative endpoint or set null
+            try {
+              const fallbackUrl = 'https://www.spc.noaa.gov/products/outlook/day1/otlk_lyn.json'
+              const fallbackResponse = await fetch(fallbackUrl)
+              if (fallbackResponse.ok) {
+                const fallbackData = await fallbackResponse.json()
+                setSpcOutlook(fallbackData)
+              } else {
+                setSpcOutlook(null)
+              }
+            } catch (fallbackError) {
+              console.log('🌪️ SPC fallback also failed, using null')
+              setSpcOutlook(null)
+            }
           } finally {
             setLoadingSpc(false)
           }
@@ -402,19 +414,32 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         opacity: 0.8,
         maxZoom: 12,
         minZoom: 2,
-        errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
+        errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+        updateWhenIdle: false,
+        updateWhenZooming: false
       }).addTo(map)
 
-      // Alternative NEXRAD from Iowa State Mesonet
+      // Alternative NEXRAD from Iowa State Mesonet (primary backup)
       const nexradTilesLayer = window.L.tileLayer('https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png', {
         attribution: '© Iowa State Mesonet / NOAA NWS',
         opacity: 0.7,
         maxZoom: 12,
         minZoom: 2,
-        errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
+        errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+        updateWhenIdle: false,
+        updateWhenZooming: false
       })
 
       // Additional radar layer from Ventusky (backup)
+      const ventuskyLayer = window.L.tileLayer('https://tiles.ventusky.com/radar/{z}/{x}/{y}.png', {
+        attribution: '© Ventusky / NOAA NWS',
+        opacity: 0.6,
+        maxZoom: 12,
+        minZoom: 2,
+        errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+        updateWhenIdle: false,
+        updateWhenZooming: false
+      })
       const ventuskyRadar = window.L.tileLayer('https://tiles.ventusky.com/radar/{z}/{x}/{y}.png', {
         attribution: '© Ventusky / NOAA NWS',
         opacity: 0.7,
