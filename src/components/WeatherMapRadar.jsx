@@ -28,22 +28,23 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
           try {
             console.log('🌪️ Fetching SPC convective outlook...')
             
-            // Updated SPC URLs with current date format
+            // Updated SPC URLs with working endpoints
             const today = new Date()
             const year = today.getFullYear()
             const month = String(today.getMonth() + 1).padStart(2, '0')
             const day = String(today.getDate()).padStart(2, '0')
             
-            // Try different SPC URL formats with current date
+            // Try working SPC URL formats
             const spcUrls = [
+              // Try the new format first
               `https://www.spc.noaa.gov/products/outlook/day1/otlk_${year}${month}${day}_1200_lyr.geojson`,
               `https://www.spc.noaa.gov/products/outlook/day1/otlk_${year}${month}${day}_1630_lyr.geojson`,
               `https://www.spc.noaa.gov/products/outlook/day1/otlk_${year}${month}${day}_2000_lyr.geojson`,
-              `https://www.spc.noaa.gov/products/outlook/day2/otlk_${year}${month}${day}_1200_lyr.geojson`,
-              `https://www.spc.noaa.gov/products/outlook/day3/otlk_${year}${month}${day}_1200_lyr.geojson`,
-              // Fallback to generic URLs
+              // Fallback to older working URLs
               'https://www.spc.noaa.gov/products/outlook/day1/otlk_lyn.json',
-              'https://www.spc.noaa.gov/products/outlook/day1otlk.json'
+              'https://www.spc.noaa.gov/products/outlook/day1otlk.json',
+              // Try alternative format
+              'https://www.spc.noaa.gov/public/products/outlook/day1/otlk_lyn.json'
             ]
             
             let data = null
@@ -357,11 +358,12 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
     if (!mapRef.current || !window.L) return
 
     // Check if map is already initialized
-    if (mapRef.current._leaflet_map) {
+    if (mapRef.current._leaflet_map || mapRef.current._leaflet_id) {
       console.log('🗺️ Map already initialized, skipping')
       return
     }
 
+    console.log('🗺️ Initializing map...')
     // Initialize OpenStreetMap with Leaflet
     initializeOpenStreetMap()
   }, []) // Remove dependencies to prevent re-initialization
@@ -469,7 +471,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         if (radarLayersLoaded > 0) {
           setRadarStatus('active')
           const activeLayers = []
-          if (layerStatus.nexrad === 'loaded') activeLayers.push('RainViewer NEXRAD')
+          if (layerStatus.nexrad === 'loaded') activeLayers.push('Iowa State NEXRAD')
           if (layerStatus.iowaState === 'loaded') activeLayers.push('RainViewer 2')
           if (layerStatus.ventusky === 'loaded') activeLayers.push('Ventusky')
           if (layerStatus.weatherGov === 'loaded') activeLayers.push('Weather.gov')
@@ -510,9 +512,9 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         }
       }
 
-      // Primary NEXRAD radar from RainViewer (working URL)
-      const nexradLayer = window.L.tileLayer('https://tile.rainviewer.com/v2/radar/{z}/{x}/{y}/256/0_0.png', {
-        attribution: '© RainViewer / NOAA NWS',
+      // Primary NEXRAD radar from Iowa State (reliable source)
+      const nexradLayer = window.L.tileLayer('https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/ridge::USCOMP-N0Q::0/256/{z}/{x}/{y}.png', {
+        attribution: '© Iowa State Mesonet / NOAA NWS',
         opacity: 0.8,
         maxZoom: 12,
         minZoom: 2,
@@ -530,7 +532,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         // Only log first few errors to reduce console noise
         if (!nexradLayer.errorCount) nexradLayer.errorCount = 0
         if (nexradLayer.errorCount < 3) {
-          console.error('🛡️ RainViewer NEXRAD tile error:', error)
+          console.error('🛡️ Iowa State NEXRAD tile error:', error)
           nexradLayer.errorCount++
         }
         
@@ -540,7 +542,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
             if (layerStatus.nexrad === 'pending') {
               layerStatus.nexrad = 'failed'
               radarLayersFailed++
-              console.log('🛡️ RainViewer NEXRAD layer failed to load')
+              console.log('🛡️ Iowa State NEXRAD layer failed to load')
               checkRadarStatus()
             }
           }, 5000)
@@ -551,7 +553,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         if (layerStatus.nexrad === 'pending' && radarLayersLoaded === 0) {
           layerStatus.nexrad = 'loaded'
           radarLayersLoaded = 1
-          console.log('✅ RainViewer NEXRAD radar loaded successfully')
+          console.log('✅ Iowa State NEXRAD radar loaded successfully')
           setRadarError(null)
         }
       })
@@ -559,7 +561,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
       nexradLayer.on('load', () => {
         if (layerStatus.nexrad === 'pending') {
           layerStatus.nexrad = 'loaded'
-          console.log('✅ RainViewer NEXRAD radar layer fully loaded')
+          console.log('✅ Iowa State NEXRAD radar layer fully loaded')
           if (radarLayersLoaded === 0) {
             radarLayersLoaded = 1
             setRadarError(null)
@@ -570,8 +572,8 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
       nexradLayer.addTo(map)
       
       // Add backup NEXRAD layer with different URL format
-      const nexradBackup = window.L.tileLayer('https://tilecache.rainviewer.com/v2/radar/{z}/{x}/{y}/256/0_0.png', {
-        attribution: '© RainViewer / NOAA NWS',
+      const nexradBackup = window.L.tileLayer('https://radar.weather.gov/ridge/Conus/Base/NEXRAD/{z}/{x}/{y}.png', {
+        attribution: '© NOAA Weather.gov',
         opacity: 0.7,
         maxZoom: 12,
         minZoom: 2,
