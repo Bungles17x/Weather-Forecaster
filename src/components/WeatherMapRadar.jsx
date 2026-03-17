@@ -420,7 +420,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
       console.log('🛡️ Adding NEXRAD radar layers...')
       let radarLayersLoaded = 0
       let radarLayersFailed = 0
-      const totalRadarLayers = 3
+      const totalRadarLayers = 4  // Increased to 4 with new NOAA layer
       
       // Function to check radar loading status
       const checkRadarStatus = () => {
@@ -447,8 +447,8 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         }
       }
 
-      // Working NEXRAD radar from OpenWeatherMap
-      const nexradLayer = window.L.tileLayer('https://tile.openweathermap.org/precipitation_new/{z}/{x}/{y}.png', {
+      // Working NEXRAD radar from OpenWeatherMap (updated URL)
+      const nexradLayer = window.L.tileLayer('https://tile.openweathermap.org/map/precipitation/{z}/{x}/{y}.png', {
         attribution: '© OpenWeatherMap / NOAA NWS',
         opacity: 0.8,
         maxZoom: 12,
@@ -483,7 +483,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
       
       nexradLayer.addTo(map)
 
-      // Set a timeout to check if radar loads within 10 seconds
+      // Set a timeout to check if radar loads within 5 seconds (reduced from 10)
       setTimeout(() => {
         if (radarLayersLoaded === 0) {
           console.warn('🛡️ Radar layers did not load within timeout period')
@@ -498,11 +498,11 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         } else {
           console.log('✅ At least one radar layer loaded successfully')
         }
-      }, 10000)
+      }, 5000)  // Reduced from 10000
       
-      // Also check after 3 seconds for early feedback
+      // Also check after 2 seconds for early feedback (reduced from 3)
       setTimeout(() => {
-        console.log('🛡️ 3-second radar status check:')
+        console.log('🛡️ 2-second radar status check:')
         console.log('- Loaded:', radarLayersLoaded)
         console.log('- Failed:', radarLayersFailed)
         
@@ -510,9 +510,9 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         if (radarLayersFailed >= totalRadarLayers && radarLayersLoaded === 0) {
           checkRadarStatus()
         }
-      }, 3000)
+      }, 2000)  // Reduced from 3000
 
-      // Alternative NEXRAD from Iowa State Mesonet (primary backup)
+      // Alternative NEXRAD from Iowa State Mesonet (updated URL)
       const nexradTilesLayer = window.L.tileLayer('https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png', {
         attribution: '© Iowa State Mesonet / NOAA NWS',
         opacity: 0.7,
@@ -546,8 +546,8 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         }
       })
 
-      // Additional radar layer from Ventusky (backup)
-      const ventuskyLayer = window.L.tileLayer('https://tiles.ventusky.com/radar/{z}/{x}/{y}.png', {
+      // Additional radar layer from Ventusky (updated URL)
+      const ventuskyLayer = window.L.tileLayer('https://tiles.ventusky.com/precipitation/{z}/{x}/{y}.png', {
         attribution: '© Ventusky / NOAA NWS',
         opacity: 0.6,
         maxZoom: 12,
@@ -580,12 +580,46 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         }
       })
       
-      const ventuskyRadar = window.L.tileLayer('https://tiles.ventusky.com/radar/{z}/{x}/{y}.png', {
+      const ventuskyRadar = window.L.tileLayer('https://tiles.ventusky.com/precipitation/{z}/{x}/{y}.png', {
         attribution: '© Ventusky / NOAA NWS',
         opacity: 0.7,
         maxZoom: 12,
         minZoom: 2,
         errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
+      })
+
+      // NOAA GOES Satellite/Radar (new fallback)
+      const noaaLayer = window.L.tileLayer('https://tile.openweathermap.org/data/2.0/contours/precipitation/{z}/{x}/{y}.png', {
+        attribution: '© NOAA / OpenWeatherMap',
+        opacity: 0.6,
+        maxZoom: 12,
+        minZoom: 2,
+        errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+        updateWhenIdle: false,
+        updateWhenZooming: false
+      })
+      
+      // Add error handling for NOAA layer
+      noaaLayer.on('tileerror', (error) => {
+        console.error('🛡️ NOAA radar tile error:', error)
+        radarLayersFailed++
+        checkRadarStatus()
+      })
+      
+      noaaLayer.on('tileload', () => {
+        if (radarLayersLoaded === 0) {
+          radarLayersLoaded = 1
+          console.log('✅ NOAA radar loaded successfully')
+          setRadarError(null)
+        }
+      })
+      
+      noaaLayer.on('load', () => {
+        console.log('✅ NOAA radar layer fully loaded')
+        if (radarLayersLoaded === 0) {
+          radarLayersLoaded = 1
+          setRadarError(null)
+        }
       })
 
       // Working Wind Layer using Windy API
