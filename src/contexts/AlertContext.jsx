@@ -79,8 +79,12 @@ export const AlertProvider = ({ children }) => {
         if (options.onClick) {
           options.onClick()
         } else {
-          // Focus on the window
+          // Focus on the window and navigate to alerts page
           window.focus()
+          // Navigate to alerts page
+          if (window.location.pathname !== '/alerts') {
+            window.location.href = '/alerts'
+          }
         }
       }
 
@@ -184,7 +188,14 @@ export const AlertProvider = ({ children }) => {
             body: `${alert.event} - ${alert.areas.join(', ')}`,
             urgent: true,
             icon: getAlertIcon(alert.severity),
-            tag: `alert-${alert.id}`
+            tag: `alert-${alert.id}`,
+            onClick: () => {
+              // Navigate to alerts page when notification is clicked
+              console.log('🔔 Alert notification clicked - navigating to alerts page')
+              if (window.location.pathname !== '/alerts') {
+                window.location.href = '/alerts'
+              }
+            }
           })
         }
       })
@@ -245,7 +256,14 @@ export const AlertProvider = ({ children }) => {
       showNotification('Weather Alert Test', {
         body: 'This is a test weather alert notification',
         urgent: false,
-        icon: '🌤️'
+        icon: '🌤️',
+        onClick: () => {
+          // Navigate to alerts page when test notification is clicked
+          console.log('🔔 Test notification clicked - navigating to alerts page')
+          if (window.location.pathname !== '/alerts') {
+            window.location.href = '/alerts'
+          }
+        }
       })
     } else {
       requestNotificationPermission().then(granted => {
@@ -253,7 +271,14 @@ export const AlertProvider = ({ children }) => {
           showNotification('Weather Alert Test', {
             body: 'This is a test weather alert notification',
             urgent: false,
-            icon: '🌤️'
+            icon: '🌤️',
+            onClick: () => {
+              // Navigate to alerts page when test notification is clicked
+              console.log('🔔 Test notification clicked - navigating to alerts page')
+              if (window.location.pathname !== '/alerts') {
+                window.location.href = '/alerts'
+              }
+            }
           })
         }
       })
