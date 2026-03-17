@@ -16,79 +16,10 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
   const [activeRadarLayers, setActiveRadarLayers] = useState([])
   const mapRef = useRef(null)
 
-  // Fetch SPC outlook data
-  useEffect(() => {
-    const fetchSPCOutlook = async () => {
-      try {
-        setLoadingSpc(true)
-        console.log('🌪 Fetching SPC Outlook data...')
-        
-        // Fetch SPC Convective Outlook
-        const fetchSpcOutlook = async () => {
-          try {
-            console.log('🌪️ Fetching SPC convective outlook...')
-            
-            // SPC API has CORS issues - use mock data directly
-            console.log('🌪️ SPC API has CORS issues, using mock data')
-            const data = {
-              "type": "FeatureCollection",
-              "features": [
-                {
-                  "type": "Feature",
-                  "properties": {
-                    "ID": "1",
-                    "LABEL": "Mock SPC Data - CORS Issue",
-                    "OUTLOOK": "Mock Data",
-                    "RISK": "General"
-                  },
-                  "geometry": {
-                    "type": "Polygon",
-                    "coordinates": [[
-                      [-100, 35], [-80, 35], [-80, 45], [-100, 45], [-100, 35]
-                    ]]
-                  }
-                }
-              ]
-            }
-            setSpcOutlook(data)
-            setLoadingSpc(false)
-          } catch (error) {
-            console.error('🌪️ Error fetching SPC outlook:', error)
-            // Skip fallback since we're trying multiple URLs above
-            console.log('🌪️ All SPC URLs failed, using null')
-            setSpcOutlook(null)
-          } finally {
-            setLoadingSpc(false)
-          }
-        }
-        await fetchSpcOutlook()
-        
-        // Fetch active weather alerts
-        const alertsResponse = await fetch('https://api.weather.gov/alerts/active')
-        if (alertsResponse.ok) {
-          const alertsData = await alertsResponse.json()
-          console.log('⚠️ Weather Alerts:', alertsData)
-          setWeatherAlerts(alertsData.features || [])
-        }
-        
-        // Fetch NWS radar data for current location
-        if (coordinates) {
-          const radarResponse = await fetch(`https://api.weather.gov/radar/stations`)
-          if (radarResponse.ok) {
-            const radarData = await radarResponse.json()
-            console.log('📡️ NWS Radar Stations:', radarData)
-          }
-        }
-        
-      } catch (error) {
-        console.error('❌ Error fetching weather channel data:', error)
-      } finally {
-        setLoadingSpc(false)
-      }
-    }
-    
-    fetchSPCOutlook()
-  }, [coordinates])
+  // SPC data is handled in WeatherApp.jsx - removed to prevent conflicts
+  // useEffect(() => {
+  //   // SPC fetching removed to avoid duplicate API calls
+  // }, [coordinates])
 
   // Initialize map
   useEffect(() => {
@@ -101,16 +32,19 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
     }
   }, [coordinates, weatherData])
 
-  // Load map script - ONLY ONCE
+  // Load map script - ONLY ONCE with stronger prevention
   useEffect(() => {
-    // Prevent multiple initializations with stronger checks
-    if (window.leafletMapInitialized || window.L || document.querySelector('script[src*="leaflet"]')) {
-      console.log('🗺️ Leaflet already initialized or loading, skipping')
+    // Prevent multiple initializations with comprehensive checks
+    if (window.leafletMapInitialized || window.L || document.querySelector('script[src*="leaflet"]') || window.leafletScriptLoaded) {
+      console.log('🗺️ Leaflet already initialized or loading, skipping duplicate initialization')
       return
     }
     
-    // Set global flag immediately
+    // Set multiple global flags immediately to prevent race conditions
     window.leafletMapInitialized = true
+    window.leafletScriptLoaded = true
+    
+    console.log('🗺️ Loading Leaflet script for the first time...')
     
     // Try to load Leaflet for OpenStreetMap (more reliable)
     const leafletScript = document.createElement('script')
@@ -140,6 +74,9 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
     leafletScript.onerror = () => {
       console.error('❌ Failed to load Leaflet')
       setLoading(false)
+      // Reset flags on error
+      window.leafletMapInitialized = false
+      window.leafletScriptLoaded = false
       // Fallback to simple display
       initializeSimpleMap()
     }
@@ -158,8 +95,9 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
       if (document.head.contains(leafletCSS)) {
         document.head.removeChild(leafletCSS)
       }
-      // Reset flag on cleanup
+      // Reset flags on cleanup
       window.leafletMapInitialized = false
+      window.leafletScriptLoaded = false
     }
   }, []) // Empty dependency array - only run once
 
@@ -357,9 +295,9 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         return
       }
 
-      // Prevent duplicate map initialization
-      if (container._leaflet_map || container._leaflet_id) {
-        console.log('🗺️ Map already initialized in container, skipping')
+      // Prevent duplicate map initialization with comprehensive checks
+      if (container._leaflet_map || container._leaflet_id || window.leafletMapInitialized) {
+        console.log('🗺️ Map already initialized in container, skipping duplicate initialization')
         setLoading(false)
         return
       }
@@ -390,10 +328,12 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         attributionControl: false
       })
 
-      // Store map reference for cleanup
+      // Store map reference for cleanup and duplicate prevention
       container._leaflet_map = map
+      container._leaflet_id = Math.random().toString(36).substr(2, 9)
+      window.leafletMapInitialized = true
 
-      console.log('🗺️ Leaflet map created')
+      console.log('🗺️ Leaflet map created successfully')
 
       // Add OpenStreetMap tiles
       const osmLayer = window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
