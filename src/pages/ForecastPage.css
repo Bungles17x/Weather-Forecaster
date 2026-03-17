@@ -1048,38 +1048,451 @@
   font-size: 0.9rem;
 }
 
-/* Mobile Responsive */
-@media (max-width: 768px) {
+/* Enhanced Mobile Responsive */
+@media (max-width: 1024px) {
+  .forecast-page {
+    padding-bottom: 120px; /* Account for bottom nav */
+  }
+  
   .forecast-content {
     padding: 1rem;
+    max-width: 100%;
+    overflow-x: hidden;
   }
   
   .forecast-nav {
     flex-direction: column;
     text-align: center;
+    gap: 1rem;
   }
   
   .forecast-nav h1 {
-    font-size: 2rem;
+    font-size: clamp(1.5rem, 6vw, 2rem);
   }
   
   .forecast-tabs {
     justify-content: center;
     flex-wrap: wrap;
+    gap: 0.5rem;
   }
   
   .tab {
     padding: 0.5rem 1rem;
     font-size: 0.9rem;
+    min-height: 44px; /* Better touch targets */
   }
   
   .hourly-section,
   .daily-section,
   .forecast-summary {
     padding: 1.5rem;
+    border-radius: 12px;
+  }
+  
+  .summary-cards {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+  }
+  
+  .today-main {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .today-current {
+    min-width: auto;
+  }
+  
+  .today-details {
+    min-width: auto;
+  }
+  
+  .hourly-grid {
+    gap: 0.75rem;
+  }
+  
+  .hour-card {
+    min-width: 100px;
+    max-width: 130px;
+    padding: 1rem;
+  }
+  
+  .daily-grid {
+    gap: 1rem;
+  }
+  
+  .day-card {
+    min-width: 180px;
+    max-width: 220px;
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .forecast-page {
+    padding-bottom: 100px;
+  }
+  
+  .forecast-content {
+    padding: 0.75rem;
+  }
+  
+  .forecast-nav h1 {
+    font-size: clamp(1.3rem, 5vw, 1.8rem);
+  }
+  
+  .forecast-tabs {
+    gap: 0.375rem;
+  }
+  
+  .tab {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+  }
+  
+  .hourly-section,
+  .daily-section,
+  .forecast-summary {
+    padding: 1rem;
+    border-radius: 10px;
   }
   
   .summary-cards {
     grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .summary-card {
+    padding: 1rem;
+  }
+  
+  .today-main {
+    gap: 1rem;
+  }
+  
+  .current-temp {
+    font-size: clamp(2.5rem, 10vw, 3.5rem);
+  }
+  
+  .current-details h2 {
+    font-size: clamp(1.5rem, 6vw, 1.8rem);
+  }
+  
+  .today-details {
+    gap: 0.75rem;
+  }
+  
+  .detail-row {
+    padding: 0.75rem;
+  }
+  
+  .hourly-grid {
+    gap: 0.5rem;
+  }
+  
+  .hour-card {
+    min-width: 85px;
+    max-width: 110px;
+    padding: 0.75rem;
+  }
+  
+  .daily-grid {
+    gap: 0.75rem;
+  }
+  
+  .day-card {
+    min-width: 150px;
+    max-width: 180px;
+    padding: 0.75rem;
+  }
+  
+  .extended-grid {
+    gap: 0.75rem;
+  }
+  
+  .extended-card {
+    min-width: 200px;
+    max-width: 240px;
+    padding: 1rem;
+  }
+  
+  .ten-day-grid {
+    gap: 0.5rem;
+  }
+  
+  .ten-day-card {
+    min-width: 140px;
+    max-width: 160px;
+    padding: 0.75rem;
+  }
+  
+  .summary-content {
+    gap: 1rem;
+  }
+  
+  .summary-overview, .summary-averages, .summary-highlights {
+    min-width: 250px;
+    max-width: 300px;
+  }
+  
+  .overview-card, .averages-card, .highlights-card {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .forecast-page {
+    padding-bottom: 90px;
+  }
+  
+  .forecast-content {
+    padding: 0.5rem;
+  }
+  
+  .forecast-nav h1 {
+    font-size: clamp(1.1rem, 4vw, 1.5rem);
+  }
+  
+  .forecast-tabs {
+    gap: 0.25rem;
+  }
+  
+  .tab {
+    padding: 0.375rem 0.625rem;
+    font-size: 0.75rem;
+  }
+  
+  .hourly-section,
+  .daily-section,
+  .forecast-summary {
+    padding: 0.75rem;
+    border-radius: 8px;
+  }
+  
+  .summary-card {
+    padding: 0.75rem;
+  }
+  
+  .today-main {
+    gap: 0.75rem;
+  }
+  
+  .current-temp {
+    font-size: clamp(2rem, 8vw, 3rem);
+  }
+  
+  .current-details h2 {
+    font-size: clamp(1.2rem, 5vw, 1.5rem);
+  }
+  
+  .current-condition {
+    font-size: clamp(0.9rem, 3.5vw, 1.1rem);
+  }
+  
+  .today-details {
+    gap: 0.5rem;
+  }
+  
+  .detail-row {
+    padding: 0.5rem;
+  }
+  
+  .detail-label {
+    font-size: 0.8rem;
+  }
+  
+  .detail-value {
+    font-size: 0.9rem;
+  }
+  
+  .hourly-grid {
+    gap: 0.375rem;
+  }
+  
+  .hour-card {
+    min-width: 70px;
+    max-width: 90px;
+    padding: 0.5rem;
+  }
+  
+  .hour-temp {
+    font-size: 0.9rem;
+  }
+  
+  .hour-condition {
+    font-size: 0.8rem;
+  }
+  
+  .daily-grid {
+    gap: 0.5rem;
+  }
+  
+  .day-card {
+    min-width: 120px;
+    max-width: 140px;
+    padding: 0.5rem;
+  }
+  
+  .day-name {
+    font-size: 1rem;
+  }
+  
+  .day-date {
+    font-size: 0.8rem;
+  }
+  
+  .day-high, .day-low {
+    font-size: 1rem;
+  }
+  
+  .day-condition {
+    font-size: 0.8rem;
+  }
+  
+  .extended-grid {
+    gap: 0.5rem;
+  }
+  
+  .extended-card {
+    min-width: 160px;
+    max-width: 180px;
+    padding: 0.75rem;
+  }
+  
+  .extended-day {
+    font-size: 1rem;
+  }
+  
+  .extended-date {
+    font-size: 0.8rem;
+  }
+  
+  .extended-high, .extended-low {
+    font-size: 1rem;
+  }
+  
+  .extended-condition {
+    font-size: 0.8rem;
+  }
+  
+  .ten-day-grid {
+    gap: 0.375rem;
+  }
+  
+  .ten-day-card {
+    min-width: 110px;
+    max-width: 130px;
+    padding: 0.5rem;
+  }
+  
+  .ten-day-name {
+    font-size: 0.9rem;
+  }
+  
+  .ten-day-date {
+    font-size: 0.7rem;
+  }
+  
+  .ten-day-high, .ten-day-low {
+    font-size: 0.9rem;
+  }
+  
+  .ten-day-condition {
+    font-size: 0.7rem;
+  }
+  
+  .ten-day-precip {
+    font-size: 0.7rem;
+  }
+  
+  .summary-content {
+    gap: 0.75rem;
+  }
+  
+  .summary-overview, .summary-averages, .summary-highlights {
+    min-width: 200px;
+    max-width: 250px;
+  }
+  
+  .overview-card, .averages-card, .highlights-card {
+    padding: 0.75rem;
+  }
+  
+  .overview-card h4, .averages-card h4, .highlights-card h4 {
+    font-size: 1rem;
+  }
+  
+  .overview-label, .average-label, .highlight-label {
+    font-size: 0.8rem;
+  }
+  
+  .overview-value, .average-value, .highlight-value {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .forecast-page {
+    padding-bottom: 85px;
+  }
+  
+  .forecast-content {
+    padding: 0.375rem;
+  }
+  
+  .forecast-nav h1 {
+    font-size: clamp(1rem, 3.5vw, 1.3rem);
+  }
+  
+  .tab {
+    padding: 0.312rem 0.5rem;
+    font-size: 0.7rem;
+  }
+  
+  .hourly-section,
+  .daily-section,
+  .forecast-summary {
+    padding: 0.5rem;
+  }
+  
+  .summary-card {
+    padding: 0.5rem;
+  }
+  
+  .current-temp {
+    font-size: clamp(1.8rem, 7vw, 2.5rem);
+  }
+  
+  .hour-card {
+    min-width: 60px;
+    max-width: 75px;
+    padding: 0.375rem;
+  }
+  
+  .day-card {
+    min-width: 100px;
+    max-width: 120px;
+    padding: 0.375rem;
+  }
+  
+  .extended-card {
+    min-width: 140px;
+    max-width: 160px;
+    padding: 0.5rem;
+  }
+  
+  .ten-day-card {
+    min-width: 95px;
+    max-width: 110px;
+    padding: 0.375rem;
+  }
+  
+  .summary-overview, .summary-averages, .summary-highlights {
+    min-width: 180px;
+    max-width: 220px;
+  }
+  
+  .overview-card, .averages-card, .highlights-card {
+    padding: 0.5rem;
   }
 }

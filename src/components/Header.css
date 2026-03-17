@@ -1048,7 +1048,7 @@
   }
 }
 
-/* Mobile Bottom Navigation - Really Cool Design */
+/* Mobile Bottom Navigation - Enhanced Mobile Experience */
 .mobile-bottom-nav {
   display: none;
   position: fixed;
@@ -1059,7 +1059,7 @@
   backdrop-filter: blur(25px);
   border-top: 2px solid rgba(255, 255, 255, 0.15);
   z-index: 1000;
-  padding: 14px 0 18px 0;
+  padding: 12px 0 16px 0;
   box-shadow: 
     0 -8px 32px rgba(0, 0, 0, 0.5),
     0 -4px 16px rgba(100, 100, 255, 0.2),
@@ -1067,28 +1067,42 @@
   display: flex;
   justify-content: space-around;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
+  /* Safe area for mobile devices */
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
 }
 
 .mobile-nav-btn {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
   border: 2px solid rgba(255, 255, 255, 0.25);
   color: white;
-  padding: 12px 8px;
+  padding: 10px 6px;
   cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  font-size: 0.75rem;
-  border-radius: 18px;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  font-size: 0.7rem;
+  border-radius: 16px;
   flex: 1;
-  max-width: 65px;
+  max-width: 60px;
   position: relative;
   overflow: hidden;
   text-decoration: none;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  /* Better touch targets */
+  min-height: 60px;
+  min-width: 50px;
+  /* Prevent text selection */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  /* Prevent tap highlight */
+  -webkit-tap-highlight-color: transparent;
+  /* Smooth touch feedback */
+  touch-action: manipulation;
 }
 
 .mobile-nav-btn::before {
@@ -1104,19 +1118,20 @@
     rgba(100, 200, 255, 0.2),
     transparent
   );
-  transition: left 0.8s ease;
+  transition: left 0.6s ease;
 }
 
 .mobile-nav-btn:hover::before {
   left: 100%;
 }
 
-.mobile-nav-btn:hover {
+.mobile-nav-btn:hover,
+.mobile-nav-btn:active {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.15) 100%);
-  transform: translateY(-8px) scale(1.05);
+  transform: translateY(-4px) scale(1.02);
   box-shadow: 
-    0 8px 25px rgba(0, 0, 0, 0.4),
-    0 0 20px rgba(100, 200, 255, 0.3),
+    0 6px 20px rgba(0, 0, 0, 0.4),
+    0 0 15px rgba(100, 200, 255, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
   border-color: rgba(255, 255, 255, 0.4);
   color: white;
@@ -1124,40 +1139,40 @@
 }
 
 .mobile-nav-btn:active {
-  transform: translateY(-4px) scale(1.02);
+  transform: translateY(-2px) scale(1.01);
   box-shadow: 
-    0 4px 15px rgba(0, 0, 0, 0.3),
-    0 0 15px rgba(100, 200, 255, 0.2);
+    0 3px 12px rgba(0, 0, 0, 0.3),
+    0 0 10px rgba(100, 200, 255, 0.2);
 }
 
 .mobile-nav-btn.locating {
-  animation: coolPulse 2s ease-in-out infinite;
+  animation: mobilePulse 2s ease-in-out infinite;
   background: linear-gradient(135deg, rgba(52, 152, 219, 0.4) 0%, rgba(41, 128, 185, 0.3) 100%);
   border-color: rgba(52, 152, 219, 0.6);
   box-shadow: 
-    0 0 25px rgba(52, 152, 219, 0.4),
-    inset 0 0 15px rgba(52, 152, 219, 0.2);
+    0 0 20px rgba(52, 152, 219, 0.4),
+    inset 0 0 12px rgba(52, 152, 219, 0.2);
 }
 
 .mobile-nav-icon {
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   line-height: 1;
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
 .mobile-nav-btn:hover .mobile-nav-icon {
-  transform: scale(1.3) rotate(5deg);
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
+  transform: scale(1.2) rotate(3deg);
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.4));
 }
 
 .mobile-nav-label {
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   font-weight: 700;
   text-align: center;
   line-height: 1;
   text-transform: uppercase;
-  letter-spacing: 0.8px;
+  letter-spacing: 0.6px;
   opacity: 0.9;
   transition: all 0.3s ease;
 }
@@ -1167,19 +1182,28 @@
   transform: translateY(-1px);
 }
 
-@keyframes coolPulse {
+@keyframes mobilePulse {
   0%, 100% { 
     transform: scale(1);
     box-shadow: 
-      0 0 25px rgba(52, 152, 219, 0.4),
-      inset 0 0 15px rgba(52, 152, 219, 0.2);
+      0 0 20px rgba(52, 152, 219, 0.4),
+      inset 0 0 12px rgba(52, 152, 219, 0.2);
   }
   50% { 
     transform: scale(1.05);
     box-shadow: 
-      0 0 35px rgba(52, 152, 219, 0.6),
-      inset 0 0 20px rgba(52, 152, 219, 0.3);
+      0 0 30px rgba(52, 152, 219, 0.6),
+      inset 0 0 16px rgba(52, 152, 219, 0.3);
   }
+}
+
+/* Active state for navigation buttons */
+.mobile-nav-btn.active {
+  background: linear-gradient(135deg, rgba(52, 152, 219, 0.4) 0%, rgba(41, 128, 185, 0.3) 100%);
+  border-color: rgba(52, 152, 219, 0.6);
+  box-shadow: 
+    0 0 18px rgba(52, 152, 219, 0.3),
+    inset 0 0 10px rgba(52, 152, 219, 0.2);
 }
 
 /* Location Search Modal - Shown when GPS fails */

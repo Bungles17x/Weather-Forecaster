@@ -3,6 +3,8 @@
   min-height: 100vh;
   background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #1e3c72 100%);
   background-attachment: fixed;
+  /* Prevent horizontal scrolling on mobile */
+  overflow-x: hidden;
 }
 
 .weather-content {
@@ -10,14 +12,50 @@
   min-height: calc(100vh - 40px);
   padding: 2rem;
   padding-bottom: 100px; /* Add space for mobile bottom nav */
+  /* Prevent horizontal scrolling */
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
-/* Mobile adjustments */
+/* Enhanced Mobile Layout */
 @media (max-width: 1024px) {
   .weather-content {
     padding: 1rem;
     padding-bottom: 100px;
     min-height: 100vh; /* Full height since no top nav */
+  }
+  
+  /* Ensure content doesn't overflow */
+  .weather-content > * {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+}
+
+/* Small Mobile Devices */
+@media (max-width: 480px) {
+  .weather-content {
+    padding: 0.75rem;
+    padding-bottom: 90px;
+  }
+  
+  /* Better text sizing for small screens */
+  .weather-content {
+    font-size: 14px;
+  }
+  
+  /* Prevent zoom on input focus */
+  input, select, textarea {
+    font-size: 16px;
+  }
+}
+
+/* Ultra Small Mobile */
+@media (max-width: 360px) {
+  .weather-content {
+    padding: 0.5rem;
+    padding-bottom: 85px;
+    font-size: 13px;
   }
 }
 
@@ -29,7 +67,26 @@
   margin: 1.5rem 0;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
+  /* Mobile responsive */
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* Mobile SPC Outlook */
+@media (max-width: 1024px) {
+  .spc-outlook {
+    padding: 1rem;
+    margin: 1rem 0;
+    border-radius: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .spc-outlook {
+    padding: 0.75rem;
+    margin: 0.75rem 0;
+    border-radius: 6px;
+  }
 }
 
 .spc-header {
@@ -39,6 +96,7 @@
   margin-bottom: 1.5rem;
   padding-bottom: 1rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
 }
 
 .spc-header h2 {

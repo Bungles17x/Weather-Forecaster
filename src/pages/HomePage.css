@@ -1,8 +1,10 @@
-/* HomePage Styles */
+/* HomePage Styles - Enhanced Mobile Experience */
 .home-page {
   min-height: 100vh;
   background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #1e3c72 100%);
   background-attachment: fixed;
+  /* Prevent horizontal scrolling */
+  overflow-x: hidden;
 }
 
 .hero-section {
@@ -12,10 +14,15 @@
   justify-content: center;
   text-align: center;
   padding: 2rem;
+  /* Mobile responsive */
+  padding-bottom: 120px; /* Account for bottom nav */
 }
 
 .hero-content {
   max-width: 800px;
+  /* Prevent overflow */
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .hero-title {
@@ -24,12 +31,17 @@
   color: white;
   margin-bottom: 1rem;
   text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  /* Mobile responsive */
+  font-size: clamp(2rem, 8vw, 4rem);
+  line-height: 1.1;
 }
 
 .hero-subtitle {
   font-size: 1.5rem;
   color: rgba(255, 255, 255, 0.9);
   margin-bottom: 2rem;
+  /* Mobile responsive */
+  font-size: clamp(1rem, 4vw, 1.5rem);
 }
 
 .hero-buttons {
@@ -37,6 +49,9 @@
   gap: 1rem;
   justify-content: center;
   flex-wrap: wrap;
+  /* Mobile responsive */
+  flex-direction: row;
+  gap: 0.75rem;
 }
 
 .hero-btn {
@@ -47,6 +62,14 @@
   font-size: 1.1rem;
   transition: all 0.3s ease;
   display: inline-block;
+  /* Better touch targets */
+  min-height: 48px;
+  min-width: 120px;
+  /* Prevent tap highlight */
+  -webkit-tap-highlight-color: transparent;
+  /* Mobile responsive */
+  padding: 0.875rem 1.5rem;
+  font-size: clamp(0.9rem, 3vw, 1.1rem);
 }
 
 .hero-btn.primary {
@@ -55,7 +78,8 @@
   box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
 }
 
-.hero-btn.primary:hover {
+.hero-btn.primary:hover,
+.hero-btn.primary:active {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
 }
@@ -67,7 +91,8 @@
   backdrop-filter: blur(10px);
 }
 
-.hero-btn.secondary:hover {
+.hero-btn.secondary:hover,
+.hero-btn.secondary:active {
   background: rgba(255, 255, 255, 0.2);
   transform: translateY(-2px);
 }
@@ -76,6 +101,9 @@
   padding: 4rem 2rem;
   background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(10px);
+  /* Mobile responsive */
+  padding: 3rem 1rem;
+  padding-bottom: 120px; /* Account for bottom nav */
 }
 
 .section-title {
@@ -84,6 +112,9 @@
   color: white;
   margin-bottom: 3rem;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  /* Mobile responsive */
+  font-size: clamp(1.5rem, 6vw, 2.5rem);
+  margin-bottom: 2rem;
 }
 
 .features-grid {
@@ -92,6 +123,10 @@
   gap: 2rem;
   max-width: 1200px;
   margin: 0 auto;
+  /* Mobile responsive */
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  padding: 0 1rem;
 }
 
 .feature-card {
@@ -102,9 +137,15 @@
   padding: 2rem;
   text-align: center;
   transition: all 0.3s ease;
+  /* Mobile responsive */
+  padding: 1.5rem;
+  border-radius: 12px;
+  /* Better touch feedback */
+  -webkit-tap-highlight-color: transparent;
 }
 
-.feature-card:hover {
+.feature-card:hover,
+.feature-card:active {
   transform: translateY(-5px);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
   background: rgba(255, 255, 255, 0.15);
@@ -113,29 +154,41 @@
 .feature-icon {
   font-size: 3rem;
   margin-bottom: 1rem;
+  /* Mobile responsive */
+  font-size: clamp(2rem, 6vw, 3rem);
 }
 
 .feature-card h3 {
   color: white;
   font-size: 1.5rem;
   margin-bottom: 1rem;
+  /* Mobile responsive */
+  font-size: clamp(1.1rem, 4vw, 1.5rem);
 }
 
 .feature-card p {
   color: rgba(255, 255, 255, 0.8);
   line-height: 1.6;
+  /* Mobile responsive */
+  font-size: clamp(0.9rem, 3vw, 1rem);
 }
 
 .cta-section {
   padding: 4rem 2rem;
   text-align: center;
   background: rgba(255, 255, 255, 0.05);
+  /* Mobile responsive */
+  padding: 3rem 1rem;
+  padding-bottom: 120px; /* Account for bottom nav */
 }
 
 .cta-section h2 {
   color: white;
   font-size: 2rem;
   margin-bottom: 2rem;
+  /* Mobile responsive */
+  font-size: clamp(1.3rem, 5vw, 2rem);
+  margin-bottom: 1.5rem;
 }
 
 .cta-btn {
@@ -149,42 +202,140 @@
   font-size: 1.1rem;
   transition: all 0.3s ease;
   box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+  /* Better touch targets */
+  min-height: 48px;
+  /* Prevent tap highlight */
+  -webkit-tap-highlight-color: transparent;
+  /* Mobile responsive */
+  padding: 0.875rem 2rem;
+  font-size: clamp(0.9rem, 3vw, 1.1rem);
 }
 
-.cta-btn:hover {
+.cta-btn:hover,
+.cta-btn:active {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
 }
 
-/* Mobile Responsive */
-@media (max-width: 768px) {
-  .hero-title {
-    font-size: 3rem;
+/* Enhanced Mobile Responsive */
+@media (max-width: 1024px) {
+  .hero-section {
+    padding: 1.5rem;
+    padding-bottom: 120px;
   }
   
-  .hero-subtitle {
-    font-size: 1.2rem;
+  .hero-buttons {
+    gap: 0.75rem;
+  }
+  
+  .features-section {
+    padding: 2.5rem 1rem;
+    padding-bottom: 120px;
+  }
+  
+  .cta-section {
+    padding: 2.5rem 1rem;
+    padding-bottom: 120px;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-section {
+    padding: 1rem;
+    padding-bottom: 100px;
+    min-height: 50vh;
   }
   
   .hero-buttons {
     flex-direction: column;
     align-items: center;
+    gap: 1rem;
   }
   
   .hero-btn {
     width: 200px;
-  }
-  
-  .section-title {
-    font-size: 2rem;
+    max-width: 90%;
   }
   
   .features-grid {
     grid-template-columns: 1fr;
-    gap: 1.5rem;
+    gap: 1.25rem;
+    padding: 0 0.5rem;
   }
   
   .feature-card {
-    padding: 1.5rem;
+    padding: 1.25rem;
+  }
+  
+  .features-section {
+    padding: 2rem 0.75rem;
+    padding-bottom: 100px;
+  }
+  
+  .cta-section {
+    padding: 2rem 0.75rem;
+    padding-bottom: 100px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-section {
+    padding: 0.75rem;
+    padding-bottom: 90px;
+    min-height: 45vh;
+  }
+  
+  .hero-buttons {
+    gap: 0.75rem;
+  }
+  
+  .hero-btn {
+    width: 180px;
+    padding: 0.75rem 1.25rem;
+  }
+  
+  .features-grid {
+    gap: 1rem;
+    padding: 0 0.25rem;
+  }
+  
+  .feature-card {
+    padding: 1rem;
+  }
+  
+  .features-section {
+    padding: 1.5rem 0.5rem;
+    padding-bottom: 90px;
+  }
+  
+  .cta-section {
+    padding: 1.5rem 0.5rem;
+    padding-bottom: 90px;
+  }
+  
+  .cta-btn {
+    width: 180px;
+    padding: 0.75rem 1.5rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .hero-section {
+    padding: 0.5rem;
+    padding-bottom: 85px;
+  }
+  
+  .hero-btn {
+    width: 160px;
+    padding: 0.625rem 1rem;
+  }
+  
+  .feature-card {
+    padding: 0.875rem;
+  }
+  
+  .cta-btn {
+    width: 160px;
+    padding: 0.625rem 1.25rem;
   }
 }
