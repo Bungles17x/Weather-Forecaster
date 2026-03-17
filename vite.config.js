@@ -11,6 +11,21 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    host: true
+    host: true,
+    fs: {
+      // Prevent serving service workers
+      strict: false
+    }
+  },
+  // Prevent service worker registration
+  worker: {
+    format: 'es',
+    rollupOptions: {
+      output: {
+        entryFileNames: `assets/[name].js`,
+        chunkFileNames: `assets/[name].js`,
+        assetFileNames: `assets/[name].[ext]`
+      }
+    }
   }
 })

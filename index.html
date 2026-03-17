@@ -9,18 +9,47 @@
     <!-- Prevent service worker registration -->
     <meta name="serviceworker" content="off" />
     <script>
+      // Aggressive service worker cleanup
+      (function() {
+        // Clear any existing service workers
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(function(registrations) {
+            console.log('Found', registrations.length, 'service workers to unregister');
+            for(let registration of registrations) {
+              registration.unregister().then(function(success) {
+                console.log('Service worker unregistered:', success);
+              });
+            }
+          });
+        }
+        
+        // Clear all caches
+        if ('caches' in window) {
+          caches.keys().then(function(cacheNames) {
+            console.log('Found', cacheNames.length, 'caches to clear');
+            return Promise.all(
+              cacheNames.map(function(cacheName) {
+                return caches.delete(cacheName);
+              })
+            );
+          }).then(function() {
+            console.log('All caches cleared');
+          });
+        }
+        
+        // Prevent service worker registration
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.register = function() {
+            console.log('Service worker registration blocked');
+            return Promise.reject(new Error('Service worker registration is disabled'));
+          };
+        }
+      })();
+      
       // Redirect to GitHub Pages docs folder (only if not already in docs)
       if (window.location.hostname === 'bungles17x.github.io' && 
           !window.location.pathname.includes('/docs')) {
         window.location.replace('/Weather-Forecaster/docs/')
-      }
-      // Clear any existing service workers
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(function(registrations) {
-          for(let registration of registrations) {
-            registration.unregister();
-          }
-        });
       }
     </script>
   </head>
