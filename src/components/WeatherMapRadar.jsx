@@ -522,41 +522,93 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
     // Add alert statistics panel
     addAlertStatisticsPanel(map)
     
-    // Fetch active weather alerts from NWS with correct endpoint
-    fetch('https://api.weather.gov/alerts/active')
-      .then(response => {
+    // Fetch active weather alerts from NWS with enhanced error handling
+    const fetchAlerts = async () => {
+      try {
+        console.log('🚨 Fetching weather alerts from NWS...')
+        const response = await fetch('https://api.weather.gov/alerts/active')
+        
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`)
         }
-        return response.json()
-      })
-      .then(data => {
+        
+        const data = await response.json()
         console.log('🚨 Alerts data received:', data)
         
         if (data.features && data.features.length > 0) {
           console.log(`🚨 Processing ${data.features.length} alerts`)
-          
-          // Initialize statistics
-          const alertStats = {
-            extreme: 0,
-            severe: 0,
-            moderate: 0,
-            minor: 0,
-            total: data.features.length
-          }
-          
-          data.features.forEach((alert, index) => {
-            console.log(`🚨 Processing alert ${index + 1}:`, alert.properties.event)
-            
-            if (alert.geometry && alert.geometry.coordinates) {
-              const severity = alert.properties.severity ? alert.properties.severity.toLowerCase() : 'unknown'
-              const event = alert.properties.event || 'Weather Alert'
-              const urgency = alert.properties.urgency || 'Unknown'
-              
-              // Track statistics
-              if (alertStats[severity] !== undefined) {
-                alertStats[severity]++
-              }
+          processAlerts(data.features, alertsLayerGroup, map, setMapCenter, setZoom)
+        } else {
+          console.log('🚨 No active alerts found')
+          showNoAlertsMessage(map)
+        }
+      } catch (error) {
+        console.error('🚨 Error fetching alerts:', error)
+        showFetchErrorMessage(map, error)
+      }
+    }
+    
+    fetchAlerts()
+    
+    // Auto-refresh alerts every 5 minutes
+    const refreshInterval = setInterval(fetchAlerts, 5 * 60 * 1000)
+    
+    // Cleanup on component unmount
+    return () => clearInterval(refreshInterval)
+  }
+  
+  // Enhanced alert statistics panel
+  const addAlertStatisticsPanel = (map) => {
+    const statsPanel = window.L.control({ position: 'topright' })
+    
+    statsPanel.onAdd = function(map) {
+      const div = window.L.DomUtil.create('div', 'alert-stats-panel')
+      div.innerHTML = `
+        <div class="alert-stats-header">
+          <h4>🚨 Weather Alerts</h4>
+          <button class="refresh-btn" onclick="location.reload()">🔄</button>
+        </div>
+        <div class="alert-stats-content">
+          <div class="loading">Loading alerts...</div>
+        </div>
+      `
+      return div
+    }
+    
+    statsPanel.addTo(map)
+    return statsPanel
+  }
+  
+  // Process alerts with enhanced categorization
+  const processAlerts = (features, alertsLayerGroup, map, setMapCenter, setZoom) => {
+    const alertStats = {
+      extreme: 0,
+      severe: 0,
+      moderate: 0,
+      minor: 0,
+      total: features.length
+    }
+    
+    const alertTypes = {}
+    
+    features.forEach((alert, index) => {
+      try {
+        const event = alert.properties.event || 'Unknown Alert'
+        const severity = alert.properties.severity ? alert.properties.severity.toLowerCase() : 'unknown'
+        const urgency = alert.properties.urgency || 'Unknown'
+        const area = alert.properties.areaDesc || 'Unknown Area'
+        
+        // Track alert types
+        alertTypes[event] = (alertTypes[event] || 0) + 1
+        
+        // Count by severity
+        if (alertStats[severity] !== undefined) {
+          alertStats[severity]++
+        }
+        
+        console.log(`🚨 Processing alert ${index + 1}: ${event}`)
+        
+        if (alert.geometry && alert.geometry.coordinates) {
               
               // Determine color based on severity
               let polygonColor, polygonOpacity
@@ -907,56 +959,139 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
               }
             }
           })
-          
-          // Update statistics panel
-          updateAlertStatsPanel(alertStats)
-          
-          console.log(`🚨 Successfully added ${data.features.length} alerts to map`)
-        } else {
-          console.log('🚨 No active alerts found')
-        }
-      })
-      .catch(error => {
-        console.error('🚨 Error fetching active alerts:', error)
-        
-        // Add a test alert to verify the system works
-        console.log('🚨 Adding weather advisory test alert for demonstration')
-        const testAlert = {
-          properties: {
-            event: 'Winter Weather Advisory',
-            severity: 'moderate',
-            urgency: 'Expected',
-            headline: 'Winter Weather Advisory in Effect Until Tomorrow Morning',
-            description: 'Snow accumulations of 3 to 6 inches expected. Travel could be difficult during the evening commute. Hazardous conditions could impact travel Tuesday morning and evening commutes.',
-            areaDesc: 'Mount Union; Huntingdon County',
-            effective: new Date().toISOString(),
-            expires: new Date(Date.now() + 7200000).toISOString(), // 2 hours from now
-            web: 'https://www.weather.gov',
-            instruction: 'Slow down and use caution while traveling. The latest road conditions for the state you are calling from can be obtained by calling 5 1 1. Keep an extra flashlight, food, and water in your vehicle in case of an emergency.',
-            certainty: 'Likely',
-            sender: 'National Weather Service Test Office',
-            senderName: 'NWS Test Region'
-          },
-          geometry: {
-            type: 'Polygon',
-            coordinates: [[
-              [-77.8867, 40.3838],
-              [-77.8867, 40.3938],
-              [-77.8767, 40.3938],
-              [-77.8767, 40.3838],
-              [-77.8867, 40.3838]
-            ]]
-          }
-        }
-        
-        // Process test alert
-        const severity = testAlert.properties.severity
-        const event = testAlert.properties.event
-        const polygonColor = '#f59e0b' // Yellow for severe
-        const polygonOpacity = 0.3
-        
-        const coords = testAlert.geometry.coordinates[0]
-        const latLngs = coords.map(coord => [coord[1], coord[0]])
+      
+      // Update statistics panel
+      updateAlertStatsPanel(alertStats, alertTypes)
+      
+      console.log(`🚨 Successfully added ${features.length} alerts to map`)
+    } catch (error) {
+      console.error('🚨 Error processing alerts:', error)
+    }
+  }
+  
+  // Update alert statistics panel
+  const updateAlertStatsPanel = (stats, types) => {
+    const panel = document.querySelector('.alert-stats-content')
+    if (!panel) return
+    
+    let statsHtml = `
+      <div class="severity-counts">
+        <div class="stat-item extreme">
+          <span class="stat-number">${stats.extreme}</span>
+          <span class="stat-label">Extreme</span>
+        </div>
+        <div class="stat-item severe">
+          <span class="stat-number">${stats.severe}</span>
+          <span class="stat-label">Severe</span>
+        </div>
+        <div class="stat-item moderate">
+          <span class="stat-number">${stats.moderate}</span>
+          <span class="stat-label">Moderate</span>
+        </div>
+        <div class="stat-item minor">
+          <span class="stat-number">${stats.minor}</span>
+          <span class="stat-label">Minor</span>
+        </div>
+      </div>
+      
+      <div class="total-alerts">
+        <strong>Total: ${stats.total}</strong> active alerts
+      </div>
+      
+      <div class="alert-types">
+        <h5>Alert Types:</h5>
+    `
+    
+    // Add top 5 alert types
+    const sortedTypes = Object.entries(types).sort((a, b) => b[1] - a[1]).slice(0, 5)
+    sortedTypes.forEach(([type, count]) => {
+      statsHtml += `<div class="type-item">${type}: ${count}</div>`
+    })
+    
+    statsHtml += `</div>`
+    panel.innerHTML = statsHtml
+  }
+  
+  // Show no alerts message
+  const showNoAlertsMessage = (map) => {
+    const noAlertsDiv = window.L.DomUtil.create('div', 'no-alerts-message')
+    noAlertsDiv.innerHTML = `
+      <div class="no-alerts-content">
+        <h3>✅ No Active Weather Alerts</h3>
+        <p>There are currently no active weather alerts in your area.</p>
+        <button onclick="location.reload()">� Refresh</button>
+      </div>
+    `
+    
+    window.L.popup({
+      maxWidth: 300,
+      className: 'no-alerts-popup'
+    })
+    .setLatLng(map.getCenter())
+    .setContent(noAlertsDiv)
+    .openOn(map)
+  }
+  
+  // Show fetch error message
+  const showFetchErrorMessage = (map, error) => {
+    const errorDiv = window.L.DomUtil.create('div', 'error-message')
+    errorDiv.innerHTML = `
+      <div class="error-content">
+        <h3>⚠️ Alert Loading Error</h3>
+        <p>Unable to load weather alerts: ${error.message}</p>
+        <button onclick="location.reload()">🔄 Try Again</button>
+      </div>
+    `
+    
+    window.L.popup({
+      maxWidth: 300,
+      className: 'error-popup'
+    })
+    .setLatLng(map.getCenter())
+    .setContent(errorDiv)
+    .openOn(map)
+  }
+
+  const addTestAlerts = (map) => {
+    // Create test alert polygons for demonstration
+    console.log('🚨 Adding test weather alert for demonstration')
+    
+    const testAlert = {
+      properties: {
+        event: 'Winter Weather Advisory',
+        severity: 'moderate',
+        urgency: 'Expected',
+        headline: 'Winter Weather Advisory in Effect Until Tomorrow Morning',
+        description: 'Snow accumulations of 3 to 6 inches expected. Travel could be difficult during the evening commute.',
+        areaDesc: 'Mount Union; Huntingdon County',
+        effective: new Date().toISOString(),
+        expires: new Date(Date.now() + 7200000).toISOString(),
+        web: 'https://www.weather.gov',
+        instruction: 'Slow down and use caution while traveling.',
+        certainty: 'Likely',
+        sender: 'National Weather Service Test Office',
+        senderName: 'NWS Test Region'
+      },
+      geometry: {
+        type: 'Polygon',
+        coordinates: [[
+          [-77.8867, 40.3838],
+          [-77.8867, 40.3938],
+          [-77.8767, 40.3938],
+          [-77.8767, 40.3838],
+          [-77.8867, 40.3838]
+        ]]
+      }
+    }
+    
+    // Process test alert
+    const severity = testAlert.properties.severity
+    const event = testAlert.properties.event
+    const polygonColor = '#f59e0b' // Yellow for moderate
+    const polygonOpacity = 0.3
+    
+    const coords = testAlert.geometry.coordinates[0]
+    const latLngs = coords.map(coord => [coord[1], coord[0]])
         
         const polygon = window.L.polygon(latLngs, {
           color: polygonColor,
@@ -1669,61 +1804,6 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
 
   const handleWeatherLayerToggle = () => {
     setWeatherLayer(!weatherLayer)
-  }
-
-  // Enhanced alert statistics panel
-  const addAlertStatisticsPanel = (map) => {
-    const statsPanel = window.L.control({ position: 'topright' })
-    
-    statsPanel.onAdd = function(map) {
-      const div = window.L.DomUtil.create('div', 'alert-stats-panel')
-      div.innerHTML = `
-        <div class="alert-stats-header">
-          <h4>🚨 Weather Alerts</h4>
-          <button class="refresh-btn" onclick="location.reload()">🔄</button>
-        </div>
-        <div class="alert-stats-content">
-          <div class="loading">Loading alerts...</div>
-        </div>
-      `
-      return div
-    }
-    
-    statsPanel.addTo(map)
-    return statsPanel
-  }
-  
-  // Update alert statistics panel
-  const updateAlertStatsPanel = (stats) => {
-    const panel = document.querySelector('.alert-stats-content')
-    if (!panel) return
-    
-    const statsHtml = `
-      <div class="severity-counts">
-        <div class="stat-item extreme">
-          <span class="stat-number">${stats.extreme}</span>
-          <span class="stat-label">Extreme</span>
-        </div>
-        <div class="stat-item severe">
-          <span class="stat-number">${stats.severe}</span>
-          <span class="stat-label">Severe</span>
-        </div>
-        <div class="stat-item moderate">
-          <span class="stat-number">${stats.moderate}</span>
-          <span class="stat-label">Moderate</span>
-        </div>
-        <div class="stat-item minor">
-          <span class="stat-number">${stats.minor}</span>
-          <span class="stat-label">Minor</span>
-        </div>
-      </div>
-      
-      <div class="total-alerts">
-        <strong>Total: ${stats.total}</strong> active alerts
-      </div>
-    `
-    
-    panel.innerHTML = statsHtml
   }
 
   if (loading) {
