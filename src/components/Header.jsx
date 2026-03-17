@@ -12,6 +12,8 @@ const Header = ({ onLocationChange }) => {
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [locating, setLocating] = useState(false)
   const [currentCoordinates, setCurrentCoordinates] = useState(null)
+  const [showLocationSearch, setShowLocationSearch] = useState(false)
+  const [locationSearchInput, setLocationSearchInput] = useState('')
   const location = useLocation()
 
   // Get current page for active navigation
@@ -130,26 +132,11 @@ const Header = ({ onLocationChange }) => {
       },
       (error) => {
         console.error('❌ Navbar geolocation error:', error)
-        let errorMessage = 'Unable to get your location'
-        
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            errorMessage = 'Location permission was denied. Please enable location access in your browser settings and try again.'
-            break
-          case error.POSITION_UNAVAILABLE:
-            errorMessage = 'Location information is unavailable.'
-            break
-          case error.TIMEOUT:
-            errorMessage = 'Location request timed out. Please try again.'
-            break
-          case error.UNKNOWN_ERROR:
-            errorMessage = 'An unknown error occurred while getting your location.'
-            break
-        }
-        
-        console.error(errorMessage)
-        alert(errorMessage)
         setLocating(false)
+        
+        // Show search city form when location fails
+        setShowLocationSearch(true)
+        setLocationSearchInput('')
       },
       {
         enableHighAccuracy: true,
@@ -157,6 +144,30 @@ const Header = ({ onLocationChange }) => {
         maximumAge: 0 // Force fresh location
       }
     )
+  }
+
+  const handleLocationSearchSubmit = (e) => {
+    e.preventDefault()
+    if (locationSearchInput.trim()) {
+      // Save to location history
+      const history = JSON.parse(localStorage.getItem('weatherLocationHistory') || '[]')
+      const newHistory = [locationSearchInput, ...history.filter(loc => loc !== locationSearchInput)].slice(0, 10)
+      localStorage.setItem('weatherLocationHistory', JSON.stringify(newHistory))
+      
+      onLocationChange && onLocationChange(locationSearchInput)
+      setShowLocationSearch(false)
+      setLocationSearchInput('')
+    }
+  }
+
+  const handleLocationSearchInputChange = (e) => {
+    const value = e.target.value
+    setLocationSearchInput(value)
+  }
+
+  const closeLocationSearch = () => {
+    setShowLocationSearch(false)
+    setLocationSearchInput('')
   }
 
   const handleLocationSubmit = (e) => {
@@ -411,6 +422,49 @@ const Header = ({ onLocationChange }) => {
           </span>
         </button>
       </div>
+
+      {/* Location Search Modal - Shown when GPS fails */}
+      {showLocationSearch && (
+        <div className="location-search-overlay" onClick={closeLocationSearch}>
+          <div className="location-search-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="location-search-header">
+              <h3>📍 Enter Your Location</h3>
+              <button className="close-search-btn" onClick={closeLocationSearch}>✕</button>
+            </div>
+            <div className="location-search-content">
+              <p className="location-search-message">
+                We couldn't get your location automatically. Please enter your city name manually.
+              </p>
+              <form className="location-search-form" onSubmit={handleLocationSearchSubmit}>
+                <div className="location-search-input-wrapper">
+                  <input
+                    type="text"
+                    className="location-search-input"
+                    placeholder="Enter city name (e.g., New York, NY)"
+                    value={locationSearchInput}
+                    onChange={handleLocationSearchInputChange}
+                    autoFocus
+                  />
+                  <button type="submit" className="location-search-submit-btn">
+                    🔍
+                  </button>
+                </div>
+              </form>
+              <div className="location-search-suggestions">
+                <p className="suggestions-title">Popular Cities:</p>
+                <div className="quick-city-buttons">
+                  <button onClick={() => {setLocationSearchInput('New York, NY');}} className="quick-city-btn">New York</button>
+                  <button onClick={() => {setLocationSearchInput('Los Angeles, CA');}} className="quick-city-btn">Los Angeles</button>
+                  <button onClick={() => {setLocationSearchInput('Chicago, IL');}} className="quick-city-btn">Chicago</button>
+                  <button onClick={() => {setLocationSearchInput('Houston, TX');}} className="quick-city-btn">Houston</button>
+                  <button onClick={() => {setLocationSearchInput('Phoenix, AZ');}} className="quick-city-btn">Phoenix</button>
+                  <button onClick={() => {setLocationSearchInput('Philadelphia, PA');}} className="quick-city-btn">Philadelphia</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Mobile Menu Overlay */}
       {isMenuOpen && (
