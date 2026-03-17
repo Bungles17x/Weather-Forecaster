@@ -81,9 +81,11 @@ export const AlertProvider = ({ children }) => {
         } else {
           // Focus on the window and navigate to alerts page
           window.focus()
-          // Navigate to alerts page
-          if (window.location.pathname !== '/alerts') {
-            window.location.href = '/alerts'
+          // Navigate to alerts page (HashRouter compatible)
+          if (window.location.pathname !== '/' && !window.location.hash.includes('/alerts')) {
+            window.location.href = '/#/alerts'
+          } else if (!window.location.hash.includes('/alerts')) {
+            window.location.href = '/#/alerts'
           }
         }
       }
@@ -190,10 +192,10 @@ export const AlertProvider = ({ children }) => {
             icon: getAlertIcon(alert.severity),
             tag: `alert-${alert.id}`,
             onClick: () => {
-              // Navigate to alerts page when notification is clicked
+              // Navigate to alerts page when notification is clicked (HashRouter compatible)
               console.log('🔔 Alert notification clicked - navigating to alerts page')
-              if (window.location.pathname !== '/alerts') {
-                window.location.href = '/alerts'
+              if (!window.location.hash.includes('/alerts')) {
+                window.location.href = '/#/alerts'
               }
             }
           })
@@ -258,10 +260,10 @@ export const AlertProvider = ({ children }) => {
         urgent: false,
         icon: '🌤️',
         onClick: () => {
-          // Navigate to alerts page when test notification is clicked
+          // Navigate to alerts page when test notification is clicked (HashRouter compatible)
           console.log('🔔 Test notification clicked - navigating to alerts page')
-          if (window.location.pathname !== '/alerts') {
-            window.location.href = '/alerts'
+          if (!window.location.hash.includes('/alerts')) {
+            window.location.href = '/#/alerts'
           }
         }
       })
@@ -273,10 +275,10 @@ export const AlertProvider = ({ children }) => {
             urgent: false,
             icon: '🌤️',
             onClick: () => {
-              // Navigate to alerts page when test notification is clicked
+              // Navigate to alerts page when test notification is clicked (HashRouter compatible)
               console.log('🔔 Test notification clicked - navigating to alerts page')
-              if (window.location.pathname !== '/alerts') {
-                window.location.href = '/alerts'
+              if (!window.location.hash.includes('/alerts')) {
+                window.location.href = '/#/alerts'
               }
             }
           })
