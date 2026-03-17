@@ -1,6 +1,7 @@
 import React from 'react'
 import { HashRouter, Routes, Route } from 'react-router-dom'
 import { LocationProvider } from './contexts/LocationContext'
+import { AlertProvider } from './contexts/AlertContext'
 import './App.css'
 
 console.log('🔍 App.jsx - React imported:', React)
@@ -84,13 +85,15 @@ function App() {
   return (
     <ErrorBoundary>
       <LocationProvider>
-        <HashRouter>
-          <div className="App">
-            <Routes>
-              <Route path="/" element={<TestComponent />} />
-            </Routes>
-          </div>
-        </HashRouter>
+        <AlertProvider>
+          <HashRouter>
+            <div className="App">
+              <Routes>
+                <Route path="/" element={<TestComponent />} />
+              </Routes>
+            </div>
+          </HashRouter>
+        </AlertProvider>
       </LocationProvider>
     </ErrorBoundary>
   )
