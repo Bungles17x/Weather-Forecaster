@@ -625,10 +625,21 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
       //   retry: 2
       // })
 
-      // RadarScope fallback (alternative source)
-      const radarScopeLayer = window.L.tileLayer('https://api.radarscope.io/radar/{z}/{x}/{y}.png', {
-        attribution: '© RadarScope / Aviation Weather',
-        opacity: 0.7,
+      // RadarScope fallback - REMOVED DUE TO API ISSUES
+      // const radarScopeLayer = window.L.tileLayer('https://api.radarscope.io/radar/{z}/{x}/{y}.png', {
+      //   attribution: '© RadarScope / Aviation Weather',
+      //   opacity: 0.7,
+      //   maxZoom: 12,
+      //   minZoom: 2,
+      //   errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+      //   timeout: 5000,
+      //   retry: 2
+      // })
+
+      // Alternative radar layer using OpenWeatherMap
+      const radarScopeLayer = window.L.tileLayer('https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136', {
+        attribution: '© OpenWeatherMap',
+        opacity: 0.6,
         maxZoom: 12,
         minZoom: 2,
         errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
@@ -636,8 +647,8 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         retry: 2
       })
 
-      // Backup NEXRAD from RainViewer (different layer)
-      const nexradTilesLayer = window.L.tileLayer('https://tile.rainviewer.com/v2/coverage/now/{z}/{x}/{y}/256/1/0_1.png', {
+      // Backup NEXRAD from RainViewer - SIMPLIFIED URL
+      const nexradTilesLayer = window.L.tileLayer('https://tile.rainviewer.com/v2/radar/{z}/{x}/{y}/256/0_0.png', {
         attribution: '© RainViewer / NOAA NWS',
         opacity: 0.7,
         maxZoom: 12,
@@ -693,8 +704,8 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         }
       })
 
-      // Additional radar layer from RainViewer (future radar)
-      const ventuskyLayer = window.L.tileLayer('https://tile.rainviewer.com/v2/coverage/now/{z}/{x}/{y}/256/2/0_1.png', {
+      // Additional radar layer from RainViewer - SIMPLIFIED URL
+      const ventuskyLayer = window.L.tileLayer('https://tile.rainviewer.com/v2/radar/{z}/{x}/{y}/256/1_0.png', {
         attribution: '© RainViewer / NOAA NWS',
         opacity: 0.6,
         maxZoom: 12,
@@ -708,17 +719,26 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         retry: 2
       })
 
-      // Working Wind Layer using Windy API
-      const windLayer = window.L.tileLayer('https://tiles.windy.com/tiles/v2.0/overlay/wind/{z}/{x}/{y}.png?key=6LkELHlYhWkCGpOq9pGJd1f5pG0lGJGd', {
-        attribution: '© Windy.com',
+      // Wind Layer using Windy API - REMOVED DUE TO API KEY ISSUES
+      // const windLayer = window.L.tileLayer('https://tiles.windy.com/tiles/v2.0/overlay/wind/{z}/{x}/{y}.png?key=6LkELHlYhWkCGpOq9pGJd1f5pG0lGJGd', {
+      //   attribution: '© Windy.com',
+      //   opacity: 0.7,
+      //   maxZoom: 12,
+      //   minZoom: 4,
+      //   errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
+      // })
+
+      // Alternative wind layer using OpenWeatherMap
+      const windLayer = window.L.tileLayer('https://tile.openweathermap.org/map/wind_new/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136', {
+        attribution: '© OpenWeatherMap',
         opacity: 0.7,
         maxZoom: 12,
         minZoom: 4,
         errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
       })
 
-    // Working Precipitation Layer using OpenWeatherMap
-    const precipLayer = window.L.tileLayer('https://tile.openweathermap.org/precipitation_new/{z}/{x}/{y}.png', {
+    // Working Precipitation Layer using OpenWeatherMap - FIXED URL
+    const precipLayer = window.L.tileLayer('https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136', {
       attribution: '© OpenWeatherMap',
       opacity: 0.8,
       maxZoom: 12,
