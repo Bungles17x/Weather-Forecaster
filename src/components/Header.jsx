@@ -51,8 +51,11 @@ const Header = ({ onLocationChange }) => {
         console.log('🔐 Current geolocation permission:', result.state)
         
         if (result.state === 'denied') {
-          console.log('❌ Location permission previously denied')
-          alert('Location access was previously denied. Please enable location permissions in your browser settings and refresh the page.')
+          console.log('❌ Location permission previously denied - showing search modal')
+          setLocating(false)
+          // Show search city form when permission was denied
+          setShowLocationSearch(true)
+          setLocationSearchInput('')
           return
         }
         
