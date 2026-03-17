@@ -379,6 +379,26 @@ const Header = ({ onLocationChange }) => {
 
       {/* Mobile Bottom Navigation */}
       <div className="mobile-bottom-nav">
+        <Link to="/" className="mobile-nav-btn" title="Current weather">
+          <span className="mobile-nav-icon">🌤️</span>
+          <span className="mobile-nav-label">Weather</span>
+        </Link>
+        
+        <Link to="/forecast" className="mobile-nav-btn" title="View forecast">
+          <span className="mobile-nav-icon">📅</span>
+          <span className="mobile-nav-label">Forecast</span>
+        </Link>
+        
+        <Link to="/map" className="mobile-nav-btn" title="View weather map">
+          <span className="mobile-nav-icon">🗺️</span>
+          <span className="mobile-nav-label">Map</span>
+        </Link>
+        
+        <Link to="/alerts" className="mobile-nav-btn" title="View weather alerts">
+          <span className="mobile-nav-icon">🚨</span>
+          <span className="mobile-nav-label">Alerts</span>
+        </Link>
+        
         <button
           onClick={handleLocateMe}
           className={`mobile-nav-btn ${locating ? 'locating' : ''}`}
@@ -389,34 +409,6 @@ const Header = ({ onLocationChange }) => {
           <span className="mobile-nav-label">
             {locating ? 'Locating...' : 'Locate'}
           </span>
-        </button>
-        
-        <button
-          onClick={handleMenuToggle}
-          className={`mobile-nav-btn ${isMenuOpen ? 'open' : ''}`}
-          title="Toggle menu"
-        >
-          <span className="mobile-nav-icon">☰</span>
-          <span className="mobile-nav-label">Menu</span>
-        </button>
-        
-        <Link to="/map" className="mobile-nav-btn" title="View weather map">
-          <span className="mobile-nav-icon">🗺️</span>
-          <span className="mobile-nav-label">Map</span>
-        </Link>
-        
-        <Link to="/hourly" className="mobile-nav-btn" title="View hourly forecast">
-          <span className="mobile-nav-icon">⏰</span>
-          <span className="mobile-nav-label">Hourly</span>
-        </Link>
-        
-        <button
-          className="mobile-nav-btn"
-          onClick={() => window.location.reload()}
-          title="Refresh weather data"
-        >
-          <span className="mobile-nav-icon">🔄</span>
-          <span className="mobile-nav-label">Refresh</span>
         </button>
       </div>
 
