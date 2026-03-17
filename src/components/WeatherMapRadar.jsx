@@ -419,11 +419,14 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
     try {
       console.log('🛡️ Adding NEXRAD radar layers...')
       let radarLayersLoaded = 0
-      let radarLayersTotal = 3
+      let radarLayersFailed = 0
+      const totalRadarLayers = 3
       
-      // Function to check if all radar layers failed
-      const checkRadarFailure = () => {
-        if (radarLayersLoaded === 0 && radarLayersTotal === 0) {
+      // Function to check radar loading status
+      const checkRadarStatus = () => {
+        console.log(`🛡️ Radar status: ${radarLayersLoaded} loaded, ${radarLayersFailed} failed`)
+        
+        if (radarLayersLoaded === 0 && radarLayersFailed >= totalRadarLayers) {
           const errorMessage = '⚠️ NEXRAD radar layers failed to load. This may be due to network issues or service outages.'
           console.error('🛡️ All NEXRAD radar layers failed to load')
           setRadarError(errorMessage)
@@ -458,8 +461,8 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
       // Add error handling for this layer
       nexradLayer.on('tileerror', (error) => {
         console.error('🛡️ OpenWeatherMap radar tile error:', error)
-        radarLayersTotal--
-        checkRadarFailure()
+        radarLayersFailed++
+        checkRadarStatus()
       })
       
       nexradLayer.on('tileload', () => {
@@ -470,15 +473,44 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         }
       })
       
+      nexradLayer.on('load', () => {
+        console.log('✅ OpenWeatherMap radar layer fully loaded')
+        if (radarLayersLoaded === 0) {
+          radarLayersLoaded = 1
+          setRadarError(null)
+        }
+      })
+      
       nexradLayer.addTo(map)
 
       // Set a timeout to check if radar loads within 10 seconds
       setTimeout(() => {
         if (radarLayersLoaded === 0) {
           console.warn('🛡️ Radar layers did not load within timeout period')
-          checkRadarFailure()
+          console.log('🛡️ Current radar status for debugging:')
+          console.log('- Loaded:', radarLayersLoaded)
+          console.log('- Failed:', radarLayersFailed)
+          console.log('- Total expected:', totalRadarLayers)
+          
+          // Force error detection
+          radarLayersFailed = totalRadarLayers
+          checkRadarStatus()
+        } else {
+          console.log('✅ At least one radar layer loaded successfully')
         }
       }, 10000)
+      
+      // Also check after 3 seconds for early feedback
+      setTimeout(() => {
+        console.log('🛡️ 3-second radar status check:')
+        console.log('- Loaded:', radarLayersLoaded)
+        console.log('- Failed:', radarLayersFailed)
+        
+        // If all have failed quickly, show error immediately
+        if (radarLayersFailed >= totalRadarLayers && radarLayersLoaded === 0) {
+          checkRadarStatus()
+        }
+      }, 3000)
 
       // Alternative NEXRAD from Iowa State Mesonet (primary backup)
       const nexradTilesLayer = window.L.tileLayer('https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png', {
@@ -494,14 +526,22 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
       // Add error handling for this layer
       nexradTilesLayer.on('tileerror', (error) => {
         console.error('🛡️ Iowa State radar tile error:', error)
-        radarLayersTotal--
-        checkRadarFailure()
+        radarLayersFailed++
+        checkRadarStatus()
       })
       
       nexradTilesLayer.on('tileload', () => {
         if (radarLayersLoaded === 0) {
           radarLayersLoaded = 1
           console.log('✅ Iowa State radar loaded successfully')
+          setRadarError(null)
+        }
+      })
+      
+      nexradTilesLayer.on('load', () => {
+        console.log('✅ Iowa State radar layer fully loaded')
+        if (radarLayersLoaded === 0) {
+          radarLayersLoaded = 1
           setRadarError(null)
         }
       })
@@ -520,14 +560,22 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
       // Add error handling for this layer
       ventuskyLayer.on('tileerror', (error) => {
         console.error('🛡️ Ventusky radar tile error:', error)
-        radarLayersTotal--
-        checkRadarFailure()
+        radarLayersFailed++
+        checkRadarStatus()
       })
       
       ventuskyLayer.on('tileload', () => {
         if (radarLayersLoaded === 0) {
           radarLayersLoaded = 1
           console.log('✅ Ventusky radar loaded successfully')
+          setRadarError(null)
+        }
+      })
+      
+      ventuskyLayer.on('load', () => {
+        console.log('✅ Ventusky radar layer fully loaded')
+        if (radarLayersLoaded === 0) {
+          radarLayersLoaded = 1
           setRadarError(null)
         }
       })
