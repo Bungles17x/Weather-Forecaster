@@ -6,14 +6,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Weather Forecaster</title>
     <meta name="description" content="Professional weather app with forecasts and radar" />
+    <!-- Prevent service worker registration -->
+    <meta name="serviceworker" content="off" />
     <script>
       // Redirect to GitHub Pages docs folder (only if not already in docs)
       if (window.location.hostname === 'bungles17x.github.io' && 
           !window.location.pathname.includes('/docs')) {
         window.location.replace('/Weather-Forecaster/docs/')
       }
+      // Clear any existing service workers
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          for(let registration of registrations) {
+            registration.unregister();
+          }
+        });
+      }
     </script>
-    <script type="module" crossorigin src="./assets/index-BlDMzttY.js"></script>
+    <script type="module" crossorigin src="./assets/index-DWxp5Z8r.js"></script>
     <link rel="stylesheet" crossorigin href="./assets/index-DAVXARM8.css">
   </head>
   <body>
