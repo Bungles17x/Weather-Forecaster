@@ -593,6 +593,39 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         }
       }, 2000)  // Reduced from 3000
 
+      // Declare all radar layer variables first
+      const ventuskyRadar = window.L.tileLayer('https://tiles.ventusky.com/precipitation/{z}/{x}/{y}.png', {
+        attribution: '© Ventusky / NOAA NWS',
+        opacity: 0.7,
+        maxZoom: 12,
+        minZoom: 2,
+        errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+        timeout: 5000,
+        retry: 2
+      })
+
+      // Alternative radar from Weather.gov (more reliable)
+      const weatherGovRadar = window.L.tileLayer('https://radar.weather.gov/ridge/Conus/Base/NEXRAD/{z}/{x}/{y}.png', {
+        attribution: '© NOAA Weather.gov',
+        opacity: 0.8,
+        maxZoom: 10,
+        minZoom: 3,
+        errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+        timeout: 5000,
+        retry: 2
+      })
+
+      // RadarScope fallback (alternative source)
+      const radarScopeLayer = window.L.tileLayer('https://api.radarscope.io/radar/{z}/{x}/{y}.png', {
+        attribution: '© RadarScope / Aviation Weather',
+        opacity: 0.7,
+        maxZoom: 12,
+        minZoom: 2,
+        errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+        timeout: 5000,
+        retry: 2
+      })
+
       // Backup NEXRAD from RainViewer (different layer)
       const nexradTilesLayer = window.L.tileLayer('https://tile.rainviewer.com/v2/coverage/now/{z}/{x}/{y}/256/1/0_1.png', {
         attribution: '© RainViewer / NOAA NWS',
@@ -786,42 +819,10 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
           }
         }
       })
-      
-      const ventuskyRadar = window.L.tileLayer('https://tiles.ventusky.com/precipitation/{z}/{x}/{y}.png', {
-        attribution: '© Ventusky / NOAA NWS',
-        opacity: 0.7,
-        maxZoom: 12,
-        minZoom: 2,
-        errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
-        timeout: 5000,
-        retry: 2
-      })
 
-      // Alternative radar from Weather.gov (more reliable)
-      const weatherGovRadar = window.L.tileLayer('https://radar.weather.gov/ridge/Conus/Base/NEXRAD/{z}/{x}/{y}.png', {
-        attribution: '© NOAA Weather.gov',
-        opacity: 0.8,
-        maxZoom: 10,
-        minZoom: 3,
-        errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
-        timeout: 5000,
-        retry: 2
-      })
-
-      // RadarScope fallback (alternative source)
-      const radarScopeLayer = window.L.tileLayer('https://api.radarscope.io/radar/{z}/{x}/{y}.png', {
-        attribution: '© RadarScope / Aviation Weather',
-        opacity: 0.7,
-        maxZoom: 12,
-        minZoom: 2,
-        errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
-        timeout: 5000,
-        retry: 2
-      })
-
-      // NOAA GOES Satellite/Radar from RainViewer (satellite layer)
-      const noaaLayer = window.L.tileLayer('https://tile.rainviewer.com/v2/coverage/satellite/{z}/{x}/{y}/256/0_1.png', {
-        attribution: '© RainViewer / NOAA',
+      // Additional radar layer from RainViewer (future radar)
+      const ventuskyLayer2 = window.L.tileLayer('https://tile.rainviewer.com/v2/coverage/now/{z}/{x}/{y}/256/2/0_1.png', {
+        attribution: '© RainViewer / NOAA NWS',
         opacity: 0.6,
         maxZoom: 12,
         minZoom: 2,
@@ -829,44 +830,46 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         updateWhenIdle: false,
         updateWhenZooming: false,
         crossOrigin: true,
-        detectRetina: true
+        detectRetina: true,
+        timeout: 5000,
+        retry: 2
       })
       
-      // Add error handling for NOAA layer
-      noaaLayer.on('tileerror', (error) => {
+      // Add error handling for this layer
+      ventuskyLayer2.on('tileerror', (error) => {
         // Only log first few errors to reduce console noise
-        if (!noaaLayer.errorCount) noaaLayer.errorCount = 0
-        if (noaaLayer.errorCount < 3) {
-          console.error('🛡️ NOAA radar tile error:', error)
-          noaaLayer.errorCount++
+        if (!ventuskyLayer2.errorCount) ventuskyLayer2.errorCount = 0
+        if (ventuskyLayer2.errorCount < 3) {
+          console.error('🛡️ Ventusky radar tile error:', error)
+          ventuskyLayer2.errorCount++
         }
         
         // Don't count individual tile errors
-        if (layerStatus.noaa === 'pending') {
+        if (layerStatus.ventusky === 'pending') {
           setTimeout(() => {
-            if (layerStatus.noaa === 'pending') {
-              layerStatus.noaa = 'failed'
+            if (layerStatus.ventusky === 'pending') {
+              layerStatus.ventusky = 'failed'
               radarLayersFailed++
-              console.log('🛡️ NOAA layer failed to load')
+              console.log('🛡️ Ventusky layer failed to load')
               checkRadarStatus()
             }
-          }, 3000)
+          }, 5000)
         }
       })
       
-      noaaLayer.on('tileload', () => {
-        if (layerStatus.noaa === 'pending' && radarLayersLoaded === 0) {
-          layerStatus.noaa = 'loaded'
+      ventuskyLayer2.on('tileload', () => {
+        if (layerStatus.ventusky === 'pending' && radarLayersLoaded === 0) {
+          layerStatus.ventusky = 'loaded'
           radarLayersLoaded = 1
-          console.log('✅ NOAA radar loaded successfully')
+          console.log('✅ Ventusky radar loaded successfully')
           setRadarError(null)
         }
       })
       
-      noaaLayer.on('load', () => {
-        if (layerStatus.noaa === 'pending') {
-          layerStatus.noaa = 'loaded'
-          console.log('✅ NOAA radar layer fully loaded')
+      ventuskyLayer2.on('load', () => {
+        if (layerStatus.ventusky === 'pending') {
+          layerStatus.ventusky = 'loaded'
+          console.log('✅ Ventusky radar layer fully loaded')
           if (radarLayersLoaded === 0) {
             radarLayersLoaded = 1
             setRadarError(null)

@@ -13,8 +13,10 @@ export default defineConfig({
     port: 5173,
     host: true,
     fs: {
-      // Prevent serving service workers
       strict: false
+    },
+    headers: {
+      'Content-Type': 'application/javascript'
     }
   },
   // Prevent service worker registration
