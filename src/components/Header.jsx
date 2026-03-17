@@ -41,7 +41,7 @@ const Header = ({ onLocationChange }) => {
     setLocating(true)
 
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      async (position) => {
         const { latitude, longitude } = position.coords
         const coordinates = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`
         console.log('📍 Navbar location found:', { latitude, longitude })
@@ -49,12 +49,35 @@ const Header = ({ onLocationChange }) => {
         // Store coordinates
         setCurrentCoordinates(coordinates)
         
-        // Update location display
-        setLocationInput(`Lat: ${latitude.toFixed(4)}, Lon: ${longitude.toFixed(4)}`)
-        
-        // Pass coordinates to parent
-        if (onLocationChange) {
-          onLocationChange(coordinates)
+        try {
+          // Reverse geocode to get location name
+          const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10&addressdetails=1`)
+          const data = await response.json()
+          
+          let locationName = `Lat: ${latitude.toFixed(4)}, Lon: ${longitude.toFixed(4)}`
+
+          if (data && data.display_name) {
+            locationName = data.display_name
+            console.log('📍 Reverse geocoded location:', locationName)
+          }
+          
+          // Update location display
+          setLocationInput(locationName)
+          
+          // Pass location name to parent
+          if (onLocationChange) {
+            onLocationChange(locationName)
+          }
+        } catch (error) {
+          console.error('❌ Reverse geocoding error:', error)
+          // Fallback to coordinates
+          const fallbackLocation = `Lat: ${latitude.toFixed(4)}, Lon: ${longitude.toFixed(4)}`
+
+          setLocationInput(fallbackLocation)
+          
+          if (onLocationChange) {
+            onLocationChange(fallbackLocation)
+          }
         }
         
         setLocating(false)
