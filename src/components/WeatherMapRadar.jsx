@@ -103,11 +103,14 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
 
   // Load map script - ONLY ONCE
   useEffect(() => {
-    // Prevent multiple initializations
-    if (window.leafletMapInitialized) {
-      console.log('🗺️ Leaflet already initialized, skipping')
+    // Prevent multiple initializations with stronger checks
+    if (window.leafletMapInitialized || window.L || document.querySelector('script[src*="leaflet"]')) {
+      console.log('🗺️ Leaflet already initialized or loading, skipping')
       return
     }
+    
+    // Set global flag immediately
+    window.leafletMapInitialized = true
     
     // Try to load Leaflet for OpenStreetMap (more reliable)
     const leafletScript = document.createElement('script')
@@ -116,7 +119,6 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
     leafletScript.onload = () => {
       console.log('✅ Leaflet loaded successfully')
       setLoading(false)
-      window.leafletMapInitialized = true
       // Wait for DOM to be ready before initializing map
       setTimeout(() => {
         if (mapRef.current && mapRef.current.offsetHeight > 0) {
@@ -156,6 +158,8 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
       if (document.head.contains(leafletCSS)) {
         document.head.removeChild(leafletCSS)
       }
+      // Reset flag on cleanup
+      window.leafletMapInitialized = false
     }
   }, []) // Empty dependency array - only run once
 
@@ -349,6 +353,13 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
       const container = mapRef.current
       if (!container) {
         console.error('🗺️ Map container not found')
+        setLoading(false)
+        return
+      }
+
+      // Prevent duplicate map initialization
+      if (container._leaflet_map || container._leaflet_id) {
+        console.log('🗺️ Map already initialized in container, skipping')
         setLoading(false)
         return
       }
@@ -603,16 +614,16 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         retry: 2
       })
 
-      // Alternative radar from Weather.gov (more reliable)
-      const weatherGovRadar = window.L.tileLayer('https://radar.weather.gov/ridge/Conus/Base/NEXRAD/{z}/{x}/{y}.png', {
-        attribution: '© NOAA Weather.gov',
-        opacity: 0.8,
-        maxZoom: 10,
-        minZoom: 3,
-        errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
-        timeout: 5000,
-        retry: 2
-      })
+      // Alternative radar from Weather.gov - REMOVED DUE TO CORS
+      // const weatherGovRadar = window.L.tileLayer('https://radar.weather.gov/ridge/Conus/Base/NEXRAD/{z}/{x}/{y}.png', {
+      //   attribution: '© NOAA Weather.gov',
+      //   opacity: 0.8,
+      //   maxZoom: 10,
+      //   minZoom: 3,
+      //   errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+      //   timeout: 5000,
+      //   retry: 2
+      // })
 
       // RadarScope fallback (alternative source)
       const radarScopeLayer = window.L.tileLayer('https://api.radarscope.io/radar/{z}/{x}/{y}.png', {
@@ -766,7 +777,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
       '🛡️ NEXRAD Radar (RainViewer)': nexradLayer,
       '🛡️ NEXRAD (RainViewer 2)': nexradTilesLayer,
       '🛡️ NEXRAD (Ventusky)': ventuskyRadar,
-      '🛡️ NEXRAD (Weather.gov)': weatherGovRadar,
+      // '🛡️ NEXRAD (Weather.gov)': weatherGovRadar, // REMOVED DUE TO CORS
       '🛡️ NEXRAD (RadarScope)': radarScopeLayer,
       '💨 Wind Speed': windLayer,
       '💧 Precipitation': precipLayer,
@@ -786,7 +797,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
       nexrad: nexradLayer,
       nexradTiles: nexradTilesLayer,
       ventuskyRadar: ventuskyRadar,
-      weatherGovRadar: weatherGovRadar,
+      // weatherGovRadar: weatherGovRadar, // REMOVED DUE TO CORS
       radarScope: radarScopeLayer,
       wind: windLayer,
       precipitation: precipLayer,
@@ -801,7 +812,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         nexrad: null,
         nexradTiles: null,
         ventuskyRadar: null,
-        weatherGovRadar: null,
+        // weatherGovRadar: null, // REMOVED DUE TO CORS
         radarScope: null,
         wind: null,
         precipitation: null,
@@ -1601,7 +1612,6 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
       noaa: noaaLayer,
       precipitation: precipLayer,
       clouds: cloudsLayer,
-      temperature: tempLayer
       temperature: tempLayer,
       nexrad: nexradLayer
     }
