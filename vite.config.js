@@ -12,22 +12,18 @@ export default defineConfig({
   server: {
     port: 5173,
     host: true,
-    fs: {
-      strict: false
-    },
     headers: {
-      'Content-Type': 'application/javascript'
+      // Fix MIME type for @react-refresh and other modules
+      'Content-Type': 'application/javascript',
+      // Add proper MIME types for different file extensions
+      '.js': 'application/javascript',
+      '.jsx': 'application/javascript',
+      '.ts': 'application/typescript',
+      '.tsx': 'application/typescript'
     }
   },
-  // Prevent service worker registration
-  worker: {
-    format: 'es',
-    rollupOptions: {
-      output: {
-        entryFileNames: `assets/[name].js`,
-        chunkFileNames: `assets/[name].js`,
-        assetFileNames: `assets/[name].[ext]`
-      }
-    }
+  // Ensure proper module resolution
+  resolve: {
+    extensions: ['.js', '.jsx', '.ts', '.tsx']
   }
 })

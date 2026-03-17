@@ -66,7 +66,7 @@ function App() {
       <SettingsProvider>
         <LocationProvider>
           <AlertProvider>
-            <HashRouter>
+            <HashRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
               <div className="App">
                 <Routes>
                   <Route path="/" element={<WeatherApp />} />
