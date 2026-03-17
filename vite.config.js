@@ -6,7 +6,7 @@ export default defineConfig({
   },
   base: '/Weather-Forecaster/',
   build: {
-    outDir: 'dist',
+    outDir: 'docs',
     assetsDir: 'assets'
   },
   server: {
