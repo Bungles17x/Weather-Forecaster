@@ -32,10 +32,11 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
             const spcUrls = [
               'https://www.spc.noaa.gov/products/outlook/day1/otlk_lyn.json',
               'https://www.spc.noaa.gov/products/outlook/day1otlk.json',
+              'https://www.spc.noaa.gov/products/outlook/day2otlk.json',
+              'https://www.spc.noaa.gov/products/outlook/day3otlk.json',
+              'https://www.spc.noaa.gov/products/outlook/day1/otlk_cat.json',
               'https://www.spc.noaa.gov/products/outlook/day1/otlk_20260317_day1otlk.json',
-              'https://www.spc.noaa.gov/products/outlook/day1/otlk_20260316_day1otlk.json', // Yesterday
-              'https://www.spc.noaa.gov/products/outlook/day2otlk.json', // Day 2
-              'https://www.spc.noaa.gov/products/outlook/day1/otlk_cat.json' // Category
+              'https://www.spc.noaa.gov/products/outlook/day1/otlk_20260316_day1otlk.json' // Yesterday
             ]
             
             let data = null
@@ -460,25 +461,29 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
           console.error('🛡️ All NEXRAD radar layers failed to load')
           setRadarError(errorMessage)
           
-          // Show popup error on map
-          if (map && window.L) {
-            window.L.popup()
-              .setLatLng([mapCenter.lat, mapCenter.lng])
-              .setContent(`
-                <div style="padding: 10px;">
-                  <h4 style="color: #dc2626; margin: 0 0 8px 0;">⚠️ Radar Loading Error</h4>
-                  <p style="margin: 0; font-size: 14px;">${errorMessage}</p>
-                  <p style="margin: 8px 0 0 0; font-size: 12px; color: #666;">Try refreshing the page or check your internet connection.</p>
-                </div>
-              `)
-              .openOn(map)
+          // Show popup error on map (only if map is ready)
+          if (map && window.L && map._container && map._container.parentNode) {
+            try {
+              window.L.popup()
+                .setLatLng([mapCenter.lat, mapCenter.lng])
+                .setContent(`
+                  <div style="padding: 10px; max-width: 300px;">
+                    <h4 style="color: #dc2626; margin: 0 0 8px 0;">⚠️ Radar Loading Error</h4>
+                    <p style="margin: 0; font-size: 14px;">${errorMessage}</p>
+                    <p style="margin: 8px 0 0 0; font-size: 12px; color: #666;">Try refreshing the page or check your internet connection.</p>
+                  </div>
+                `)
+                .openOn(map)
+            } catch (popupError) {
+              console.warn('🛡️ Could not show radar error popup:', popupError)
+            }
           }
         }
       }
 
-      // Working NEXRAD radar from OpenWeatherMap (updated to more reliable endpoint)
-      const nexradLayer = window.L.tileLayer('https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png', {
-        attribution: '© OpenWeatherMap / NOAA NWS',
+      // Working NEXRAD radar from RainViewer (free, no API key needed)
+      const nexradLayer = window.L.tileLayer('https://tile.rainviewer.com/v2/coverage/now/{z}/{x}/{y}/256/0/0_1.png', {
+        attribution: '© RainViewer / NOAA NWS',
         opacity: 0.8,
         maxZoom: 12,
         minZoom: 2,
@@ -563,9 +568,9 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         }
       }, 2000)  // Reduced from 3000
 
-      // Alternative NEXRAD from Iowa State Mesonet (updated endpoint)
-      const nexradTilesLayer = window.L.tileLayer('https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png', {
-        attribution: '© Iowa State Mesonet / NOAA NWS',
+      // Alternative NEXRAD from RainViewer (different layer)
+      const nexradTilesLayer = window.L.tileLayer('https://tile.rainviewer.com/v2/coverage/now/{z}/{x}/{y}/256/1/0_1.png', {
+        attribution: '© RainViewer / NOAA NWS',
         opacity: 0.7,
         maxZoom: 12,
         minZoom: 2,
@@ -618,9 +623,9 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         }
       })
 
-      // Additional radar layer from Ventusky (updated endpoint)
-      const ventuskyLayer = window.L.tileLayer('https://tiles.ventusky.com/precipitation/{z}/{x}/{y}.png', {
-        attribution: '© Ventusky / NOAA NWS',
+      // Additional radar layer from RainViewer (future radar)
+      const ventuskyLayer = window.L.tileLayer('https://tile.rainviewer.com/v2/coverage/now/{z}/{x}/{y}/256/2/0_1.png', {
+        attribution: '© RainViewer / NOAA NWS',
         opacity: 0.6,
         maxZoom: 12,
         minZoom: 2,
@@ -681,9 +686,9 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
       })
 
-      // NOAA GOES Satellite/Radar (updated endpoint)
-      const noaaLayer = window.L.tileLayer('https://tile.openweathermap.org/data/2.5/precipitation/{z}/{x}/{y}.png', {
-        attribution: '© NOAA / OpenWeatherMap',
+      // NOAA GOES Satellite/Radar from RainViewer (satellite layer)
+      const noaaLayer = window.L.tileLayer('https://tile.rainviewer.com/v2/coverage/satellite/{z}/{x}/{y}/256/0_1.png', {
+        attribution: '© RainViewer / NOAA',
         opacity: 0.6,
         maxZoom: 12,
         minZoom: 2,
