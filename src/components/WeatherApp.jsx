@@ -546,7 +546,7 @@ const WeatherApp = () => {
       // Use working SPC API endpoint with fallback
       let spcData = null
       try {
-        const spcResponse = await fetch('https://www.spc.noaa.gov/products/outlook/day1otlk_lyn.json')
+        const spcResponse = await fetch('https://www.spc.noaa.gov/products/outlook/day1/otlk_lyn.json')
         if (spcResponse.ok) {
           spcData = await spcResponse.json()
           console.log('🌪 SPC Outlook RAW DATA:', spcData)
@@ -830,9 +830,9 @@ const WeatherApp = () => {
       <div className="notification-controls">
         <div className="notification-status">
           <span className={`status-badge ${permission}`}>
-            {permission === 'granted' ? '🔔 Notifications Enabled' : 
-             permission === 'denied' ? '🔕 Notifications Disabled' : 
-             '🔔 Notifications Not Set'}
+            {permission === 'granted' ? '🔔 alerts Notifications Enabled' : 
+             permission === 'denied' ? '🔕 alerts Notifications Disabled' : 
+             '🔔 alerts Notifications Not Set'}
           </span>
           
           {permission === 'default' && (

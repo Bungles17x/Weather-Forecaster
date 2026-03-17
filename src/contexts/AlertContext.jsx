@@ -138,12 +138,8 @@ export const AlertProvider = ({ children }) => {
       const county = pointsData.properties.county
       console.log('📍 County info:', county)
 
-      // Extract county code from the URL
-      const countyCode = county.split('/').pop()
-      console.log('📍 County code:', countyCode)
-
-      // Get alerts for the county/area
-      const alertsResponse = await fetch(`https://api.weather.gov/alerts/active?area=${countyCode}`)
+      // Get alerts for the coordinates
+      const alertsResponse = await fetch(`https://api.weather.gov/alerts/active?point=${lat},${lon}`)
       if (!alertsResponse.ok) {
         throw new Error('Failed to fetch weather alerts')
       }
