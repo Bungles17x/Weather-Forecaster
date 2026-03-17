@@ -33,15 +33,20 @@ const Header = ({ onLocationChange }) => {
   }
 
   const handleLocateMe = () => {
+    console.log('🔘 Locate button clicked!')
+    
     if (!navigator.geolocation) {
-      console.error('Geolocation is not supported by your browser')
+      console.error('❌ Geolocation is not supported by your browser')
+      alert('Geolocation is not supported by your browser')
       return
     }
 
+    console.log('📍 Starting geolocation request...')
     setLocating(true)
 
     navigator.geolocation.getCurrentPosition(
       async (position) => {
+        console.log('✅ GPS position obtained:', position)
         const { latitude, longitude } = position.coords
         const coordinates = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`
         console.log('📍 Navbar location found:', { latitude, longitude })
@@ -50,9 +55,11 @@ const Header = ({ onLocationChange }) => {
         setCurrentCoordinates(coordinates)
         
         try {
+          console.log('🌍 Starting reverse geocoding...')
           // Reverse geocode to get location name
           const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10&addressdetails=1`)
           const data = await response.json()
+          console.log('🌍 Geocoding response:', data)
           
           let locationName = `Lat: ${latitude.toFixed(4)}, Lon: ${longitude.toFixed(4)}`
 
@@ -66,7 +73,10 @@ const Header = ({ onLocationChange }) => {
           
           // Pass location name to parent
           if (onLocationChange) {
+            console.log('🔄 Calling onLocationChange with:', locationName)
             onLocationChange(locationName)
+          } else {
+            console.log('❌ onLocationChange is not available')
           }
         } catch (error) {
           console.error('❌ Reverse geocoding error:', error)
@@ -102,6 +112,7 @@ const Header = ({ onLocationChange }) => {
         }
         
         console.error(errorMessage)
+        alert(errorMessage)
         setLocating(false)
       },
       {
