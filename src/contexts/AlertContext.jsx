@@ -59,8 +59,6 @@ export const AlertProvider = ({ children }) => {
       console.log('🔔 Showing notification:', title)
       
       const notification = new Notification(title, {
-        icon: '/weather-icon.png',
-        badge: '/weather-badge.png',
         tag: 'weather-alert',
         renotify: true,
         requireInteraction: options.urgent || false,
@@ -137,10 +135,15 @@ export const AlertProvider = ({ children }) => {
       }
 
       const pointsData = await pointsResponse.json()
-      const { county } = pointsData.properties
+      const county = pointsData.properties.county
+      console.log('📍 County info:', county)
+
+      // Extract county code from the URL
+      const countyCode = county.split('/').pop()
+      console.log('📍 County code:', countyCode)
 
       // Get alerts for the county/area
-      const alertsResponse = await fetch(`https://api.weather.gov/alerts/active?area=${county}`)
+      const alertsResponse = await fetch(`https://api.weather.gov/alerts/active?area=${countyCode}`)
       if (!alertsResponse.ok) {
         throw new Error('Failed to fetch weather alerts')
       }

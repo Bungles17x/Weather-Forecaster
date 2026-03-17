@@ -372,7 +372,7 @@ const Header = ({ onLocationChange }) => {
               <div className="shimmer"></div>
               <div className="glow"></div>
               <span className="desktop-nav-icon">🗺️</span>
-              <span className="desktop-nav-label">Map</span>
+              <span className="desktop-nav-label">radar</span>
             </Link>
             <Link to="/alerts" className={`desktop-nav-item ${currentPage === 'alerts' ? 'active' : ''}`}>
               <div className="shimmer"></div>
@@ -428,7 +428,7 @@ const Header = ({ onLocationChange }) => {
         
         <Link to="/map" className="mobile-nav-btn" title="View weather map">
           <span className="mobile-nav-icon">🗺️</span>
-          <span className="mobile-nav-label">Map</span>
+          <span className="mobile-nav-label">radar</span>
         </Link>
         
         <Link to="/alerts" className="mobile-nav-btn" title="View weather alerts">

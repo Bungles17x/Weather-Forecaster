@@ -546,7 +546,7 @@ const WeatherApp = () => {
       // Use working SPC API endpoint with fallback
       let spcData = null
       try {
-        const spcResponse = await fetch('https://www.spc.noaa.gov/products/outlook/day1otlk.json')
+        const spcResponse = await fetch('https://www.spc.noaa.gov/products/outlook/day1otlk_lyn.json')
         if (spcResponse.ok) {
           spcData = await spcResponse.json()
           console.log('🌪 SPC Outlook RAW DATA:', spcData)
