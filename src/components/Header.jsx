@@ -43,15 +43,49 @@ const Header = ({ onLocationChange }) => {
 
     console.log('📍 Starting geolocation request...')
     
+    // Check current permission status
+    if (navigator.permissions && navigator.permissions.query) {
+      navigator.permissions.query({ name: 'geolocation' }).then((result) => {
+        console.log('🔐 Current geolocation permission:', result.state)
+        
+        if (result.state === 'denied') {
+          console.log('❌ Location permission previously denied')
+          alert('Location access was previously denied. Please enable location permissions in your browser settings and refresh the page.')
+          return
+        }
+        
+        if (result.state === 'granted') {
+          console.log('✅ Location permission already granted')
+          // Proceed with location request
+          requestLocation()
+        } else {
+          console.log('🔐 Location permission not set - requesting...')
+          // Request permission
+          requestLocation()
+        }
+      }).catch((error) => {
+        console.log('🔐 Permission API not supported, proceeding anyway...')
+        requestLocation()
+      })
+    } else {
+      console.log('🔐 Permission API not supported, proceeding anyway...')
+      requestLocation()
+    }
+  }
+
+  const requestLocation = () => {
     setLocating(true)
 
-    // This will automatically trigger the browser's permission popup
-    navigator.geolocation.getCurrentPosition(
+    // Use watchPosition instead of getCurrentPosition to trigger permission dialog
+    const watchId = navigator.geolocation.watchPosition(
       async (position) => {
         console.log('✅ GPS position obtained:', position)
         const { latitude, longitude } = position.coords
         const coordinates = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`
         console.log('📍 Navbar location found:', { latitude, longitude })
+        
+        // Clear the watch immediately after getting position
+        navigator.geolocation.clearWatch(watchId)
         
         // Store coordinates
         setCurrentCoordinates(coordinates)
@@ -119,8 +153,8 @@ const Header = ({ onLocationChange }) => {
       },
       {
         enableHighAccuracy: true,
-        timeout: 15000, // Increased timeout
-        maximumAge: 300000 // 5 minutes
+        timeout: 15000,
+        maximumAge: 0 // Force fresh location
       }
     )
   }
