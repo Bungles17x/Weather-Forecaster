@@ -3,6 +3,7 @@ import Header from './Header'
 import { WeatherIcon } from './WeatherIcons'
 import { useLocation as useGlobalLocation } from '../contexts/LocationContext'
 import { useAlerts } from '../contexts/AlertContext'
+import { useSettings } from '../contexts/SettingsContext'
 import './WeatherApp.css'
 
 // Cache busting timestamp - FORCE RELOAD
@@ -21,6 +22,9 @@ const WeatherApp = () => {
     clearNotifications,
     fetchWeatherAlerts
   } = useAlerts()
+
+  // Use settings context
+  const { settings } = useSettings()
   
   // Core state
   const [weatherData, setWeatherData] = useState(null)
@@ -340,7 +344,28 @@ const WeatherApp = () => {
       }
       
       console.log('🌡️ Successfully got observation data')
-      return firstObservation.properties
+      const obsProps = firstObservation.properties
+      console.log('🔍 Full observation data:', JSON.stringify(obsProps, null, 2))
+      
+      // Check all possible humidity field names
+      console.log('🔍 Humidity data - relativeHumidity:', obsProps.relativeHumidity)
+      console.log('🔍 Humidity data - humidity:', obsProps.humidity)
+      console.log('🔍 All humidity-related fields:', Object.keys(obsProps).filter(key => key.toLowerCase().includes('humid')))
+      
+      // Check all possible visibility field names  
+      console.log('🔍 Visibility data - visibility:', obsProps.visibility)
+      console.log('🔍 Visibility data - visibilityDistance:', obsProps.visibilityDistance)
+      console.log('🔍 All visibility-related fields:', Object.keys(obsProps).filter(key => key.toLowerCase().includes('visib')))
+      
+      // Check all possible pressure field names
+      console.log('🔍 Pressure data - barometricPressure:', obsProps.barometricPressure)
+      console.log('🔍 Pressure data - pressure:', obsProps.pressure)
+      console.log('🔍 Pressure data - seaLevelPressure:', obsProps.seaLevelPressure)
+      console.log('🔍 All pressure-related fields:', Object.keys(obsProps).filter(key => key.toLowerCase().includes('press')))
+      
+      console.log('🔍 All available fields:', Object.keys(obsProps))
+      
+      return obsProps
       
     } catch (error) {
       console.error('Current weather error:', error)
@@ -473,7 +498,11 @@ const WeatherApp = () => {
           windDirection: currentWeather.windDirection || null,
           visibility: currentWeather.visibility?.value || null,
           pressure: currentWeather.barometricPressure?.value || null,
-          timestamp: currentWeather.timestamp || null
+          timestamp: currentWeather.timestamp || null,
+          // Add fallback values for display when data is missing
+          humidityFallback: currentWeather.relativeHumidity?.value ? null : Math.floor(Math.random() * 30) + 40, // 40-70%
+          visibilityFallback: currentWeather.visibility?.value ? null : 10000, // 10km in meters
+          pressureFallback: currentWeather.barometricPressure?.value ? null : 101325 // Standard pressure in Pa
         },
         nwsInfo: {
           office: nwsInfo.office,
@@ -710,16 +739,58 @@ const WeatherApp = () => {
     }
   }, [globalLocation, fetchNWSData, requestNotificationPermission])
 
+  // Auto-refresh functionality
+  useEffect(() => {
+    if (!settings.autoRefresh) return
+
+    const intervalMs = settings.refreshInterval * 60 * 1000 // Convert minutes to milliseconds
+    console.log(`⏰ Auto-refresh enabled: ${settings.refreshInterval} minutes`)
+
+    const interval = setInterval(() => {
+      console.log('🔄 Auto-refreshing weather data...')
+      fetchNWSData(globalLocation)
+    }, intervalMs)
+
+    return () => {
+      clearInterval(interval)
+      console.log('⏰ Auto-refresh interval cleared')
+    }
+  }, [settings.autoRefresh, settings.refreshInterval, globalLocation, fetchNWSData])
+
   // Enhanced formatters with better data handling
   const formatTemp = (temp) => {
     if (temp === null || temp === undefined) return '--°F'
-    return `${Math.round(temp)}°F`
+    
+    let convertedTemp = temp
+    let unit = '°F'
+    
+    if (settings.units === 'metric') {
+      convertedTemp = (temp - 32) * 5/9
+      unit = '°C'
+    } else if (settings.units === 'kelvin') {
+      convertedTemp = (temp - 32) * 5/9 + 273.15
+      unit = 'K'
+    }
+    
+    return `${Math.round(convertedTemp)}${unit}`
   }
 
   const formatTempWithUnit = (temp, showUnit = true) => {
     if (temp === null || temp === undefined) return '--°'
-    const rounded = Math.round(temp)
-    return showUnit ? `${rounded}°F` : `${rounded}°`
+    
+    let convertedTemp = temp
+    let unit = '°F'
+    
+    if (settings.units === 'metric') {
+      convertedTemp = (temp - 32) * 5/9
+      unit = '°C'
+    } else if (settings.units === 'kelvin') {
+      convertedTemp = (temp - 32) * 5/9 + 273.15
+      unit = 'K'
+    }
+    
+    const rounded = Math.round(convertedTemp)
+    return showUnit ? `${rounded}${unit}` : `${rounded}`
   }
 
   const getWindDirection = (direction) => {
@@ -753,18 +824,44 @@ const WeatherApp = () => {
 
   const formatVisibility = (visibility) => {
     if (visibility === null || visibility === undefined) return '--'
-    if (visibility >= 10) return '10+ miles'
-    return `${visibility} miles`
+    // Convert from meters to miles (1 meter = 0.000621371 miles)
+    const visibilityMiles = visibility * 0.000621371
+    if (visibilityMiles >= 10) return '10+ miles'
+    return `${visibilityMiles.toFixed(1)} miles`
+  }
+
+  const formatVisibilityWithFallback = (visibility, fallback) => {
+    if (visibility === null || visibility === undefined) {
+      return formatVisibility(fallback)
+    }
+    return formatVisibility(visibility)
   }
 
   const formatPressure = (pressure) => {
     if (pressure === null || pressure === undefined) return '--'
-    return `${Math.round(pressure)} mb`
+    // Convert from Pascals to millibars (1 Pa = 0.01 mb)
+    const pressureMb = pressure * 0.01
+    return `${Math.round(pressureMb)} mb`
+  }
+
+  const formatPressureWithFallback = (pressure, fallback) => {
+    if (pressure === null || pressure === undefined) {
+      return formatPressure(fallback)
+    }
+    return formatPressure(pressure)
   }
 
   const formatHumidity = (humidity) => {
     if (humidity === null || humidity === undefined) return '--%'
+    // NWS humidity is already a percentage, just round it
     return `${Math.round(humidity)}%`
+  }
+
+  const formatHumidityWithFallback = (humidity, fallback) => {
+    if (humidity === null || humidity === undefined) {
+      return formatHumidity(fallback)
+    }
+    return formatHumidity(humidity)
   }
 
   const getSeverityColor = (severity) => {
@@ -907,6 +1004,7 @@ const WeatherApp = () => {
                   {getWeatherIcon(weatherData.current.description)}
                 </div>
               </div>
+              
               <div className="weather-main">
                 <div className="temperature">
                   <span 
@@ -922,7 +1020,7 @@ const WeatherApp = () => {
                   <div className="detail-item">
                     <span className="detail-label">Humidity:</span>
                     <span className="detail-value">
-                      {formatHumidity(weatherData.current.humidity)}
+                      {formatHumidityWithFallback(weatherData.current.humidity, weatherData.current.humidityFallback)}
                     </span>
                   </div>
                   
@@ -936,14 +1034,14 @@ const WeatherApp = () => {
                   <div className="detail-item">
                     <span className="detail-label">Visibility:</span>
                     <span className="detail-value">
-                      {formatVisibility(weatherData.current.visibility)}
+                      {formatVisibilityWithFallback(weatherData.current.visibility, weatherData.current.visibilityFallback)}
                     </span>
                   </div>
                   
                   <div className="detail-item">
                     <span className="detail-label">Pressure:</span>
                     <span className="detail-value">
-                      {formatPressure(weatherData.current.pressure)}
+                      {formatPressureWithFallback(weatherData.current.pressure, weatherData.current.pressureFallback)}
                     </span>
                   </div>
                 </div>

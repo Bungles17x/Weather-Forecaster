@@ -218,13 +218,13 @@ const ForecastPage = () => {
             {currentWeather?.visibility && (
               <div className="detail-row">
                 <span className="detail-label">👁️ Visibility:</span>
-                <span className="detail-value">{currentWeather.visibility} mi</span>
+                <span className="detail-value">{(currentWeather.visibility * 0.000621371).toFixed(1)} mi</span>
               </div>
             )}
             {currentWeather?.pressure && (
               <div className="detail-row">
                 <span className="detail-label">🔵 Pressure:</span>
-                <span className="detail-value">{currentWeather.pressure} inHg</span>
+                <span className="detail-value">{(currentWeather.pressure * 0.01).toFixed(1)} mb</span>
               </div>
             )}
           </div>

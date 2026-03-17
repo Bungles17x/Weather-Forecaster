@@ -1,54 +1,26 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import Header from '../components/Header'
+import { useSettings } from '../contexts/SettingsContext'
 import './SettingsPage.css'
 
 const SettingsPage = () => {
-  const [settings, setSettings] = useState({
-    units: 'imperial',
-    theme: 'dark',
-    notifications: true,
-    autoRefresh: false,
-    refreshInterval: 10,
-    location: 'auto',
-    language: 'en'
-  })
-
+  const { settings, updateSetting, resetSettings } = useSettings()
   const [saved, setSaved] = useState(false)
 
-  useEffect(() => {
-    // Load settings from localStorage
-    const savedSettings = localStorage.getItem('weatherSettings')
-    if (savedSettings) {
-      setSettings(JSON.parse(savedSettings))
-    }
-  }, [])
-
   const handleSettingChange = (key, value) => {
-    setSettings(prev => ({
-      ...prev,
-      [key]: value
-    }))
+    updateSetting(key, value)
   }
 
   const saveSettings = () => {
-    localStorage.setItem('weatherSettings', JSON.stringify(settings))
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
   }
 
-  const resetSettings = () => {
-    const defaultSettings = {
-      units: 'imperial',
-      theme: 'dark',
-      notifications: true,
-      autoRefresh: false,
-      refreshInterval: 10,
-      location: 'auto',
-      language: 'en'
-    }
-    setSettings(defaultSettings)
-    localStorage.setItem('weatherSettings', JSON.stringify(defaultSettings))
+  const handleResetSettings = () => {
+    resetSettings()
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
   }
 
   return (
@@ -227,7 +199,7 @@ const SettingsPage = () => {
             <h2>Danger Zone</h2>
             <div className="setting-group">
               <div className="setting-item">
-                <button className="reset-btn" onClick={resetSettings}>
+                <button className="reset-btn" onClick={handleResetSettings}>
                   Reset All Settings
                 </button>
                 <p className="setting-description">Reset all settings to default values</p>

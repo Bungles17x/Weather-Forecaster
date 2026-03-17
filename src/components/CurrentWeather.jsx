@@ -103,11 +103,12 @@ const CurrentWeather = ({ data }) => {
 
   const getVisibilityDescription = (vis) => {
     if (!vis) return 'N/A'
-    const visKm = vis / 1000
-    if (visKm >= 10) return 'Excellent'
-    if (visKm >= 5) return 'Good'
-    if (visKm >= 2) return 'Fair'
-    if (visKm >= 1) return 'Poor'
+    // Convert from meters to miles for description
+    const visMiles = vis * 0.000621371
+    if (visMiles >= 10) return 'Excellent'
+    if (visMiles >= 5) return 'Good'
+    if (visMiles >= 2) return 'Fair'
+    if (visMiles >= 1) return 'Poor'
     return 'Very Poor'
   }
 
@@ -116,8 +117,10 @@ const CurrentWeather = ({ data }) => {
     let aqi = 50 // Base moderate
     
     if (humidity > 80) aqi += 20
-    if (visibility < 5000) aqi += 30
-    if (pressure < 1000) aqi += 10
+    // Convert visibility from meters to check against 5000m (5km)
+    if (visibility && visibility < 5000) aqi += 30
+    // Convert pressure from Pascals to millibars for comparison
+    if (pressure && pressure * 0.01 < 1000) aqi += 10
     
     if (aqi <= 50) return { level: 'Good', color: '#00e400' }
     if (aqi <= 100) return { level: 'Moderate', color: '#ffff00' }
@@ -429,7 +432,7 @@ const CurrentWeather = ({ data }) => {
             <div className="detail-item">
               <div className="detail-icon">🌡️</div>
               <div className="detail-info">
-                <div className="detail-value">{pressure} mb</div>
+                <div className="detail-value">{pressure ? Math.round(pressure * 0.01) : '--'} mb</div>
                 <div className="detail-label">Pressure</div>
               </div>
             </div>

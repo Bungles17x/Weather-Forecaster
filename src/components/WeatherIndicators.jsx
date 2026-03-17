@@ -29,7 +29,7 @@ const WeatherIndicators = ({ data }) => {
     },
     {
       label: 'Visibility',
-      value: visibility ? `${(visibility / 1000).toFixed(1)} km` : '10 km',
+      value: visibility ? `${(visibility * 0.000621371).toFixed(1)} miles` : '10 miles',
       icon: '👁️'
     },
     {

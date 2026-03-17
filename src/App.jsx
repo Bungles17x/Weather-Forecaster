@@ -8,26 +8,29 @@ import AlertsPage from './pages/AlertsPage'
 import SettingsPage from './pages/SettingsPage'
 import { LocationProvider } from './contexts/LocationContext'
 import { AlertProvider } from './contexts/AlertContext'
+import { SettingsProvider } from './contexts/SettingsContext'
 import './App.css'
 
 function App() {
   return (
-    <LocationProvider>
-      <AlertProvider>
-        <BrowserRouter>
-          <div className="App">
-            <Routes>
-              <Route path="/" element={<WeatherApp />} />
-              <Route path="/home" element={<HomePage />} />
-              <Route path="/forecast" element={<ForecastPage />} />
-              <Route path="/map" element={<MapPage />} />
-              <Route path="/alerts" element={<AlertsPage />} />
-              <Route path="/settings" element={<SettingsPage />} />
-            </Routes>
-          </div>
-        </BrowserRouter>
-      </AlertProvider>
-    </LocationProvider>
+    <SettingsProvider>
+      <LocationProvider>
+        <AlertProvider>
+          <BrowserRouter>
+            <div className="App">
+              <Routes>
+                <Route path="/" element={<WeatherApp />} />
+                <Route path="/home" element={<HomePage />} />
+                <Route path="/forecast" element={<ForecastPage />} />
+                <Route path="/map" element={<MapPage />} />
+                <Route path="/alerts" element={<AlertsPage />} />
+                <Route path="/settings" element={<SettingsPage />} />
+              </Routes>
+            </div>
+          </BrowserRouter>
+        </AlertProvider>
+      </LocationProvider>
+    </SettingsProvider>
   )
 }
 

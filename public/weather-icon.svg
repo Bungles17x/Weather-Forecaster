@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <defs>
+    <linearGradient id="sunGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD700;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FFA500;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="cloudGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#87CEEB;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4682B4;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Sun -->
+  <circle cx="10" cy="10" r="6" fill="url(#sunGradient)" />
+  
+  <!-- Sun rays -->
+  <path d="M10 2 L10 4" stroke="#FFD700" stroke-width="2" stroke-linecap="round"/>
+  <path d="M10 16 L10 18" stroke="#FFD700" stroke-width="2" stroke-linecap="round"/>
+  <path d="M2 10 L4 10" stroke="#FFD700" stroke-width="2" stroke-linecap="round"/>
+  <path d="M16 10 L18 10" stroke="#FFD700" stroke-width="2" stroke-linecap="round"/>
+  <path d="M4.5 4.5 L6 6" stroke="#FFD700" stroke-width="2" stroke-linecap="round"/>
+  <path d="M14 14 L15.5 15.5" stroke="#FFD700" stroke-width="2" stroke-linecap="round"/>
+  <path d="M4.5 15.5 L6 14" stroke="#FFD700" stroke-width="2" stroke-linecap="round"/>
+  <path d="M14 6 L15.5 4.5" stroke="#FFD700" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- Cloud -->
+  <ellipse cx="18" cy="20" rx="8" ry="5" fill="url(#cloudGradient)" opacity="0.9"/>
+  <ellipse cx="14" cy="18" rx="6" ry="4" fill="url(#cloudGradient)" opacity="0.9"/>
+  <ellipse cx="22" cy="18" rx="5" ry="3.5" fill="url(#cloudGradient)" opacity="0.9"/>
+  
+  <!-- Rain drops -->
+  <path d="M12 25 Q12 27 11 28 Q10 27 10 25 Q10 23 12 25" fill="#4682B4" opacity="0.8"/>
+  <path d="M16 26 Q16 28 15 29 Q14 28 14 26 Q14 24 16 26" fill="#4682B4" opacity="0.8"/>
+  <path d="M20 25 Q20 27 19 28 Q18 27 18 25 Q18 23 20 25" fill="#4682B4" opacity="0.8"/>
+</svg>
