@@ -29,7 +29,7 @@ const WeatherIndicators = ({ data }) => {
     },
     {
       label: 'Visibility',
-      value: visibility ? `${(visibility * 0.000621371).toFixed(1)} miles` : '10 miles',
+      value: visibility !== null && visibility !== undefined && !isNaN(visibility) ? `${(visibility * 0.000621371).toFixed(1)} miles` : '10 miles',
       icon: '👁️'
     },
     {

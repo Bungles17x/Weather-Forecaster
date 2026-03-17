@@ -223,7 +223,7 @@ const HourlyForecast = ({ data }) => {
     }
 
     // VISIBILITY WARNINGS AND ADVISORIES
-    if (visibility <= 500) {
+    if (visibility && visibility !== null && visibility !== undefined && !isNaN(visibility) && visibility <= 500) {
       alerts.push({
         type: 'dense-fog-advisory',
         icon: '🌫️',
@@ -231,7 +231,7 @@ const HourlyForecast = ({ data }) => {
         message: `Visibility reduced to ${(visibility/1000).toFixed(1)} miles or less. Extreme driving hazard. Avoid travel if possible.`,
         severity: 'high'
       })
-    } else if (visibility <= 1000) {
+    } else if (visibility && visibility !== null && visibility !== undefined && !isNaN(visibility) && visibility <= 1000) {
       alerts.push({
         type: 'fog-advisory',
         icon: '👁️',
@@ -239,7 +239,7 @@ const HourlyForecast = ({ data }) => {
         message: `Visibility reduced to ${(visibility/1000).toFixed(1)} miles. Use extreme caution when traveling.`,
         severity: 'moderate'
       })
-    } else if (visibility <= 3000) {
+    } else if (visibility && visibility !== null && visibility !== undefined && !isNaN(visibility) && visibility <= 3000) {
       alerts.push({
         type: 'visibility-advisory',
         icon: '🌫️',

@@ -93,7 +93,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
               <div class="control-title">Location</div>
               <div class="location-info">
                 <div class="current-location">
-                  📍 ${coordinates ? `${coordinates.latitude.toFixed(2)}, ${coordinates.longitude.toFixed(2)}` : '40.71, -74.01'}
+                  📍 ${coordinates && coordinates.latitude && coordinates.longitude ? `${coordinates.latitude.toFixed(2)}, ${coordinates.longitude.toFixed(2)}` : '40.71, -74.01'}
                 </div>
                 <button class="location-btn">📍 My Location</button>
               </div>
@@ -162,7 +162,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
             (position) => {
               const { latitude, longitude } = position.coords
               console.log('📍 Location found:', { latitude, longitude })
-              if (onLocationChange) {
+              if (onLocationChange && latitude !== null && latitude !== undefined && longitude !== null && longitude !== undefined) {
                 onLocationChange(`${latitude.toFixed(4)}, ${longitude.toFixed(4)}`)
               }
             },
