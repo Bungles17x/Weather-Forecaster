@@ -20,7 +20,10 @@ export const AlertProvider = ({ children }) => {
 
   // Request notification permission
   const requestNotificationPermission = useCallback(async () => {
+    console.log('🔔 Starting notification permission request...')
+    
     if (!('Notification' in window)) {
+      console.error('❌ Notifications not supported in this browser')
       setError('This browser does not support notifications')
       return false
     }
@@ -28,10 +31,21 @@ export const AlertProvider = ({ children }) => {
     try {
       console.log('🔔 Requesting notification permission...')
       const result = await Notification.requestPermission()
+      console.log('🔔 Permission result:', result)
       setPermission(result)
       
       if (result === 'granted') {
         console.log('✅ Notification permission granted')
+        // Test with a simple notification
+        try {
+          const testNotif = new Notification('Weather App', {
+            body: 'Notifications are now enabled!',
+            icon: '🌤️'
+          })
+          setTimeout(() => testNotif.close(), 3000)
+        } catch (testError) {
+          console.error('❌ Test notification failed:', testError)
+        }
         return true
       } else if (result === 'denied') {
         console.log('❌ Notification permission denied')
@@ -254,8 +268,11 @@ export const AlertProvider = ({ children }) => {
 
   // Test notification
   const testNotification = useCallback(() => {
+    console.log('🧪 Test notification requested, permission:', permission)
+    
     if (permission === 'granted') {
-      showNotification('Weather Alert Test', {
+      console.log('🧪 Showing test notification...')
+      const success = showNotification('Weather Alert Test', {
         body: 'This is a test weather alert notification',
         urgent: false,
         icon: '🌤️',
@@ -267,10 +284,18 @@ export const AlertProvider = ({ children }) => {
           }
         }
       })
+      
+      if (success) {
+        console.log('✅ Test notification sent successfully')
+      } else {
+        console.error('❌ Failed to send test notification')
+      }
     } else {
+      console.log('🧪 Permission not granted, requesting first...')
       requestNotificationPermission().then(granted => {
         if (granted) {
-          showNotification('Weather Alert Test', {
+          console.log('🧪 Permission granted, sending test notification...')
+          const success = showNotification('Weather Alert Test', {
             body: 'This is a test weather alert notification',
             urgent: false,
             icon: '🌤️',
@@ -282,6 +307,14 @@ export const AlertProvider = ({ children }) => {
               }
             }
           })
+          
+          if (success) {
+            console.log('✅ Test notification sent successfully after permission grant')
+          } else {
+            console.error('❌ Failed to send test notification after permission grant')
+          }
+        } else {
+          console.error('❌ Permission denied for test notification')
         }
       })
     }

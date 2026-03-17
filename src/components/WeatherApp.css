@@ -2029,6 +2029,8 @@
   
   .notification-actions {
     justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
   }
   
   .active-alerts-indicator {
@@ -2041,6 +2043,7 @@
   .clear-notifications-btn {
     justify-content: center;
     flex: 1;
+    min-width: 120px;
   }
 }
 

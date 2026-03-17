@@ -939,6 +939,12 @@ const WeatherApp = () => {
           
           {permission === 'granted' && (
             <div className="notification-actions">
+              <button 
+                className="test-notification-btn"
+                onClick={testNotification}
+              >
+                🧪 Test Alert
+              </button>
               {notifications.length > 0 && (
                 <button 
                   className="clear-notifications-btn"
