@@ -32,7 +32,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
     }
   }, [coordinates, weatherData])
 
-  // Load map script - ONLY ONCE with stronger prevention
+  // Load map script - ONLY ONCE with aggressive prevention
   useEffect(() => {
     // Prevent multiple initializations with comprehensive checks
     if (window.leafletMapInitialized || window.L || document.querySelector('script[src*="leaflet"]') || window.leafletScriptLoaded) {
@@ -53,14 +53,28 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
     leafletScript.onload = () => {
       console.log('✅ Leaflet loaded successfully')
       setLoading(false)
-      // Wait for DOM to be ready before initializing map
+      // Wait for DOM to be ready before initializing map - ONLY ONCE
       setTimeout(() => {
+        // Additional check to prevent duplicate initialization
+        if (window.leafletMapAlreadyInitialized) {
+          console.log('🗺️ Map already initialized, skipping')
+          return
+        }
+        
         if (mapRef.current && mapRef.current.offsetHeight > 0) {
+          window.leafletMapAlreadyInitialized = true
           initializeOpenStreetMap()
         } else {
           console.log('🔄 Map container not ready, retrying...')
           setTimeout(() => {
+            // Check again before retry
+            if (window.leafletMapAlreadyInitialized) {
+              console.log('🗺️ Map already initialized during retry, skipping')
+              return
+            }
+            
             if (mapRef.current && mapRef.current.offsetHeight > 0) {
+              window.leafletMapAlreadyInitialized = true
               initializeOpenStreetMap()
             } else {
               console.log('❌ Map container still not available')
@@ -98,6 +112,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
       // Reset flags on cleanup
       window.leafletMapInitialized = false
       window.leafletScriptLoaded = false
+      window.leafletMapAlreadyInitialized = false
     }
   }, []) // Empty dependency array - only run once
 
@@ -296,11 +311,14 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
       }
 
       // Prevent duplicate map initialization with comprehensive checks
-      if (container._leaflet_map || container._leaflet_id || window.leafletMapInitialized) {
+      if (container._leaflet_map || container._leaflet_id || window.leafletMapInitialized || window.leafletMapAlreadyInitialized) {
         console.log('🗺️ Map already initialized in container, skipping duplicate initialization')
         setLoading(false)
         return
       }
+
+      // Set flag immediately to prevent race conditions
+      window.leafletMapAlreadyInitialized = true
 
       // Clear any existing map
       if (container._leaflet_map) {
