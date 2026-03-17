@@ -137,30 +137,11 @@
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .temperature-display {
-    font-size: 3rem;
-  }
-  
-  .weather-condition {
-    font-size: 1.25rem;
-  }
-  
-  .weather-indicators {
-    gap: 12px;
-  }
-  
-  .indicator {
-    min-width: 100px;
-    padding: 8px 16px;
-  }
-}
-
-@media (max-width: 480px) {
-  .temperature-display {
     font-size: 2.5rem;
   }
   
   .weather-condition {
-    font-size: 1.125rem;
+    font-size: 1rem;
   }
   
   .weather-indicators {
@@ -170,5 +151,43 @@
   .indicator {
     min-width: 80px;
     padding: 6px 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .temperature-display {
+    font-size: 2rem;
+  }
+  
+  .weather-condition {
+    font-size: 0.9rem;
+  }
+  
+  .weather-indicators {
+    gap: 6px;
+  }
+  
+  .indicator {
+    min-width: 70px;
+    padding: 4px 8px;
+  }
+}
+
+@media (max-width: 360px) {
+  .temperature-display {
+    font-size: 1.8rem;
+  }
+  
+  .weather-condition {
+    font-size: 0.85rem;
+  }
+  
+  .weather-indicators {
+    gap: 4px;
+  }
+  
+  .indicator {
+    min-width: 60px;
+    padding: 3px 6px;
   }
 }

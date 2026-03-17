@@ -20,8 +20,8 @@
 /* Enhanced Mobile Layout */
 @media (max-width: 1024px) {
   .weather-content {
-    padding: 1rem;
-    padding-bottom: 100px;
+    padding: 0.5rem;
+    padding-bottom: 80px;
     min-height: 100vh; /* Full height since no top nav */
   }
   
@@ -35,13 +35,13 @@
 /* Small Mobile Devices */
 @media (max-width: 480px) {
   .weather-content {
-    padding: 0.75rem;
-    padding-bottom: 90px;
+    padding: 0.25rem;
+    padding-bottom: 70px;
   }
   
   /* Better text sizing for small screens */
   .weather-content {
-    font-size: 14px;
+    font-size: 12px;
   }
   
   /* Prevent zoom on input focus */
@@ -53,9 +53,8 @@
 /* Ultra Small Mobile */
 @media (max-width: 360px) {
   .weather-content {
-    padding: 0.5rem;
-    padding-bottom: 85px;
-    font-size: 13px;
+    padding: 0.1rem;
+    padding-bottom: 65px;
   }
 }
 
@@ -568,7 +567,7 @@
 
 .temp-value {
   display: block;
-  font-size: 4rem;
+  font-size: 3rem;
   font-weight: 700;
   line-height: 1;
   text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
@@ -1077,7 +1076,7 @@
   }
   
   .temp-value {
-    font-size: 3rem;
+    font-size: 2.5rem;
   }
   
   .weather-details {
@@ -1124,7 +1123,7 @@
   }
   
   .temp-value {
-    font-size: 2.5rem;
+    font-size: 2rem;
   }
   
   .temp-desc {
