@@ -1,15 +1,36 @@
-import React, { Suspense } from 'react'
+import React from 'react'
 import { HashRouter, Routes, Route } from 'react-router-dom'
-import WeatherApp from './components/WeatherApp'
-import HomePage from './pages/HomePage'
-import ForecastPage from './pages/ForecastPage'
-import MapPage from './pages/MapPage'
-import AlertsPage from './pages/AlertsPage'
-import SettingsPage from './pages/SettingsPage'
-import { LocationProvider } from './contexts/LocationContext'
-import { AlertProvider } from './contexts/AlertContext'
-import { SettingsProvider } from './contexts/SettingsContext'
 import './App.css'
+
+console.log('🔍 App.jsx - React imported:', React)
+
+// Simple test component to isolate the issue
+const TestComponent = () => {
+  console.log('🧪 TestComponent rendering...')
+  
+  try {
+    const [testState, setTestState] = React.useState('test')
+    console.log('✅ useState works in TestComponent')
+    return (
+      <div style={{ padding: '20px', textAlign: 'center' }}>
+        <h1>Weather App Debug</h1>
+        <p>React useState works: {testState}</p>
+        <button onClick={() => setTestState('clicked')}>
+          Click me
+        </button>
+        <p>If you can see this, React is working!</p>
+      </div>
+    )
+  } catch (error) {
+    console.error('❌ useState failed in TestComponent:', error)
+    return (
+      <div style={{ padding: '20px', textAlign: 'center', color: 'red' }}>
+        <h1>useState Error</h1>
+        <p>Error: {error.message}</p>
+      </div>
+    )
+  }
+}
 
 // Error Boundary Component
 class ErrorBoundary extends React.Component {
@@ -48,43 +69,26 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-// Loading Component
-const LoadingFallback = () => (
-  <div style={{ 
-    display: 'flex', 
-    justifyContent: 'center', 
-    alignItems: 'center', 
-    height: '100vh',
-    fontSize: '18px',
-    color: '#666'
-  }}>
-    Loading Weather App...
-  </div>
-)
-
 function App() {
+  console.log('🚀 App function rendering...')
+  
+  try {
+    const [appState, setAppState] = React.useState('app')
+    console.log('✅ useState works in App')
+  } catch (error) {
+    console.error('❌ useState failed in App:', error)
+    return <div>useState Error in App: {error.message}</div>
+  }
+
   return (
     <ErrorBoundary>
-      <SettingsProvider>
-        <LocationProvider>
-          <AlertProvider>
-            <HashRouter>
-              <div className="App">
-                <Suspense fallback={<LoadingFallback />}>
-                  <Routes>
-                    <Route path="/" element={<WeatherApp />} />
-                    <Route path="/home" element={<HomePage />} />
-                    <Route path="/forecast" element={<ForecastPage />} />
-                    <Route path="/map" element={<MapPage />} />
-                    <Route path="/alerts" element={<AlertsPage />} />
-                    <Route path="/settings" element={<SettingsPage />} />
-                  </Routes>
-                </Suspense>
-              </div>
-            </HashRouter>
-          </AlertProvider>
-        </LocationProvider>
-      </SettingsProvider>
+      <HashRouter>
+        <div className="App">
+          <Routes>
+            <Route path="/" element={<TestComponent />} />
+          </Routes>
+        </div>
+      </HashRouter>
     </ErrorBoundary>
   )
 }
