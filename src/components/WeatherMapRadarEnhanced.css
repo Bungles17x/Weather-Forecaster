@@ -1,0 +1,468 @@
+/* Enhanced Weather Map Radar Styles */
+
+/* Alert Statistics Panel */
+.alert-stats-panel {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  min-width: 200px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.alert-stats-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  padding-bottom: 8px;
+}
+
+.alert-stats-header h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.refresh-btn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.refresh-btn:hover {
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+.severity-counts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 8px 4px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.stat-item.extreme {
+  background-color: rgba(220, 38, 38, 0.1);
+  border-color: rgba(220, 38, 38, 0.3);
+}
+
+.stat-item.severe {
+  background-color: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.stat-item.moderate {
+  background-color: rgba(234, 88, 12, 0.1);
+  border-color: rgba(234, 88, 12, 0.3);
+}
+
+.stat-item.minor {
+  background-color: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.stat-number {
+  display: block;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.stat-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.total-alerts {
+  text-align: center;
+  padding: 8px;
+  background-color: rgba(16, 185, 129, 0.1);
+  border-radius: 6px;
+  margin-bottom: 10px;
+  font-size: 12px;
+  color: #065f46;
+}
+
+.alert-types h5 {
+  margin: 0 0 6px 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.type-item {
+  font-size: 11px;
+  color: #6b7280;
+  padding: 2px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Enhanced Alert Popups */
+.alert-popup.enhanced {
+  min-width: 300px;
+  max-width: 400px;
+}
+
+.alert-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  margin: -12px -12px 12px -12px;
+  border-radius: 8px 8px 0 0;
+}
+
+.alert-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.urgency {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.urgency.extreme,
+.urgency.immediate {
+  background-color: rgba(220, 38, 38, 0.1);
+  color: #991b1b;
+}
+
+.urgency.severe,
+.urgency.urgent {
+  background-color: rgba(245, 158, 11, 0.1);
+  color: #92400e;
+}
+
+.urgency.expected {
+  background-color: rgba(234, 88, 12, 0.1);
+  color: #9a3412;
+}
+
+.urgency.future {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: #1e40af;
+}
+
+.alert-details {
+  margin-bottom: 12px;
+}
+
+.alert-details p {
+  margin: 4px 0;
+  font-size: 13px;
+  color: #4b5563;
+}
+
+.alert-details strong {
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.alert-description {
+  margin-bottom: 12px;
+  padding: 8px;
+  background-color: rgba(243, 244, 246, 0.5);
+  border-radius: 6px;
+  border-left: 3px solid #3b82f6;
+}
+
+.alert-description p {
+  margin: 0;
+  font-size: 13px;
+  color: #374151;
+  line-height: 1.4;
+}
+
+.alert-instructions h4 {
+  margin: 0 0 6px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.alert-instructions p {
+  margin: 0;
+  font-size: 12px;
+  color: #4b5563;
+  line-height: 1.4;
+}
+
+.alert-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary,
+.btn-secondary {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  text-align: center;
+}
+
+.btn-primary {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #2563eb;
+}
+
+.btn-secondary {
+  background-color: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.btn-secondary:hover {
+  background-color: #e5e7eb;
+}
+
+/* Alert Filter Control */
+.alert-filter-control {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.filter-header h4 {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.filter-options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.filter-options label {
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  color: #374151;
+  cursor: pointer;
+}
+
+.filter-options input[type="checkbox"] {
+  margin-right: 6px;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.filter-actions button {
+  flex: 1;
+  padding: 6px 8px;
+  border: none;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-actions button:first-child {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.filter-actions button:first-child:hover {
+  background-color: #2563eb;
+}
+
+.filter-actions button:last-child {
+  background-color: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.filter-actions button:last-child:hover {
+  background-color: #e5e7eb;
+}
+
+/* Enhanced Alert Polygons */
+.alert-polygon {
+  transition: all 0.3s ease;
+}
+
+.alert-polygon:hover {
+  cursor: pointer;
+}
+
+/* No Alerts Message */
+.no-alerts-popup .no-alerts-content,
+.error-popup .error-content {
+  text-align: center;
+  padding: 16px;
+}
+
+.no-alerts-content h3,
+.error-content h3 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.no-alerts-content p,
+.error-content p {
+  margin: 0 0 12px 0;
+  font-size: 13px;
+  color: #6b7280;
+  line-height: 1.4;
+}
+
+.no-alerts-content button,
+.error-content button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  background-color: #3b82f6;
+  color: white;
+}
+
+.no-alerts-content button:hover,
+.error-content button:hover {
+  background-color: #2563eb;
+}
+
+/* Loading State */
+.alert-stats-content .loading {
+  text-align: center;
+  padding: 20px;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .alert-stats-panel {
+    min-width: 160px;
+    padding: 8px;
+  }
+  
+  .severity-counts {
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+  }
+  
+  .stat-item {
+    padding: 6px 2px;
+  }
+  
+  .stat-number {
+    font-size: 14px;
+  }
+  
+  .stat-label {
+    font-size: 10px;
+  }
+  
+  .alert-popup.enhanced {
+    min-width: 280px;
+    max-width: 320px;
+  }
+  
+  .alert-actions {
+    flex-direction: column;
+  }
+  
+  .alert-filter-control {
+    padding: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .alert-stats-panel {
+    min-width: 140px;
+    padding: 6px;
+  }
+  
+  .alert-stats-header h4 {
+    font-size: 12px;
+  }
+  
+  .severity-counts {
+    gap: 2px;
+  }
+  
+  .stat-item {
+    padding: 4px 2px;
+  }
+  
+  .stat-number {
+    font-size: 12px;
+  }
+  
+  .stat-label {
+    font-size: 9px;
+  }
+  
+  .alert-popup.enhanced {
+    min-width: 260px;
+    max-width: 280px;
+  }
+  
+  .alert-header {
+    padding: 8px;
+  }
+  
+  .alert-header h3 {
+    font-size: 14px;
+  }
+  
+  .urgency {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+}
