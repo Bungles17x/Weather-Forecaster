@@ -4,6 +4,11 @@ import { LocationProvider } from './contexts/LocationContext'
 import { AlertProvider } from './contexts/AlertContext'
 import { SettingsProvider } from './contexts/SettingsContext'
 import WeatherApp from './components/WeatherApp'
+import HomePage from './pages/HomePage'
+import ForecastPage from './pages/ForecastPage'
+import MapPage from './pages/MapPage'
+import AlertsPage from './pages/AlertsPage'
+import SettingsPage from './pages/SettingsPage'
 import './App.css'
 
 console.log('🔍 App.jsx - React imported:', React)
@@ -65,6 +70,11 @@ function App() {
               <div className="App">
                 <Routes>
                   <Route path="/" element={<WeatherApp />} />
+                  <Route path="/home" element={<HomePage />} />
+                  <Route path="/forecast" element={<ForecastPage />} />
+                  <Route path="/map" element={<MapPage />} />
+                  <Route path="/alerts" element={<AlertsPage />} />
+                  <Route path="/settings" element={<SettingsPage />} />
                 </Routes>
               </div>
             </HashRouter>
