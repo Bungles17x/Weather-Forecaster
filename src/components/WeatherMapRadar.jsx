@@ -189,17 +189,17 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
       mapContainer.style.position = 'relative'
       mapRef.current.appendChild(mapContainer)
       
-      // Initialize Leaflet map with street tiles
+      // Initialize Leaflet map with street tiles - NO ATTRIBUTION
       const map = window.L.map(mapContainer, {
         center: [mapCenter?.lat || 40.7128, mapCenter?.lng || -74.0060],
         zoom: zoom || 10,
         zoomControl: true,
-        attributionControl: false
+        attributionControl: false // Completely disabled attribution
       })
       
-      // Add OpenStreetMap tiles (street map)
+      // Add OpenStreetMap tiles (street map) - NO ATTRIBUTION
       const streetLayer = window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors',
+        attribution: '', // Empty attribution to remove any default text
         maxZoom: 19
       }).addTo(map)
       
@@ -222,9 +222,9 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
   const addNexradRadarOverlay = (map) => {
     console.log('🛡️ Adding NEXRAD radar overlay to street map...')
     
-    // Primary NEXRAD radar from Iowa State - FIXED TMS URL
+    // Primary NEXRAD radar from Iowa State - FIXED TMS URL, NO ATTRIBUTION
     const nexradLayer = window.L.tileLayer('https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/ridge::USCOMP-N0Q::0/256/{z}/{x}/{y}.png', {
-      attribution: '© Iowa State Mesonet / NOAA NWS',
+      attribution: '', // NO ATTRIBUTION - removes any email/text
       opacity: 0.7,
       maxZoom: 12,
       minZoom: 2,
@@ -249,7 +249,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
     
     nexradLayer.addTo(map)
     
-    // Add radar status indicator
+    // Add radar status indicator - NO EMAIL
     const radarStatus = window.L.control({position: 'topleft'})
     radarStatus.onAdd = function() {
       const div = window.L.DomUtil.create('div', 'radar-status')
@@ -267,13 +267,13 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
     return nexradLayer
   }
 
-  // Try alternative radar sources if primary fails
+  // Try alternative radar sources if primary fails - NO ATTRIBUTION
   const tryAlternativeRadar = (map) => {
     console.log('🔄 Trying alternative radar sources...')
     
-    // Try OpenWeatherMap radar as fallback
+    // Try OpenWeatherMap radar as fallback - NO ATTRIBUTION
     const owmRadar = window.L.tileLayer('https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136', {
-      attribution: '© OpenWeatherMap',
+      attribution: '', // NO ATTRIBUTION - removes any email/text
       opacity: 0.6,
       maxZoom: 12,
       minZoom: 2,
@@ -536,9 +536,9 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
 
       console.log('🗺️ Leaflet map created successfully')
 
-      // Add OpenStreetMap tiles
+      // Add OpenStreetMap tiles - NO ATTRIBUTION
       const osmLayer = window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors',
+        attribution: '', // Empty attribution to remove any text
         maxZoom: 19
       }).addTo(map)
 
@@ -607,9 +607,9 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         }
       }
 
-      // Primary NEXRAD radar from Iowa State - FIXED TMS REQUEST
+      // Primary NEXRAD radar from Iowa State - FIXED TMS REQUEST, NO ATTRIBUTION
       const nexradLayer = window.L.tileLayer('https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/ridge::USCOMP-N0Q::0/256/{z}/{x}/{y}.png', {
-        attribution: '© Iowa State Mesonet / NOAA NWS',
+        attribution: '', // NO ATTRIBUTION - removes any email/text
         opacity: 0.8,
         maxZoom: 12,
         minZoom: 2,
@@ -645,9 +645,9 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
       
       nexradLayer.addTo(map)
       
-      // RainViewer radar - ORIGINAL WORKING SOURCE
+      // RainViewer radar - NO ATTRIBUTION
       const rainviewerLayer = window.L.tileLayer('https://tile.rainviewer.com/v2/radar/{z}/{x}/{y}/256/0_0.png', {
-        attribution: '© RainViewer / NOAA NWS',
+        attribution: '', // NO ATTRIBUTION - removes any email/text
         opacity: 0.7,
         maxZoom: 12,
         minZoom: 2,
@@ -671,9 +671,9 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
       
       rainviewerLayer.addTo(map)
       
-      // Weather.gov radar - ORIGINAL WORKING SOURCE
+      // Weather.gov radar - NO ATTRIBUTION
       const weatherGovLayer = window.L.tileLayer('https://radar.weather.gov/ridge/Conus/Base/NEXRAD/{z}/{x}/{y}.png', {
-        attribution: '© NOAA Weather.gov',
+        attribution: '', // NO ATTRIBUTION - removes any email/text
         opacity: 0.7,
         maxZoom: 12,
         minZoom: 2,
@@ -697,9 +697,9 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
       
       weatherGovLayer.addTo(map)
       
-      // Ventusky radar - ORIGINAL WORKING SOURCE
+      // Ventusky radar - NO ATTRIBUTION
       const ventuskyLayer = window.L.tileLayer('https://tiles.ventusky.com/precipitation/{z}/{x}/{y}.png', {
-        attribution: '© Ventusky / NOAA NWS',
+        attribution: '', // NO ATTRIBUTION - removes any email/text
         opacity: 0.6,
         maxZoom: 12,
         minZoom: 2,
