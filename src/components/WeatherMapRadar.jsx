@@ -25,8 +25,10 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
           try {
             console.log('🌪️ Fetching SPC convective outlook...')
             
-            // Try the main SPC outlook endpoint
-            const outlookUrl = 'https://www.spc.noaa.gov/products/outlook/day1otlk.json'
+            // Try the main SPC outlook endpoint (dynamic date)
+            const today = new Date().toISOString().slice(0, 10).replace(/-/g, '')
+            const outlookUrl = `https://www.spc.noaa.gov/products/outlook/day1/otlk_${today}_day1otlk.json`
+            console.log('🌪️ Trying SPC URL:', outlookUrl)
             const response = await fetch(outlookUrl)
             
             if (!response.ok) {
@@ -40,7 +42,9 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
             console.error('🌪️ Error fetching SPC outlook:', error)
             // Try alternative endpoint or set null
             try {
-              const fallbackUrl = 'https://www.spc.noaa.gov/products/outlook/day1/otlk_lyn.json'
+              const today = new Date().toISOString().slice(0, 10).replace(/-/g, '')
+              const fallbackUrl = `https://www.spc.noaa.gov/products/outlook/day1/otlk_${today}_day1otlk.json`
+              console.log('🌪️ Trying fallback SPC URL:', fallbackUrl)
               const fallbackResponse = await fetch(fallbackUrl)
               if (fallbackResponse.ok) {
                 const fallbackData = await fallbackResponse.json()
@@ -408,9 +412,9 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
 
   const addRadarLayersOSM = (map) => {
     try {
-      // Working NEXRAD radar from RainViewer (more reliable)
-      const nexradLayer = window.L.tileLayer('https://tile.rainviewer.com/v2/radar/{z}/{x}/{y}.png', {
-        attribution: '© RainViewer / NOAA NWS',
+      // Working NEXRAD radar from RainViewer (updated URL)
+      const nexradLayer = window.L.tileLayer('https://tile.openweathermap.org/precipitation_new/{z}/{x}/{y}.png', {
+        attribution: '© OpenWeatherMap / NOAA NWS',
         opacity: 0.8,
         maxZoom: 12,
         minZoom: 2,
@@ -457,9 +461,9 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
       })
 
-    // Working Precipitation Layer using RainViewer
-    const precipLayer = window.L.tileLayer('https://tile.rainviewer.com/v2/radar/{z}/{x}/{y}.png', {
-      attribution: '© RainViewer',
+    // Working Precipitation Layer using OpenWeatherMap
+    const precipLayer = window.L.tileLayer('https://tile.openweathermap.org/precipitation_new/{z}/{x}/{y}.png', {
+      attribution: '© OpenWeatherMap',
       opacity: 0.8,
       maxZoom: 12,
       minZoom: 4
