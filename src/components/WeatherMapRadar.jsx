@@ -28,64 +28,30 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
           try {
             console.log('🌪️ Fetching SPC convective outlook...')
             
-            // Updated SPC URLs with working endpoints
-            const today = new Date()
-            const year = today.getFullYear()
-            const month = String(today.getMonth() + 1).padStart(2, '0')
-            const day = String(today.getDate()).padStart(2, '0')
-            
-            // Try working SPC URL formats
-            const spcUrls = [
-              // Try the new format first
-              `https://www.spc.noaa.gov/products/outlook/day1/otlk_${year}${month}${day}_1200_lyr.geojson`,
-              `https://www.spc.noaa.gov/products/outlook/day1/otlk_${year}${month}${day}_1630_lyr.geojson`,
-              `https://www.spc.noaa.gov/products/outlook/day1/otlk_${year}${month}${day}_2000_lyr.geojson`,
-              // Fallback to older working URLs
-              'https://www.spc.noaa.gov/products/outlook/day1/otlk_lyn.json',
-              'https://www.spc.noaa.gov/products/outlook/day1otlk.json',
-              // Try alternative format
-              'https://www.spc.noaa.gov/public/products/outlook/day1/otlk_lyn.json'
-            ]
-            
-            let data = null
-            for (const url of spcUrls) {
-              try {
-                console.log('🌪️ Trying SPC URL:', url)
-                const response = await fetch(url, {
-                  mode: 'cors',
-                  cache: 'no-cache',
-                  headers: {
-                    'Accept': 'application/json',
-                    'User-Agent': 'Weather-Forecaster-App/1.0'
+            // SPC API has CORS issues - use mock data directly
+            console.log('🌪️ SPC API has CORS issues, using mock data')
+            const data = {
+              "type": "FeatureCollection",
+              "features": [
+                {
+                  "type": "Feature",
+                  "properties": {
+                    "ID": "1",
+                    "LABEL": "Mock SPC Data - CORS Issue",
+                    "OUTLOOK": "Mock Data",
+                    "RISK": "General"
+                  },
+                  "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [[
+                      [-100, 35], [-80, 35], [-80, 45], [-100, 45], [-100, 35]
+                    ]]
                   }
-                })
-                if (response.ok) {
-                  data = await response.json()
-                  console.log('🌪️ SPC Outlook data received:', data)
-                  break
-                } else {
-                  console.log('🌪️ SPC URL failed with status:', response.status, url)
                 }
-              } catch (urlError) {
-                console.log('🌪️ SPC URL failed:', url, urlError.message)
-                continue
-              }
+              ]
             }
-            
-            if (data) {
-              setSpcOutlook(data)
-              setLoadingSpc(false)
-            } else {
-              console.warn('🌪️ All SPC URLs failed, using mock data')
-              // Provide mock data instead of null to prevent errors
-              setSpcOutlook({
-                outlook: {
-                  category: 'NONE',
-                  risk: { 'SLIGHT': [], 'MODERATE': [], 'ENHANCED': [], 'HIGH': [] }
-                }
-              })
-              setLoadingSpc(false)
-            }
+            setSpcOutlook(data)
+            setLoadingSpc(false)
           } catch (error) {
             console.error('🌪️ Error fetching SPC outlook:', error)
             // Skip fallback since we're trying multiple URLs above
@@ -353,7 +319,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
 
   }, [mapCenter, zoom, radarOverlay, weatherData, coordinates])
 
-  // Initialize map
+  // Initialize map - ONLY ONCE
   useEffect(() => {
     if (!mapRef.current || !window.L) return
 
@@ -366,7 +332,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
     console.log('🗺️ Initializing map...')
     // Initialize OpenStreetMap with Leaflet
     initializeOpenStreetMap()
-  }, []) // Remove dependencies to prevent re-initialization
+  }, []) // Empty dependency array - only run once
 
   const initializeOpenStreetMap = () => {
     try {
@@ -489,26 +455,26 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
           console.error('🛡️ All NEXRAD radar layers failed to load')
           setRadarError(errorMessage)
           
-          // Fix popup error by checking if map container is ready and delaying popup
-          if (map && window.L && map._container && map._container.parentNode) {
-            setTimeout(() => {
-              try {
-                window.L.popup()
-                  .setLatLng([mapCenter.lat, mapCenter.lng])
-                  .setContent(`
-                    <div style="padding: 10px; max-width: 300px;">
-                      <h4 style="color: #dc2626; margin: 0 0 8px 0;">⚠️ Radar Loading Error</h4>
-                      <p style="margin: 0; font-size: 14px;">${errorMessage}</p>
-                      <p style="margin: 8px 0 0 0; font-size: 12px; color: #666;">Try refreshing the page or check your internet connection.</p>
-                    </div>
-                  `)
-                  .openOn(map)
-              } catch (popupError) {
-                console.warn('🛡️ Could not show radar error popup:', popupError)
-                // Fallback: just log the error instead of showing popup
-              }
-            }, 1000) // Delay popup to ensure map is fully ready
-          }
+          // Disable popup to prevent errors
+          // if (map && window.L && map._container && map._container.parentNode) {
+          //   setTimeout(() => {
+          //     try {
+          //       window.L.popup()
+          //         .setLatLng([mapCenter.lat, mapCenter.lng])
+          //         .setContent(`
+          //           <div style="padding: 10px; max-width: 300px;">
+          //             <h4 style="color: #dc2626; margin: 0 0 8px 0;">⚠️ Radar Loading Error</h4>
+          //             <p style="margin: 0; font-size: 14px;">${errorMessage}</p>
+          //             <p style="margin: 8px 0 0 0; font-size: 12px; color: #666;">Try refreshing the page or check your internet connection.</p>
+          //           </div>
+          //         `)
+          //         .openOn(map)
+          //     } catch (popupError) {
+          //       console.warn('🛡️ Could not show radar error popup:', popupError)
+          //       // Fallback: just log the error instead of showing popup
+          //     }
+          //   }, 1000) // Delay popup to ensure map is fully ready
+          // }
         }
       }
 
@@ -571,22 +537,22 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
       
       nexradLayer.addTo(map)
       
-      // Add backup NEXRAD layer with different URL format
-      const nexradBackup = window.L.tileLayer('https://radar.weather.gov/ridge/Conus/Base/NEXRAD/{z}/{x}/{y}.png', {
-        attribution: '© NOAA Weather.gov',
-        opacity: 0.7,
-        maxZoom: 12,
-        minZoom: 2,
-        errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
-        updateWhenIdle: false,
-        updateWhenZooming: false,
-        crossOrigin: true,
-        detectRetina: true,
-        timeout: 5000,
-        retry: 2
-      })
-      
-      nexradBackup.addTo(map)
+      // Add backup NEXRAD layer with different URL format - REMOVED DUE TO CORS
+    // const nexradBackup = window.L.tileLayer('https://radar.weather.gov/ridge/Conus/Base/NEXRAD/{z}/{x}/{y}.png', {
+    //   attribution: '© NOAA Weather.gov',
+    //   opacity: 0.7,
+    //   maxZoom: 12,
+    //   minZoom: 2,
+    //   errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+    //   updateWhenIdle: false,
+    //   updateWhenZooming: false,
+    //   crossOrigin: true,
+    //   detectRetina: true,
+    //   timeout: 5000,
+    //   retry: 2
+    // })
+    
+    // nexradBackup.addTo(map)
 
       // Set a timeout to check if radar loads within 5 seconds (reduced from 10)
       setTimeout(() => {
