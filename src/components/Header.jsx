@@ -134,9 +134,11 @@ const Header = ({ onLocationChange }) => {
         console.error('❌ Navbar geolocation error:', error)
         setLocating(false)
         
+        console.log('🔍 About to show location search modal...')
         // Show search city form when location fails
         setShowLocationSearch(true)
         setLocationSearchInput('')
+        console.log('🔍 Location search modal state set to true')
       },
       {
         enableHighAccuracy: true,
@@ -424,7 +426,7 @@ const Header = ({ onLocationChange }) => {
       </div>
 
       {/* Location Search Modal - Shown when GPS fails */}
-      {showLocationSearch && (
+      {console.log('🔍 Rendering check - showLocationSearch:', showLocationSearch) || showLocationSearch && (
         <div className="location-search-overlay" onClick={closeLocationSearch}>
           <div className="location-search-modal" onClick={(e) => e.stopPropagation()}>
             <div className="location-search-header">
