@@ -378,25 +378,25 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
 
   const addRadarLayersOSM = (map) => {
     try {
-      // Working NEXRAD radar from RainViewer (more reliable)
-      const nexradLayer = window.L.tileLayer('https://tile.rainviewer.com/v2/radar/{z}/{x}/{y}.png', {
-        attribution: '© RainViewer / NOAA NWS',
+      // Primary NEXRAD radar from Iowa State Mesonet (most reliable)
+      const nexradLayer = window.L.tileLayer('https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png', {
+        attribution: '© Iowa State Mesonet / NOAA NWS',
         opacity: 0.8,
         maxZoom: 12,
         minZoom: 2,
         errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
       }).addTo(map)
 
-      // Alternative NEXRAD from Iowa State Mesonet
-      const nexradTilesLayer = window.L.tileLayer('https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png', {
-        attribution: '© Iowa State Mesonet / NOAA NWS',
+      // Backup NEXRAD radar from RainViewer
+      const nexradTilesLayer = window.L.tileLayer('https://tilecache.rainviewer.com/v2/radar/{z}/{x}/{y}.png', {
+        attribution: '© RainViewer / NOAA NWS',
         opacity: 0.7,
         maxZoom: 12,
         minZoom: 2,
         errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
       })
 
-      // Additional radar layer from Ventusky (backup)
+      // Alternative NEXRAD from Ventusky (backup)
       const ventuskyRadar = window.L.tileLayer('https://tiles.ventusky.com/radar/{z}/{x}/{y}.png', {
         attribution: '© Ventusky / NOAA NWS',
         opacity: 0.7,
@@ -471,8 +471,8 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
 
     // Create overlay maps - working layers only
     const overlayMaps = {
-      '🛡️ NEXRAD Radar (RainViewer)': nexradLayer,
-      '🛡️ NEXRAD (Iowa State)': nexradTilesLayer,
+      '🛡️ NEXRAD Radar (Iowa State)': nexradLayer,
+      '🛡️ NEXRAD (RainViewer)': nexradTilesLayer,
       '🛡️ NEXRAD (Ventusky)': ventuskyRadar,
       '💨 Wind Speed': windLayer,
       '💧 Precipitation': precipLayer,
