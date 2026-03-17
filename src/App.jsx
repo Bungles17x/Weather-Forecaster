@@ -12,6 +12,7 @@ import SettingsPage from './pages/SettingsPage'
 import './App.css'
 
 console.log('🔍 App.jsx - React imported:', React)
+console.log('🚀 App component loading')
 
 // Error Boundary Component
 class ErrorBoundary extends React.Component {

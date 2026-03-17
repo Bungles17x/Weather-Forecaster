@@ -32,13 +32,11 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
             const today = new Date().toISOString().slice(0, 10).replace(/-/g, '')
             // Try different SPC URL formats with more reliable endpoints
             const spcUrls = [
-              'https://www.spc.noaa.gov/products/outlook/day1/otlk_lyn.json',
-              'https://www.spc.noaa.gov/products/outlook/day1otlk.json',
-              'https://www.spc.noaa.gov/products/outlook/day2otlk.json',
-              'https://www.spc.noaa.gov/products/outlook/day3otlk.json',
-              'https://www.spc.noaa.gov/products/outlook/day1/otlk_cat.json',
-              'https://www.spc.noaa.gov/products/outlook/day1/otlk_20260317_day1otlk.json',
-              'https://www.spc.noaa.gov/products/outlook/day1/otlk_20260316_day1otlk.json' // Yesterday
+              'https://www.spc.noaa.gov/products/outlook/day1/otlk_20260317_1200_lyr.geojson',
+              'https://www.spc.noaa.gov/products/outlook/day1/otlk_20260317_1630_lyr.geojson',
+              'https://www.spc.noaa.gov/products/outlook/day1/otlk_20260317_2000_lyr.geojson',
+              'https://www.spc.noaa.gov/products/outlook/day2/otlk_20260317_1200_lyr.geojson',
+              'https://www.spc.noaa.gov/products/outlook/day3/otlk_20260317_1200_lyr.geojson'
             ]
             
             let data = null
@@ -482,7 +480,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
           console.error('🛡️ All NEXRAD radar layers failed to load')
           setRadarError(errorMessage)
           
-          // Show popup error on map (only if map is ready)
+          // Fix popup error by checking if map container is ready
           if (map && window.L && map._container && map._container.parentNode) {
             try {
               window.L.popup()
@@ -497,14 +495,15 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
                 .openOn(map)
             } catch (popupError) {
               console.warn('🛡️ Could not show radar error popup:', popupError)
+              // Fallback: just log the error instead of showing popup
             }
           }
         }
       }
 
-      // Primary NEXRAD radar from RainViewer (free, no API key needed)
-      const nexradLayer = window.L.tileLayer('https://tile.rainviewer.com/v2/coverage/now/{z}/{x}/{y}/256/0/0_1.png', {
-        attribution: '© RainViewer / NOAA NWS',
+      // Primary NEXRAD radar from Weather.gov (more reliable than RainViewer)
+      const nexradLayer = window.L.tileLayer('https://radar.weather.gov/ridge/Conus/Base/NEXRAD/{z}/{x}/{y}.png', {
+        attribution: '© NOAA Weather.gov',
         opacity: 0.8,
         maxZoom: 12,
         minZoom: 2,
