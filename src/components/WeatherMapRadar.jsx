@@ -25,37 +25,41 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
           try {
             console.log('🌪️ Fetching SPC convective outlook...')
             
-            // Try the main SPC outlook endpoint (dynamic date)
+            // Try the main SPC outlook endpoint (multiple date formats)
             const today = new Date().toISOString().slice(0, 10).replace(/-/g, '')
-            const outlookUrl = `https://www.spc.noaa.gov/products/outlook/day1/otlk_${today}_day1otlk.json`
-            console.log('🌪️ Trying SPC URL:', outlookUrl)
-            const response = await fetch(outlookUrl)
+            // Try different SPC URL formats
+            const spcUrls = [
+              `https://www.spc.noaa.gov/products/outlook/day1/otlk_${today}_day1otlk.json`,
+              `https://www.spc.noaa.gov/products/outlook/day1otlk.json`,
+              `https://www.spc.noaa.gov/products/outlook/day1/otlk_lyn.json`
+            ]
             
-            if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`)
+            let data = null
+            for (const url of spcUrls) {
+              try {
+                console.log('🌪️ Trying SPC URL:', url)
+                const response = await fetch(url)
+                if (response.ok) {
+                  data = await response.json()
+                  console.log('🌪️ SPC Outlook data received:', data)
+                  break
+                }
+              } catch (urlError) {
+                console.log('🌪️ SPC URL failed:', url, urlError.message)
+                continue
+              }
             }
             
-            const data = await response.json()
-            console.log('🌪️ SPC Outlook data received:', data)
-            setSpcOutlook(data)
+            if (data) {
+              setSpcOutlook(data)
+            } else {
+              throw new Error('All SPC URLs failed')
+            }
           } catch (error) {
             console.error('🌪️ Error fetching SPC outlook:', error)
-            // Try alternative endpoint or set null
-            try {
-              const today = new Date().toISOString().slice(0, 10).replace(/-/g, '')
-              const fallbackUrl = `https://www.spc.noaa.gov/products/outlook/day1/otlk_${today}_day1otlk.json`
-              console.log('🌪️ Trying fallback SPC URL:', fallbackUrl)
-              const fallbackResponse = await fetch(fallbackUrl)
-              if (fallbackResponse.ok) {
-                const fallbackData = await fallbackResponse.json()
-                setSpcOutlook(fallbackData)
-              } else {
-                setSpcOutlook(null)
-              }
-            } catch (fallbackError) {
-              console.log('🌪️ SPC fallback also failed, using null')
-              setSpcOutlook(null)
-            }
+            // Skip fallback since we're trying multiple URLs above
+            console.log('🌪️ All SPC URLs failed, using null')
+            setSpcOutlook(null)
           } finally {
             setLoadingSpc(false)
           }
@@ -518,7 +522,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
 
     // Create overlay maps - working layers only
     const overlayMaps = {
-      '🛡️ NEXRAD Radar (RainViewer)': nexradLayer,
+      '🛡️ NEXRAD Radar (OpenWeatherMap)': nexradLayer,
       '🛡️ NEXRAD (Iowa State)': nexradTilesLayer,
       '🛡️ NEXRAD (Ventusky)': ventuskyRadar,
       '💨 Wind Speed': windLayer,
