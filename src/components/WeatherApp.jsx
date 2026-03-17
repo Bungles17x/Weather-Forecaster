@@ -10,6 +10,8 @@ import './WeatherApp.css'
 console.log('🔄 WeatherApp.jsx loaded at:', new Date().toISOString(), 'CACHE BUST: 2024-03-15-18-27')
 
 const WeatherApp = () => {
+  console.log('🚀 WeatherApp component mounting...')
+  
   // Use global location context
   const { location: globalLocation, coordinates, setLocation: setGlobalLocation, setCoordinates } = useGlobalLocation()
   
@@ -34,6 +36,8 @@ const WeatherApp = () => {
   const [lastUpdate, setLastUpdate] = useState(null)
   const [spcOutlook, setSpcOutlook] = useState(null)
   const [loadingSpc, setLoadingSpc] = useState(false)
+
+  console.log('📊 WeatherApp state initialized:', { loading, error, coordinates })
 
   // NWS API endpoints
   const NWS_BASE_URL = 'https://api.weather.gov'
