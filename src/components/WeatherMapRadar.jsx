@@ -16,10 +16,78 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
   const [activeRadarLayers, setActiveRadarLayers] = useState([])
   const mapRef = useRef(null)
 
-  // SPC data is handled in WeatherApp.jsx - removed to prevent conflicts
-  // useEffect(() => {
-  //   // SPC fetching removed to avoid duplicate API calls
-  // }, [coordinates])
+  // Original working radar setup - RESTORED
+  useEffect(() => {
+    const fetchSPCOutlook = async () => {
+      try {
+        setLoadingSpc(true)
+        console.log('🌪 Fetching SPC Outlook data...')
+        
+        // Original SPC URL fetching - RESTORED
+        const today = new Date()
+        const dateStr = today.getFullYear() + 
+          String(today.getMonth() + 1).padStart(2, '0') + 
+          String(today.getDate()).padStart(2, '0')
+        
+        console.log('🌪️ Trying SPC URL for date:', dateStr)
+        
+        // Try multiple SPC URLs - ORIGINAL APPROACH
+        const spcUrls = [
+          `https://www.spc.noaa.gov/products/outlook/day1/otlk_${dateStr}.geojson`,
+          `https://www.spc.noaa.gov/products/outlook/day1/otlk_${dateStr}.json`,
+          `https://www.spc.noaa.gov/products/outlook/day1/otlk_lyn.json`,
+          'https://www.spc.noaa.gov/products/outlook/day1/otlk_lyn.json'
+        ]
+        
+        let data = null
+        for (const url of spcUrls) {
+          try {
+            console.log('🌪️ Trying SPC URL:', url)
+            const response = await fetch(url)
+            if (response.ok) {
+              data = await response.json()
+              console.log('🌪️ SPC data loaded successfully from:', url)
+              break
+            }
+          } catch (error) {
+            console.log('🌪️ SPC URL failed:', url, error.message)
+          }
+        }
+        
+        if (data) {
+          setSpcOutlook(data)
+        } else {
+          console.log('🌪️ All SPC URLs failed, using null')
+          setSpcOutlook(null)
+        }
+        setLoadingSpc(false)
+        
+        // Fetch active weather alerts
+        const alertsResponse = await fetch('https://api.weather.gov/alerts/active')
+        if (alertsResponse.ok) {
+          const alertsData = await alertsResponse.json()
+          console.log('⚠️ Weather Alerts:', alertsData)
+          setWeatherAlerts(alertsData.features || [])
+        }
+        
+        // Fetch NWS radar data for current location
+        if (coordinates) {
+          const radarResponse = await fetch(`https://api.weather.gov/radar/stations`)
+          if (radarResponse.ok) {
+            const radarData = await radarResponse.json()
+            console.log('📡️ NWS Radar Stations:', radarData)
+          }
+        }
+        
+      } catch (error) {
+        console.error('❌ Error fetching weather channel data:', error)
+      } finally {
+        setLoadingSpc(false)
+      }
+    }
+    
+    fetchSPCOutlook()
+  }, [coordinates])
 
   // Initialize map
   useEffect(() => {
@@ -372,36 +440,33 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
     }
   }
 
+  // Original working radar layers - RESTORED
   const addRadarLayersOSM = (map) => {
     try {
       console.log('🛡️ Adding NEXRAD radar layers...')
       let radarLayersLoaded = 0
       let radarLayersFailed = 0
-      const totalRadarLayers = 6  // Increased to 6 with more reliable sources
+      const totalRadarLayers = 4  // Original count
       
-      // Track layer status to prevent duplicate counting
+      // Track layer status
       const layerStatus = {
         nexrad: 'pending',
-        iowaState: 'pending', 
-        ventusky: 'pending',
-        noaa: 'pending',
+        rainviewer: 'pending', 
         weatherGov: 'pending',
-        radarScope: 'pending'
+        ventusky: 'pending'
       }
       
       // Function to check radar loading status
       const checkRadarStatus = () => {
         console.log(`🛡️ Radar status: ${radarLayersLoaded} loaded, ${radarLayersFailed} failed`)
         
-        // Update radar status state
         if (radarLayersLoaded > 0) {
           setRadarStatus('active')
           const activeLayers = []
-          if (layerStatus.nexrad === 'loaded') activeLayers.push('Iowa State NEXRAD')
-          if (layerStatus.iowaState === 'loaded') activeLayers.push('RainViewer 2')
-          if (layerStatus.ventusky === 'loaded') activeLayers.push('Ventusky')
+          if (layerStatus.nexrad === 'loaded') activeLayers.push('NEXRAD')
+          if (layerStatus.rainviewer === 'loaded') activeLayers.push('RainViewer')
           if (layerStatus.weatherGov === 'loaded') activeLayers.push('Weather.gov')
-          if (layerStatus.radarScope === 'loaded') activeLayers.push('RadarScope')
+          if (layerStatus.ventusky === 'loaded') activeLayers.push('Ventusky')
           setActiveRadarLayers(activeLayers)
         } else if (radarLayersFailed >= totalRadarLayers) {
           setRadarStatus('failed')
@@ -409,36 +474,9 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         } else {
           setRadarStatus('loading')
         }
-        
-        if (radarLayersLoaded === 0 && radarLayersFailed >= totalRadarLayers) {
-          const errorMessage = '⚠️ NEXRAD radar layers failed to load. This may be due to network issues or service outages.'
-          console.error('🛡️ All NEXRAD radar layers failed to load')
-          setRadarError(errorMessage)
-          
-          // Disable popup to prevent errors
-          // if (map && window.L && map._container && map._container.parentNode) {
-          //   setTimeout(() => {
-          //     try {
-          //       window.L.popup()
-          //         .setLatLng([mapCenter.lat, mapCenter.lng])
-          //         .setContent(`
-          //           <div style="padding: 10px; max-width: 300px;">
-          //             <h4 style="color: #dc2626; margin: 0 0 8px 0;">⚠️ Radar Loading Error</h4>
-          //             <p style="margin: 0; font-size: 14px;">${errorMessage}</p>
-          //             <p style="margin: 8px 0 0 0; font-size: 12px; color: #666;">Try refreshing the page or check your internet connection.</p>
-          //           </div>
-          //         `)
-          //         .openOn(map)
-          //     } catch (popupError) {
-          //       console.warn('🛡️ Could not show radar error popup:', popupError)
-          //       // Fallback: just log the error instead of showing popup
-          //     }
-          //   }, 1000) // Delay popup to ensure map is fully ready
-          // }
-        }
       }
 
-      // Primary NEXRAD radar from Iowa State (reliable source)
+      // Primary NEXRAD radar from Iowa State - ORIGINAL WORKING SOURCE
       const nexradLayer = window.L.tileLayer('https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/ridge::USCOMP-N0Q::0/256/{z}/{x}/{y}.png', {
         attribution: '© Iowa State Mesonet / NOAA NWS',
         opacity: 0.8,
@@ -453,33 +491,11 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         retry: 2
       })
       
-      // Add error handling for this layer
-      nexradLayer.on('tileerror', (error) => {
-        // Only log first few errors to reduce console noise
-        if (!nexradLayer.errorCount) nexradLayer.errorCount = 0
-        if (nexradLayer.errorCount < 3) {
-          console.error('🛡️ Iowa State NEXRAD tile error:', error)
-          nexradLayer.errorCount++
-        }
-        
-        // Don't count individual tile errors
-        if (layerStatus.nexrad === 'pending') {
-          setTimeout(() => {
-            if (layerStatus.nexrad === 'pending') {
-              layerStatus.nexrad = 'failed'
-              radarLayersFailed++
-              console.log('🛡️ Iowa State NEXRAD layer failed to load')
-              checkRadarStatus()
-            }
-          }, 5000)
-        }
-      })
-      
       nexradLayer.on('tileload', () => {
         if (layerStatus.nexrad === 'pending' && radarLayersLoaded === 0) {
           layerStatus.nexrad = 'loaded'
           radarLayersLoaded = 1
-          console.log('✅ Iowa State NEXRAD radar loaded successfully')
+          console.log('✅ NEXRAD radar loaded successfully')
           setRadarError(null)
         }
       })
@@ -487,7 +503,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
       nexradLayer.on('load', () => {
         if (layerStatus.nexrad === 'pending') {
           layerStatus.nexrad = 'loaded'
-          console.log('✅ Iowa State NEXRAD radar layer fully loaded')
+          console.log('✅ NEXRAD radar layer fully loaded')
           if (radarLayersLoaded === 0) {
             radarLayersLoaded = 1
             setRadarError(null)
@@ -497,33 +513,84 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
       
       nexradLayer.addTo(map)
       
-      // Add backup NEXRAD layer with different URL format - REMOVED DUE TO CORS
-    // const nexradBackup = window.L.tileLayer('https://radar.weather.gov/ridge/Conus/Base/NEXRAD/{z}/{x}/{y}.png', {
-    //   attribution: '© NOAA Weather.gov',
-    //   opacity: 0.7,
-    //   maxZoom: 12,
-    //   minZoom: 2,
-    //   errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
-    //   updateWhenIdle: false,
-    //   updateWhenZooming: false,
-    //   crossOrigin: true,
-    //   detectRetina: true,
-    //   timeout: 5000,
-    //   retry: 2
-    // })
-    
-    // nexradBackup.addTo(map)
-
-      // Set a timeout to check if radar loads within 5 seconds (reduced from 10)
+      // RainViewer radar - ORIGINAL WORKING SOURCE
+      const rainviewerLayer = window.L.tileLayer('https://tile.rainviewer.com/v2/radar/{z}/{x}/{y}/256/0_0.png', {
+        attribution: '© RainViewer / NOAA NWS',
+        opacity: 0.7,
+        maxZoom: 12,
+        minZoom: 2,
+        errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+        updateWhenIdle: false,
+        updateWhenZooming: false,
+        crossOrigin: true,
+        detectRetina: true,
+        timeout: 5000,
+        retry: 2
+      })
+      
+      rainviewerLayer.on('tileload', () => {
+        if (layerStatus.rainviewer === 'pending' && radarLayersLoaded === 0) {
+          layerStatus.rainviewer = 'loaded'
+          radarLayersLoaded = 1
+          console.log('✅ RainViewer radar loaded successfully')
+          setRadarError(null)
+        }
+      })
+      
+      rainviewerLayer.addTo(map)
+      
+      // Weather.gov radar - ORIGINAL WORKING SOURCE
+      const weatherGovLayer = window.L.tileLayer('https://radar.weather.gov/ridge/Conus/Base/NEXRAD/{z}/{x}/{y}.png', {
+        attribution: '© NOAA Weather.gov',
+        opacity: 0.7,
+        maxZoom: 12,
+        minZoom: 2,
+        errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+        updateWhenIdle: false,
+        updateWhenZooming: false,
+        crossOrigin: true,
+        detectRetina: true,
+        timeout: 5000,
+        retry: 2
+      })
+      
+      weatherGovLayer.on('tileload', () => {
+        if (layerStatus.weatherGov === 'pending' && radarLayersLoaded === 0) {
+          layerStatus.weatherGov = 'loaded'
+          radarLayersLoaded = 1
+          console.log('✅ Weather.gov radar loaded successfully')
+          setRadarError(null)
+        }
+      })
+      
+      weatherGovLayer.addTo(map)
+      
+      // Ventusky radar - ORIGINAL WORKING SOURCE
+      const ventuskyLayer = window.L.tileLayer('https://tiles.ventusky.com/precipitation/{z}/{x}/{y}.png', {
+        attribution: '© Ventusky / NOAA NWS',
+        opacity: 0.6,
+        maxZoom: 12,
+        minZoom: 2,
+        errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+        timeout: 5000,
+        retry: 2
+      })
+      
+      ventuskyLayer.on('tileload', () => {
+        if (layerStatus.ventusky === 'pending' && radarLayersLoaded === 0) {
+          layerStatus.ventusky = 'loaded'
+          radarLayersLoaded = 1
+          console.log('✅ Ventusky radar loaded successfully')
+          setRadarError(null)
+        }
+      })
+      
+      ventuskyLayer.addTo(map)
+      
+      // Set timeout to check if radar loads
       setTimeout(() => {
         if (radarLayersLoaded === 0) {
           console.warn('🛡️ Radar layers did not load within timeout period')
-          console.log('🛡️ Current radar status for debugging:')
-          console.log('- Loaded:', radarLayersLoaded)
-          console.log('- Failed:', radarLayersFailed)
-          console.log('- Total expected:', totalRadarLayers)
-          
-          // Force error detection
           radarLayersFailed = totalRadarLayers
           setRadarStatus('failed')
           checkRadarStatus()
@@ -531,256 +598,22 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
           console.log('✅ At least one radar layer loaded successfully')
           setRadarStatus('active')
         }
-      }, 5000)  // Reduced from 10000
-      
-      // Also check after 2 seconds for early feedback (reduced from 3)
-      setTimeout(() => {
-        console.log('🛡️ 2-second radar status check:')
-        console.log('- Loaded:', radarLayersLoaded)
-        console.log('- Failed:', radarLayersFailed)
-        
-        // If all have failed quickly, show error immediately
-        if (radarLayersFailed >= totalRadarLayers && radarLayersLoaded === 0) {
-          checkRadarStatus()
-        }
-      }, 2000)  // Reduced from 3000
+      }, 5000)
 
-      // Declare all radar layer variables first
-      const ventuskyRadar = window.L.tileLayer('https://tiles.ventusky.com/precipitation/{z}/{x}/{y}.png', {
-        attribution: '© Ventusky / NOAA NWS',
-        opacity: 0.7,
-        maxZoom: 12,
-        minZoom: 2,
-        errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
-        timeout: 5000,
-        retry: 2
-      })
-
-      // Alternative radar from Weather.gov - REMOVED DUE TO CORS
-      // const weatherGovRadar = window.L.tileLayer('https://radar.weather.gov/ridge/Conus/Base/NEXRAD/{z}/{x}/{y}.png', {
-      //   attribution: '© NOAA Weather.gov',
-      //   opacity: 0.8,
-      //   maxZoom: 10,
-      //   minZoom: 3,
-      //   errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
-      //   timeout: 5000,
-      //   retry: 2
-      // })
-
-      // RadarScope fallback - REMOVED DUE TO API ISSUES
-      // const radarScopeLayer = window.L.tileLayer('https://api.radarscope.io/radar/{z}/{x}/{y}.png', {
-      //   attribution: '© RadarScope / Aviation Weather',
-      //   opacity: 0.7,
-      //   maxZoom: 12,
-      //   minZoom: 2,
-      //   errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
-      //   timeout: 5000,
-      //   retry: 2
-      // })
-
-      // Alternative radar layer using OpenWeatherMap
-      const radarScopeLayer = window.L.tileLayer('https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136', {
-        attribution: '© OpenWeatherMap',
-        opacity: 0.6,
-        maxZoom: 12,
-        minZoom: 2,
-        errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
-        timeout: 5000,
-        retry: 2
-      })
-
-      // Backup NEXRAD from RainViewer - SIMPLIFIED URL
-      const nexradTilesLayer = window.L.tileLayer('https://tile.rainviewer.com/v2/radar/{z}/{x}/{y}/256/0_0.png', {
-        attribution: '© RainViewer / NOAA NWS',
-        opacity: 0.7,
-        maxZoom: 12,
-        minZoom: 2,
-        errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
-        updateWhenIdle: false,
-        updateWhenZooming: false,
-        crossOrigin: true,
-        detectRetina: true,
-        timeout: 5000,
-        retry: 2
-      })
-      
-      // Add error handling for this layer
-      nexradTilesLayer.on('tileerror', (error) => {
-        // Only log first few errors to reduce console noise
-        if (!nexradTilesLayer.errorCount) nexradTilesLayer.errorCount = 0
-        if (nexradTilesLayer.errorCount < 3) {
-          console.error('🛡️ Iowa State radar tile error:', error)
-          nexradTilesLayer.errorCount++
-        }
-        
-        // Don't count individual tile errors
-        if (layerStatus.iowaState === 'pending') {
-          setTimeout(() => {
-            if (layerStatus.iowaState === 'pending') {
-              layerStatus.iowaState = 'failed'
-              radarLayersFailed++
-              console.log('🛡️ Iowa State layer failed to load')
-              checkRadarStatus()
-            }
-          }, 3000)
-        }
-      })
-      
-      nexradTilesLayer.on('tileload', () => {
-        if (layerStatus.iowaState === 'pending' && radarLayersLoaded === 0) {
-          layerStatus.iowaState = 'loaded'
-          radarLayersLoaded = 1
-          console.log('✅ Iowa State radar loaded successfully')
-          setRadarError(null)
-        }
-      })
-      
-      nexradTilesLayer.on('load', () => {
-        if (layerStatus.iowaState === 'pending') {
-          layerStatus.iowaState = 'loaded'
-          console.log('✅ Iowa State radar layer fully loaded')
-          if (radarLayersLoaded === 0) {
-            radarLayersLoaded = 1
-            setRadarError(null)
-          }
-        }
-      })
-
-      // Additional radar layer from RainViewer - SIMPLIFIED URL
-      const ventuskyLayer = window.L.tileLayer('https://tile.rainviewer.com/v2/radar/{z}/{x}/{y}/256/1_0.png', {
-        attribution: '© RainViewer / NOAA NWS',
-        opacity: 0.6,
-        maxZoom: 12,
-        minZoom: 2,
-        errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
-        updateWhenIdle: false,
-        updateWhenZooming: false,
-        crossOrigin: true,
-        detectRetina: true,
-        timeout: 5000,
-        retry: 2
-      })
-
-      // Wind Layer using Windy API - REMOVED DUE TO API KEY ISSUES
-      // const windLayer = window.L.tileLayer('https://tiles.windy.com/tiles/v2.0/overlay/wind/{z}/{x}/{y}.png?key=6LkELHlYhWkCGpOq9pGJd1f5pG0lGJGd', {
-      //   attribution: '© Windy.com',
-      //   opacity: 0.7,
-      //   maxZoom: 12,
-      //   minZoom: 4,
-      //   errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
-      // })
-
-      // Alternative wind layer using OpenWeatherMap
-      const windLayer = window.L.tileLayer('https://tile.openweathermap.org/map/wind_new/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136', {
-        attribution: '© OpenWeatherMap',
-        opacity: 0.7,
-        maxZoom: 12,
-        minZoom: 4,
-        errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
-      })
-
-    // Working Precipitation Layer using OpenWeatherMap - FIXED URL
-    const precipLayer = window.L.tileLayer('https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136', {
-      attribution: '© OpenWeatherMap',
-      opacity: 0.8,
-      maxZoom: 12,
-      minZoom: 4
-    })
-
-    // Working Temperature Layer using OSM Temperature
-    const tempLayer = window.L.tileLayer('https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136', {
-      attribution: '© OpenWeatherMap',
-      opacity: 0.7,
-      maxZoom: 12,
-      minZoom: 4
-    })
-
-    // Working Cloud Layer using OSM Clouds
-    const cloudsLayer = window.L.tileLayer('https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136', {
-      attribution: '© OpenWeatherMap',
-      opacity: 0.6,
-      maxZoom: 12,
-      minZoom: 4
-    })
-
-  // Working Pressure Layer using OSM Pressure
-    const pressureLayer = window.L.tileLayer('https://tile.openweathermap.org/map/pressure_new/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136', {
-      attribution: '© OpenWeatherMap',
-      opacity: 0.7,
-      maxZoom: 12,
-      minZoom: 4
-    })
-
-    // Add active alerts markers
-    const alertsLayerGroup = addActiveAlertsMarkers(map, setMapCenter, setZoom)
-
-    // Create base maps
-    const baseMaps = {
-      'OpenStreetMap': window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors',
-        maxZoom: 19
-      }),
-      'Satellite': window.L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-        attribution: '© Esri',
-        maxZoom: 19
-      }),
-      'Terrain': window.L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenTopoMap',
-        maxZoom: 17
-      }),
-      'Dark Mode': window.L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '© CartoDB',
-        maxZoom: 19
-      })
-    }
-
-    // Create overlay maps - working layers only
-    const overlayMaps = {
-      '🛡️ NEXRAD Radar (RainViewer)': nexradLayer,
-      '🛡️ NEXRAD (RainViewer 2)': nexradTilesLayer,
-      '🛡️ NEXRAD (Ventusky)': ventuskyRadar,
-      // '🛡️ NEXRAD (Weather.gov)': weatherGovRadar, // REMOVED DUE TO CORS
-      '🛡️ NEXRAD (RadarScope)': radarScopeLayer,
-      '💨 Wind Speed': windLayer,
-      '💧 Precipitation': precipLayer,
-      '☁️ Cloud Coverage': cloudsLayer,
-      '🌡 Temperature': tempLayer,
-      '🔵 Pressure': pressureLayer,
-      '🚨 Alerts': alertsLayerGroup
-    }
-
-    // Remove layer control to unblock radar map
-    // const layerControl = window.L.control.layers(baseMaps, overlayMaps, {
-    //   position: 'bottomleft',
-    //   collapsed: false
-    // }).addTo(map)
-
-    return {
-      nexrad: nexradLayer,
-      nexradTiles: nexradTilesLayer,
-      ventuskyRadar: ventuskyRadar,
-      // weatherGovRadar: weatherGovRadar, // REMOVED DUE TO CORS
-      radarScope: radarScopeLayer,
-      wind: windLayer,
-      precipitation: precipLayer,
-      clouds: cloudsLayer,
-      temperature: tempLayer,
-      pressure: pressureLayer,
-      layerControl: null // Removed layer control
-    }
+      return {
+        nexrad: nexradLayer,
+        rainviewer: rainviewerLayer,
+        weatherGov: weatherGovLayer,
+        ventusky: ventuskyLayer,
+        layerControl: null
+      }
     } catch (error) {
       console.error('🗺️ Error adding radar layers:', error)
       return {
         nexrad: null,
-        nexradTiles: null,
-        ventuskyRadar: null,
-        // weatherGovRadar: null, // REMOVED DUE TO CORS
-        radarScope: null,
-        wind: null,
-        precipitation: null,
-        clouds: null,
-        temperature: null,
-        pressure: null,
+        rainviewer: null,
+        weatherGov: null,
+        ventusky: null,
         layerControl: null
       }
     }
