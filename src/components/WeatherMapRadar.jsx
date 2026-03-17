@@ -101,8 +101,14 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
     }
   }, [coordinates, weatherData])
 
-  // Load map script
+  // Load map script - ONLY ONCE
   useEffect(() => {
+    // Prevent multiple initializations
+    if (window.leafletMapInitialized) {
+      console.log('🗺️ Leaflet already initialized, skipping')
+      return
+    }
+    
     // Try to load Leaflet for OpenStreetMap (more reliable)
     const leafletScript = document.createElement('script')
     leafletScript.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
@@ -110,6 +116,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
     leafletScript.onload = () => {
       console.log('✅ Leaflet loaded successfully')
       setLoading(false)
+      window.leafletMapInitialized = true
       // Wait for DOM to be ready before initializing map
       setTimeout(() => {
         if (mapRef.current && mapRef.current.offsetHeight > 0) {
@@ -150,7 +157,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         document.head.removeChild(leafletCSS)
       }
     }
-  }, [])
+  }, []) // Empty dependency array - only run once
 
   const initializeSimpleMap = () => {
     console.log('🗺️ Initializing weather map')
@@ -1590,22 +1597,11 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
 
     tempLayer.setMap(map)
     
-    // Add NEXRAD from NOAA
-    const nexradLayer = new window.google.maps.ImageMapType({
-      getTileUrl: (coord, zoom) => {
-        return `https://radar.weather.gov/ridge/Conus/Loop/NEXRAD.gif`
-      },
-      name: 'NEXRAD Radar',
-      alt: 'NEXRAD Radar Layer',
-      opacity: 0.9
-    })
-
-    nexradLayer.setMap(map)
-    
     return {
       noaa: noaaLayer,
       precipitation: precipLayer,
       clouds: cloudsLayer,
+      temperature: tempLayer
       temperature: tempLayer,
       nexrad: nexradLayer
     }
