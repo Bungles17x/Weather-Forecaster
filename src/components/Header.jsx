@@ -42,6 +42,10 @@ const Header = ({ onLocationChange }) => {
     }
 
     console.log('📍 Starting geolocation request...')
+    
+    // Show immediate feedback that we're requesting location
+    alert('Please allow location access to get your local weather data.')
+    
     setLocating(true)
 
     navigator.geolocation.getCurrentPosition(
@@ -98,16 +102,16 @@ const Header = ({ onLocationChange }) => {
         
         switch (error.code) {
           case error.PERMISSION_DENIED:
-            errorMessage = 'Location permission denied. Please enable location access.'
+            errorMessage = 'Location permission was denied. Please enable location access in your browser settings and try again.'
             break
           case error.POSITION_UNAVAILABLE:
-            errorMessage = 'Location information unavailable.'
+            errorMessage = 'Location information is unavailable.'
             break
           case error.TIMEOUT:
-            errorMessage = 'Location request timed out.'
+            errorMessage = 'Location request timed out. Please try again.'
             break
           case error.UNKNOWN_ERROR:
-            errorMessage = 'An unknown error occurred.'
+            errorMessage = 'An unknown error occurred while getting your location.'
             break
         }
         
@@ -117,7 +121,7 @@ const Header = ({ onLocationChange }) => {
       },
       {
         enableHighAccuracy: true,
-        timeout: 10000,
+        timeout: 15000, // Increased timeout
         maximumAge: 300000 // 5 minutes
       }
     )
