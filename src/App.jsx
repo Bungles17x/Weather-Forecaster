@@ -41,7 +41,7 @@ class ErrorBoundary extends React.Component {
           <details style={{ whiteSpace: 'pre-wrap' }}>
             {this.state.error && this.state.error.toString()}
             <br />
-            {this.state.errorInfo.componentStack}
+            {this.state.errorInfo && this.state.errorInfo.componentStack}
           </details>
         </div>
       )
@@ -54,13 +54,8 @@ class ErrorBoundary extends React.Component {
 function App() {
   console.log('🚀 App function rendering...')
   
-  try {
-    const [appState, setAppState] = React.useState('app')
-    console.log('✅ useState works in App')
-  } catch (error) {
-    console.error('❌ useState failed in App:', error)
-    return <div>useState Error in App: {error.message}</div>
-  }
+  const [appState, setAppState] = React.useState('app')
+  console.log('✅ useState works in App')
 
   return (
     <ErrorBoundary>

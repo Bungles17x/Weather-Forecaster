@@ -36,6 +36,7 @@ const ForecastPage = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [currentWeather, setCurrentWeather] = useState(null)
+  const [chartType, setChartType] = useState('all')
   
   // Use global location context
   const { location: globalLocation, coordinates, setLocation: setGlobalLocation } = useGlobalLocation()
@@ -539,36 +540,34 @@ const ForecastPage = () => {
   }
 
   const renderDailyForecast = () => {
-    const [chartType, setChartType] = useState('all')
-
-    const getFilteredChartData = () => {
-      const fullData = getTemperatureChartData()
-
-      if (chartType === 'temperature') {
-        return {
-          ...fullData,
-          datasets: fullData.datasets.filter(dataset =>
-            dataset.label.includes('Temperature')
-          )
-        }
-      } else if (chartType === 'precipitation') {
-        return {
-          ...fullData,
-          datasets: fullData.datasets.filter(dataset =>
-            dataset.label.includes('Precipitation')
-          )
-        }
-      } else if (chartType === 'wind') {
-        return {
-          ...fullData,
-          datasets: fullData.datasets.filter(dataset =>
-            dataset.label.includes('Wind')
-          )
-        }
+  const getFilteredChartData = () => {
+    const fullData = getTemperatureChartData()
+    
+    if (chartType === 'temperature') {
+      return {
+        ...fullData,
+        datasets: fullData.datasets.filter(dataset => 
+          dataset.label.includes('Temperature')
+        )
       }
-
-      return fullData
+    } else if (chartType === 'precipitation') {
+      return {
+        ...fullData,
+        datasets: fullData.datasets.filter(dataset => 
+          dataset.label.includes('Precipitation')
+        )
+      }
+    } else if (chartType === 'wind') {
+      return {
+        ...fullData,
+        datasets: fullData.datasets.filter(dataset => 
+          dataset.label.includes('Wind')
+        )
+      }
     }
+    
+    return fullData
+  }
 
     return (
       <div className="daily-forecast">
