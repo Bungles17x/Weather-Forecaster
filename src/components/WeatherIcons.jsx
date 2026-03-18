@@ -35,24 +35,10 @@ export const WeatherIcon = ({ condition, size = 48 }) => {
       )
     }
     
-    if (main.includes('rain') || description.includes('rain') || description.includes('shower')) {
-      return (
-        <div className="weather-icon-svg" style={{ width: size, height: size }}>
-          <svg viewBox="0 0 24 24" fill="none">
-            <path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z" fill="#9E9E9E" stroke="#757575" strokeWidth="1"/>
-            <g stroke="#2196F3" strokeWidth="2" strokeLinecap="round">
-              <line x1="8" y1="19" x2="8" y2="21"/>
-              <line x1="12" y1="19" x2="12" y2="21"/>
-              <line x1="16" y1="19" x2="16" y2="21"/>
-              <line x1="10" y1="21" x2="10" y2="23"/>
-              <line x1="14" y1="21" x2="14" y2="23"/>
-            </g>
-          </svg>
-        </div>
-      )
-    }
-    
-    if (main.includes('snow') || description.includes('snow') || description.includes('flurries')) {
+    // Snow conditions - check BEFORE rain to catch "snow showers"
+    if (main.includes('snow') || description.includes('snow') || description.includes('flurries') || 
+        description.includes('snow showers') || description.includes('snow shower') || 
+        description.includes('scattered snow') || main.includes('snow showers')) {
       return (
         <div className="weather-icon-svg" style={{ width: size, height: size }}>
           <svg viewBox="0 0 24 24" fill="none">
@@ -66,6 +52,23 @@ export const WeatherIcon = ({ condition, size = 48 }) => {
               <circle cx="8" cy="23" r="0.8"/>
               <circle cx="12" cy="23" r="0.8"/>
               <circle cx="16" cy="23" r="0.8"/>
+            </g>
+          </svg>
+        </div>
+      )
+    }
+    
+    if (main.includes('rain') || description.includes('rain') || description.includes('shower')) {
+      return (
+        <div className="weather-icon-svg" style={{ width: size, height: size }}>
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z" fill="#9E9E9E" stroke="#757575" strokeWidth="1"/>
+            <g stroke="#2196F3" strokeWidth="2" strokeLinecap="round">
+              <line x1="8" y1="19" x2="8" y2="21"/>
+              <line x1="12" y1="19" x2="12" y2="21"/>
+              <line x1="16" y1="19" x2="16" y2="21"/>
+              <line x1="10" y1="21" x2="10" y2="23"/>
+              <line x1="14" y1="21" x2="14" y2="23"/>
             </g>
           </svg>
         </div>
