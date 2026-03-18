@@ -25,6 +25,10 @@ export default defineConfig({
     __DEFINES__: JSON.stringify({}),
     __HMR_CONFIG_NAME__: JSON.stringify(''),
     __DEV__: JSON.stringify(false),
-    __BASE__: JSON.stringify('./')
+    __BASE__: JSON.stringify('./'),
+    'import.meta.env.BASE_URL': JSON.stringify('./'),
+    'import.meta.env.MODE': JSON.stringify('production'),
+    'import.meta.env.PROD': JSON.stringify(true),
+    'import.meta.env.DEV': JSON.stringify(false)
   }
 })
