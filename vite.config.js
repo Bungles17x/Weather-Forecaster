@@ -37,5 +37,8 @@ export default defineConfig({
     'import.meta.env.MODE': JSON.stringify('production'),
     'import.meta.env.BASE_URL': JSON.stringify('/Weather-Forecaster/'),
     'import.meta.env.SSR': JSON.stringify(false)
+  },
+  optimizeDeps: {
+    exclude: ['react-devtools', 'react-dom/devtools'] // Exclude development dependencies
   }
 })
