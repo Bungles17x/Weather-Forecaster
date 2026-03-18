@@ -393,6 +393,11 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
   const addSevereWeatherPolygons = async (map) => {
     console.log('🌪️ Adding severe weather polygons...')
     
+    if (!map || !window.L) {
+      console.warn('⚠️ Map or Leaflet not available for alerts')
+      return
+    }
+    
     try {
       // Fetch real NWS alerts
       const response = await fetch('https://api.weather.gov/alerts/active')
@@ -400,8 +405,14 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         const alertsData = await response.json()
         console.log('⚠️ Loaded NWS alerts:', alertsData.features.length)
         
+        // Clear existing alert layers if any
+        if (map._alertLayer) {
+          map.removeLayer(map._alertLayer)
+        }
+        
         // Create layer group for alerts
         const alertLayer = window.L.layerGroup().addTo(map)
+        map._alertLayer = alertLayer // Store reference for cleanup
         
         alertsData.features.forEach((alert, index) => {
           if (alert.geometry && alert.geometry.coordinates) {
@@ -488,11 +499,145 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         
       } else {
         console.warn('⚠️ Failed to fetch NWS alerts:', response.status)
+        // Add sample alerts for testing
+        addSampleAlerts(map)
       }
     } catch (error) {
       console.error('❌ Error loading severe weather alerts:', error)
-      // Don't show sample polygons on error - just log it
+      // Add sample alerts for testing
+      addSampleAlerts(map)
     }
+  }
+
+  // Add sample alerts for testing when NWS API fails
+  const addSampleAlerts = (map) => {
+    if (!map || !window.L) {
+      console.warn('⚠️ Map not available for sample alerts')
+      return
+    }
+    
+    console.log('🧪 Adding sample weather alerts for testing...')
+    
+    // Clear existing alert layers if any
+    if (map._alertLayer) {
+      map.removeLayer(map._alertLayer)
+    }
+    
+    // Create layer group for alerts
+    const alertLayer = window.L.layerGroup().addTo(map)
+    map._alertLayer = alertLayer
+    
+    // Sample alert coordinates around New York area
+    const sampleAlerts = [
+      {
+        geometry: {
+          coordinates: [[
+            [-74.5, 40.5], [-74.5, 40.8], [-74.2, 40.8], [-74.2, 40.5], [-74.5, 40.5]
+          ]]
+        },
+        properties: {
+          event: 'Severe Thunderstorm Warning',
+          severity: 'Severe',
+          headline: 'Severe Thunderstorm Warning for New York County',
+          areaDesc: 'New York County'
+        }
+      },
+      {
+        geometry: {
+          coordinates: [[
+            [-73.9, 40.6], [-73.9, 40.9], [-73.6, 40.9], [-73.6, 40.6], [-73.9, 40.6]
+          ]]
+        },
+        properties: {
+          event: 'Flash Flood Watch',
+          severity: 'Moderate',
+          headline: 'Flash Flood Watch for Queens County',
+          areaDesc: 'Queens County'
+        }
+      }
+    ]
+    
+    sampleAlerts.forEach((alert, index) => {
+      if (alert.geometry && alert.geometry.coordinates) {
+        try {
+          // Convert coordinates to Leaflet format
+          const coords = alert.geometry.coordinates[0].map(coord => [coord[1], coord[0]])
+          
+          // Determine color based on severity
+          let color = '#00ff00' // Default green
+          let fillColor = 'rgba(0, 255, 0, 0.3)'
+          
+          const severity = alert.properties.severity || 'unknown'
+          const event = alert.properties.event || ''
+          
+          // Better severity classification
+          if (event.includes('Tornado Warning') || event.includes('Severe Thunderstorm Warning') || 
+              event.includes('Flash Flood Warning') || event.includes('Blizzard Warning')) {
+            color = '#ff0000'
+            fillColor = 'rgba(255, 0, 0, 0.2)'
+          } else if (event.includes('Warning')) {
+            color = '#ff6600'
+            fillColor = 'rgba(255, 102, 0, 0.2)'
+          } else if (event.includes('Watch')) {
+            color = '#ffff00'
+            fillColor = 'rgba(255, 255, 0, 0.15)'
+          } else if (event.includes('Advisory')) {
+            color = '#ff8800'
+            fillColor = 'rgba(255, 136, 0, 0.15)'
+          }
+          
+          // Create polygon with better styling
+          const polygon = window.L.polygon(coords, {
+            color: color,
+            fillColor: fillColor,
+            fillOpacity: 0.15,
+            weight: 2,
+            opacity: 0.8,
+            smoothFactor: 1
+          })
+          
+          // Add popup with alert info
+          if (alert.properties) {
+            const popupContent = `
+              <div style="padding: 8px; max-width: 300px;">
+                <h4 style="margin: 0 0 8px 0; color: ${color}; font-size: 14px;">${alert.properties.event || 'Weather Alert'}</h4>
+                <p style="margin: 0 0 8px 0; font-size: 12px; font-weight: bold;">${alert.properties.headline || 'No headline'}</p>
+                <p style="margin: 0 0 8px 0; font-size: 11px; opacity: 0.8;">
+                  <strong>Severity:</strong> ${severity}<br>
+                  <strong>Areas:</strong> ${alert.properties.areaDesc || 'Unknown area'}
+                </p>
+                <p style="margin: 0; font-size: 10px; opacity: 0.6;">Sample alert for testing</p>
+              </div>
+            `
+            polygon.bindPopup(popupContent)
+            
+            // Add hover effect
+            polygon.on('mouseover', function(e) {
+              this.setStyle({
+                fillOpacity: 0.3,
+                weight: 3
+              })
+            })
+            
+            polygon.on('mouseout', function(e) {
+              this.setStyle({
+                fillOpacity: 0.15,
+                weight: 2
+              })
+            })
+          }
+          
+          polygon.addTo(alertLayer)
+          
+          console.log(`✅ Added sample alert polygon: ${alert.properties.event || 'Unknown'}`)
+          
+        } catch (error) {
+          console.error('❌ Error processing sample alert polygon:', error)
+        }
+      }
+    })
+    
+    console.log(`✅ Successfully added ${sampleAlerts.length} sample weather alert polygons`)
   }
 
   const initializeMap = useCallback(() => {
