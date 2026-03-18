@@ -321,21 +321,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
     
     nexradLayer.addTo(map)
     
-    // Add radar status indicator - OPTIMIZED
-    const radarStatus = window.L.control({position: 'topleft'})
-    radarStatus.onAdd = function() {
-      const div = window.L.DomUtil.create('div', 'radar-status')
-      div.innerHTML = `
-        <div style="background: rgba(0,0,0,0.8); padding: 8px; border-radius: 4px; color: white; font-size: 12px;">
-          <div style="font-weight: bold; margin-bottom: 2px;">🛡️ NEXRAD</div>
-          <div style="opacity: 0.8;">Optimized</div>
-          <div style="opacity: 0.6; font-size: 10px;">Fast</div>
-        </div>
-      `
-      return div
-    }
-    radarStatus.addTo(map)
-    
+    // NO radar status indicator - CLEAN UI
     return nexradLayer
   }
 
@@ -497,38 +483,6 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
             }
           }
         })
-        
-        // Add improved alert legend
-        const alertLegend = window.L.control({position: 'bottomright'})
-        alertLegend.onAdd = function() {
-          const div = window.L.DomUtil.create('div', 'alert-legend')
-          div.innerHTML = `
-            <div style="background: rgba(0,0,0,0.9); padding: 10px; border-radius: 6px; color: white; font-size: 11px; border: 1px solid rgba(255,255,255,0.2);">
-              <div style="font-weight: bold; margin-bottom: 6px; font-size: 12px;">⚠️ Weather Alerts</div>
-              <div style="display: flex; align-items: center; margin-bottom: 3px;">
-                <div style="width: 20px; height: 3px; background: rgba(255,0,0,0.8); margin-right: 8px; border: 1px solid #fff;"></div>
-                <span>Tornado/Severe Warning</span>
-              </div>
-              <div style="display: flex; align-items: center; margin-bottom: 3px;">
-                <div style="width: 20px; height: 3px; background: rgba(255,102,0,0.8); margin-right: 8px; border: 1px solid #fff;"></div>
-                <span>Other Warnings</span>
-              </div>
-              <div style="display: flex; align-items: center; margin-bottom: 3px;">
-                <div style="width: 20px; height: 3px; background: rgba(255,255,0,0.8); margin-right: 8px; border: 1px solid #fff;"></div>
-                <span>Watches</span>
-              </div>
-              <div style="display: flex; align-items: center;">
-                <div style="width: 20px; height: 3px; background: rgba(255,136,0,0.8); margin-right: 8px; border: 1px solid #fff;"></div>
-                <span>Advisories</span>
-              </div>
-              <div style="margin-top: 6px; font-size: 10px; opacity: 0.7; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 4px;">
-                Click polygons for details
-              </div>
-            </div>
-          `
-          return div
-        }
-        alertLegend.addTo(map)
         
         console.log(`✅ Successfully added ${alertsData.features.length} weather alert polygons`)
         
