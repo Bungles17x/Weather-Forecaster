@@ -549,6 +549,8 @@
 @media (max-width: 600px) {
   .map-content {
     padding: 1rem;
+    height: calc(100vh - 80px); /* Leave space for mobile navbar */
+    min-height: calc(100vh - 80px);
   }
   
   .header-content h1 {
@@ -852,8 +854,8 @@
 @media (max-width: 768px) {
   .map-content {
     padding: 0.25rem;
-    height: calc(100vh - 50px);
-    min-height: calc(100vh - 50px);
+    height: calc(100vh - 80px); /* Leave space for mobile navbar */
+    min-height: calc(100vh - 80px);
   }
 
   .map-nav {
@@ -874,7 +876,7 @@
     grid-template-columns: 1fr;
     gap: 0.25rem;
     padding: 0.25rem;
-    height: calc(100vh - 100px); /* MAXIMUM HEIGHT ON MOBILE */
+    height: calc(100vh - 160px); /* Leave space for header and mobile navbar */
   }
 
   .map-sidebar {
@@ -883,13 +885,13 @@
 
   .map-main {
     order: 1;
-    height: calc(100vh - 80px);
+    height: calc(100vh - 140px); /* Leave space for header and mobile navbar */
     min-height: 300px;
     padding: 0.25rem;
   }
 
   .map-wrapper {
-    height: calc(100vh - 100px);
+    height: calc(100vh - 160px); /* Leave space for header and mobile navbar */
     min-height: 250px;
   }
 
