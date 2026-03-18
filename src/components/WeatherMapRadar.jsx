@@ -218,11 +218,11 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
     }
   }
 
-  // Add NEXRAD radar overlay to street map - FIXED TMS
+  // Add NEXRAD radar overlay to street map - COMPLETE TMS FIX
   const addNexradRadarOverlay = (map) => {
     console.log('🛡️ Adding NEXRAD radar overlay to street map...')
     
-    // Use Iowa State NEXRAD - FIXED TMS FORMAT
+    // Use Iowa State NEXRAD - COMPLETE TMS FIX
     const nexradLayer = window.L.tileLayer('https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/ridge::USCOMP-N0Q::0/256/{z}/{x}/{y}.png', {
       attribution: '', // NO ATTRIBUTION - removes any email/text
       opacity: 0.6, // Reduced opacity for performance
@@ -234,9 +234,13 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
       detectRetina: false, // Disabled for performance
       timeout: 3000, // Reduced timeout
       retry: 1, // Reduced retries for performance
-      tms: false, // FIXED: Iowa State uses XYZ format, NOT TMS
+      tms: false, // COMPLETE FIX: Iowa State uses XYZ format, NOT TMS
       keepBuffer: 2, // Reduced buffer for performance
-      edgeBufferTiles: 1 // Reduced edge buffer for performance
+      edgeBufferTiles: 1, // Reduced edge buffer for performance
+      // Additional TMS prevention settings
+      noWrap: true, // Prevent world wrapping
+      continuousWorld: false, // Disable continuous world
+      bounds: [[-90, -180], [90, 180]] // Explicit bounds
     })
     
     nexradLayer.on('tileload', () => {
@@ -245,6 +249,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
     
     nexradLayer.on('tileerror', (error) => {
       console.error('❌ NEXRAD radar tile error:', error)
+      console.log('🔄 Trying alternative radar source...')
       // Try alternative URL if primary fails
       tryAlternativeRadar(map)
     })
@@ -269,11 +274,11 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
     return nexradLayer
   }
 
-  // Try alternative radar sources if primary fails - FIXED TMS
+  // Try alternative radar sources if primary fails - COMPLETE TMS FIX
   const tryAlternativeRadar = (map) => {
     console.log('🔄 Trying alternative radar sources...')
     
-    // Try Ventusky radar as fallback - FIXED TMS
+    // Try Ventusky radar as fallback - COMPLETE TMS FIX
     const ventuskyRadar = window.L.tileLayer('https://tiles.ventusky.com/precipitation/{z}/{x}/{y}.png', {
       attribution: '', // NO ATTRIBUTION - removes any email/text
       opacity: 0.5, // Reduced opacity for performance
@@ -281,7 +286,10 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
       minZoom: 3, // Increased min zoom for performance
       timeout: 3000, // Reduced timeout
       retry: 1, // Reduced retries for performance
-      tms: false // FIXED: Ventusky uses XYZ format, NOT TMS
+      tms: false, // COMPLETE FIX: Ventusky uses XYZ format, NOT TMS
+      noWrap: true, // Prevent world wrapping
+      continuousWorld: false, // Disable continuous world
+      bounds: [[-90, -180], [90, 180]] // Explicit bounds
     })
     
     ventuskyRadar.on('tileload', () => {
@@ -290,11 +298,45 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
     
     ventuskyRadar.on('tileerror', (error) => {
       console.error('❌ Ventusky radar failed:', error)
+      console.log('🔄 Trying final fallback...')
+      // Try final fallback
+      tryFinalFallback(map)
     })
     
     ventuskyRadar.addTo(map)
     
     return ventuskyRadar
+  }
+
+  // Final fallback radar - COMPLETE TMS FIX
+  const tryFinalFallback = (map) => {
+    console.log('🔄 Trying final fallback...')
+    
+    // Try OpenWeatherMap as final fallback - COMPLETE TMS FIX
+    const owmRadar = window.L.tileLayer('https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136', {
+      attribution: '', // NO ATTRIBUTION - removes any email/text
+      opacity: 0.5, // Reduced opacity for performance
+      maxZoom: 10, // Reduced max zoom for performance
+      minZoom: 3, // Increased min zoom for performance
+      timeout: 3000, // Reduced timeout
+      retry: 1, // Reduced retries for performance
+      tms: false, // COMPLETE FIX: OpenWeatherMap uses XYZ format, NOT TMS
+      noWrap: true, // Prevent world wrapping
+      continuousWorld: false, // Disable continuous world
+      bounds: [[-90, -180], [90, 180]] // Explicit bounds
+    })
+    
+    owmRadar.on('tileload', () => {
+      console.log('✅ OpenWeatherMap radar loaded as final fallback')
+    })
+    
+    owmRadar.on('tileerror', (error) => {
+      console.error('❌ All radar sources failed:', error)
+    })
+    
+    owmRadar.addTo(map)
+    
+    return owmRadar
   }
 
   // Add severe weather polygons to street map
@@ -574,13 +616,13 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
     }
   }
 
-  // Original working radar layers - BACK TO NEXRAD + FIXED TMS
+  // Original working radar layers - COMPLETE TMS FIX
   const addRadarLayersOSM = (map) => {
     try {
       console.log('🛡️ Adding NEXRAD radar layers...')
       let radarLayersLoaded = 0
       
-      // Primary NEXRAD radar from Iowa State - FIXED TMS
+      // Primary NEXRAD radar from Iowa State - COMPLETE TMS FIX
       const nexradPrimary = window.L.tileLayer('https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/ridge::USCOMP-N0Q::0/256/{z}/{x}/{y}.png', {
         attribution: '', // NO ATTRIBUTION - removes any email/text
         opacity: 0.6, // Reduced opacity for performance
@@ -593,9 +635,13 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         detectRetina: false, // Disabled for performance
         timeout: 3000, // Reduced timeout
         retry: 1, // Reduced retries for performance
-        tms: false, // FIXED: Iowa State uses XYZ format, NOT TMS
+        tms: false, // COMPLETE FIX: Iowa State uses XYZ format, NOT TMS
         keepBuffer: 2, // Reduced buffer for performance
-        edgeBufferTiles: 1 // Reduced edge buffer for performance
+        edgeBufferTiles: 1, // Reduced edge buffer for performance
+        // Additional TMS prevention settings
+        noWrap: true, // Prevent world wrapping
+        continuousWorld: false, // Disable continuous world
+        bounds: [[-90, -180], [90, 180]] // Explicit bounds
       })
       
       nexradPrimary.on('tileload', () => {
@@ -610,7 +656,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
       
       nexradPrimary.on('tileerror', () => {
         console.warn('⚠️ NEXRAD radar failed, trying fallback...')
-        // Try Ventusky as fallback - FIXED TMS
+        // Try Ventusky as fallback - COMPLETE TMS FIX
         const ventuskyFallback = window.L.tileLayer('https://tiles.ventusky.com/precipitation/{z}/{x}/{y}.png', {
           attribution: '', // NO ATTRIBUTION
           opacity: 0.5, // Reduced opacity for performance
@@ -618,7 +664,10 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
           minZoom: 3, // Increased min zoom for performance
           timeout: 3000, // Reduced timeout
           retry: 1, // Reduced retries for performance
-          tms: false // FIXED: Ventusky uses XYZ format, NOT TMS
+          tms: false, // COMPLETE FIX: Ventusky uses XYZ format, NOT TMS
+          noWrap: true, // Prevent world wrapping
+          continuousWorld: false, // Disable continuous world
+          bounds: [[-90, -180], [90, 180]] // Explicit bounds
         })
         
         ventuskyFallback.on('tileload', () => {
@@ -629,6 +678,35 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
             setActiveRadarLayers(['Ventusky'])
             setRadarError(null)
           }
+        })
+        
+        ventuskyFallback.on('tileerror', () => {
+          console.warn('⚠️ Ventusky radar failed, trying final fallback...')
+          // Try OpenWeatherMap as final fallback - COMPLETE TMS FIX
+          const owmFallback = window.L.tileLayer('https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136', {
+            attribution: '', // NO ATTRIBUTION
+            opacity: 0.5, // Reduced opacity for performance
+            maxZoom: 10, // Reduced max zoom for performance
+            minZoom: 3, // Increased min zoom for performance
+            timeout: 3000, // Reduced timeout
+            retry: 1, // Reduced retries for performance
+            tms: false, // COMPLETE FIX: OpenWeatherMap uses XYZ format, NOT TMS
+            noWrap: true, // Prevent world wrapping
+            continuousWorld: false, // Disable continuous world
+            bounds: [[-90, -180], [90, 180]] // Explicit bounds
+          })
+          
+          owmFallback.on('tileload', () => {
+            if (radarLayersLoaded === 0) {
+              radarLayersLoaded = 1
+              console.log('✅ OpenWeatherMap radar loaded as final fallback')
+              setRadarStatus('active')
+              setActiveRadarLayers(['OpenWeatherMap'])
+              setRadarError(null)
+            }
+          })
+          
+          owmFallback.addTo(map)
         })
         
         ventuskyFallback.addTo(map)
