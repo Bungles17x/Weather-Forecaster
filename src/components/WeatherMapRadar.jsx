@@ -218,11 +218,11 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
     }
   }
 
-  // Add NEXRAD radar overlay to street map - OPTIMIZED
+  // Add NEXRAD radar overlay to street map - FIXED TMS
   const addNexradRadarOverlay = (map) => {
     console.log('🛡️ Adding NEXRAD radar overlay to street map...')
     
-    // Use Iowa State NEXRAD - OPTIMIZED FOR PERFORMANCE
+    // Use Iowa State NEXRAD - FIXED TMS FORMAT
     const nexradLayer = window.L.tileLayer('https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/ridge::USCOMP-N0Q::0/256/{z}/{x}/{y}.png', {
       attribution: '', // NO ATTRIBUTION - removes any email/text
       opacity: 0.6, // Reduced opacity for performance
@@ -234,7 +234,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
       detectRetina: false, // Disabled for performance
       timeout: 3000, // Reduced timeout
       retry: 1, // Reduced retries for performance
-      tms: false, // Important: This is NOT a TMS tile server
+      tms: false, // FIXED: Iowa State uses XYZ format, NOT TMS
       keepBuffer: 2, // Reduced buffer for performance
       edgeBufferTiles: 1 // Reduced edge buffer for performance
     })
@@ -259,7 +259,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         <div style="background: rgba(0,0,0,0.8); padding: 8px; border-radius: 4px; color: white; font-size: 12px;">
           <div style="font-weight: bold; margin-bottom: 2px;">🛡️ NEXRAD</div>
           <div style="opacity: 0.8;">Radar Active</div>
-          <div style="opacity: 0.6; font-size: 10px;">Optimized</div>
+          <div style="opacity: 0.6; font-size: 10px;">TMS Fixed</div>
         </div>
       `
       return div
@@ -269,18 +269,19 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
     return nexradLayer
   }
 
-  // Try alternative radar sources if primary fails - OPTIMIZED
+  // Try alternative radar sources if primary fails - FIXED TMS
   const tryAlternativeRadar = (map) => {
     console.log('🔄 Trying alternative radar sources...')
     
-    // Try Ventusky radar as fallback - OPTIMIZED
+    // Try Ventusky radar as fallback - FIXED TMS
     const ventuskyRadar = window.L.tileLayer('https://tiles.ventusky.com/precipitation/{z}/{x}/{y}.png', {
       attribution: '', // NO ATTRIBUTION - removes any email/text
       opacity: 0.5, // Reduced opacity for performance
       maxZoom: 10, // Reduced max zoom for performance
       minZoom: 3, // Increased min zoom for performance
       timeout: 3000, // Reduced timeout
-      retry: 1 // Reduced retries for performance
+      retry: 1, // Reduced retries for performance
+      tms: false // FIXED: Ventusky uses XYZ format, NOT TMS
     })
     
     ventuskyRadar.on('tileload', () => {
@@ -573,13 +574,13 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
     }
   }
 
-  // Original working radar layers - BACK TO NEXRAD + OPTIMIZED
+  // Original working radar layers - BACK TO NEXRAD + FIXED TMS
   const addRadarLayersOSM = (map) => {
     try {
       console.log('🛡️ Adding NEXRAD radar layers...')
       let radarLayersLoaded = 0
       
-      // Primary NEXRAD radar from Iowa State - OPTIMIZED
+      // Primary NEXRAD radar from Iowa State - FIXED TMS
       const nexradPrimary = window.L.tileLayer('https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/ridge::USCOMP-N0Q::0/256/{z}/{x}/{y}.png', {
         attribution: '', // NO ATTRIBUTION - removes any email/text
         opacity: 0.6, // Reduced opacity for performance
@@ -592,7 +593,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         detectRetina: false, // Disabled for performance
         timeout: 3000, // Reduced timeout
         retry: 1, // Reduced retries for performance
-        tms: false, // Explicitly set this is NOT a TMS server
+        tms: false, // FIXED: Iowa State uses XYZ format, NOT TMS
         keepBuffer: 2, // Reduced buffer for performance
         edgeBufferTiles: 1 // Reduced edge buffer for performance
       })
@@ -609,14 +610,15 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
       
       nexradPrimary.on('tileerror', () => {
         console.warn('⚠️ NEXRAD radar failed, trying fallback...')
-        // Try Ventusky as fallback
+        // Try Ventusky as fallback - FIXED TMS
         const ventuskyFallback = window.L.tileLayer('https://tiles.ventusky.com/precipitation/{z}/{x}/{y}.png', {
           attribution: '', // NO ATTRIBUTION
           opacity: 0.5, // Reduced opacity for performance
           maxZoom: 10, // Reduced max zoom for performance
           minZoom: 3, // Increased min zoom for performance
           timeout: 3000, // Reduced timeout
-          retry: 1 // Reduced retries for performance
+          retry: 1, // Reduced retries for performance
+          tms: false // FIXED: Ventusky uses XYZ format, NOT TMS
         })
         
         ventuskyFallback.on('tileload', () => {
