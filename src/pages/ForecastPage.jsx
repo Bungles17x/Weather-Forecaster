@@ -305,11 +305,16 @@ const ForecastPage = () => {
     </div>
   )
 
-  // Generate sample chart data for temperature trends
+  // Enhanced chart data with multiple weather metrics
   const getTemperatureChartData = () => {
     const labels = forecastData.slice(0, 7).map(day => day.dayName)
     const highTemps = forecastData.slice(0, 7).map(day => day.high || Math.floor(Math.random() * 15) + 70)
     const lowTemps = forecastData.slice(0, 7).map(day => day.low || Math.floor(Math.random() * 10) + 50)
+    const precipitation = forecastData.slice(0, 7).map(day => day.precipitation || Math.floor(Math.random() * 40))
+    const windSpeed = forecastData.slice(0, 7).map(day => {
+      const wind = parseInt(day.windSpeed) || Math.floor(Math.random() * 20) + 5
+      return wind
+    })
     
     return {
       labels,
@@ -320,7 +325,13 @@ const ForecastPage = () => {
           borderColor: 'rgb(255, 99, 132)',
           backgroundColor: 'rgba(255, 99, 132, 0.2)',
           tension: 0.4,
-          fill: true,
+          fill: false,
+          borderWidth: 3,
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          pointBackgroundColor: 'rgb(255, 99, 132)',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
         },
         {
           label: 'Low Temperature',
@@ -328,110 +339,315 @@ const ForecastPage = () => {
           borderColor: 'rgb(54, 162, 235)',
           backgroundColor: 'rgba(54, 162, 235, 0.2)',
           tension: 0.4,
-          fill: true,
+          fill: false,
+          borderWidth: 3,
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          pointBackgroundColor: 'rgb(54, 162, 235)',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
+        },
+        {
+          label: 'Precipitation %',
+          data: precipitation,
+          borderColor: 'rgb(75, 192, 192)',
+          backgroundColor: 'rgba(75, 192, 192, 0.2)',
+          tension: 0.4,
+          fill: false,
+          borderWidth: 2,
+          borderDash: [5, 5],
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          pointBackgroundColor: 'rgb(75, 192, 192)',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
+          yAxisID: 'y1',
+        },
+        {
+          label: 'Wind Speed (mph)',
+          data: windSpeed,
+          borderColor: 'rgb(255, 159, 64)',
+          backgroundColor: 'rgba(255, 159, 64, 0.2)',
+          tension: 0.4,
+          fill: false,
+          borderWidth: 2,
+          borderDash: [10, 5],
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          pointBackgroundColor: 'rgb(255, 159, 64)',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
+          yAxisID: 'y1',
         },
       ],
     }
   }
 
+  // Enhanced chart options with better styling and interactions
   const chartOptions = {
     responsive: true,
+    maintainAspectRatio: false,
+    interaction: {
+      mode: 'index',
+      intersect: false,
+    },
     plugins: {
       legend: {
         position: 'top',
         labels: {
           color: 'white',
           font: {
-            size: 12
-          }
+            size: 12,
+            weight: 'bold'
+          },
+          padding: 20,
+          usePointStyle: true,
+          pointStyle: 'circle',
         }
       },
       title: {
         display: true,
-        text: '7-Day Temperature Trend',
+        text: '📈 7-Day Weather Trends',
         color: 'white',
         font: {
-          size: 16
+          size: 18,
+          weight: 'bold'
+        },
+        padding: {
+          top: 10,
+          bottom: 20
         }
       },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        titleColor: 'white',
+        bodyColor: 'white',
+        borderColor: 'rgba(255, 255, 255, 0.2)',
+        borderWidth: 1,
+        padding: 12,
+        displayColors: true,
+        callbacks: {
+          title: function(context) {
+            return '📅 ' + context[0].label
+          },
+          label: function(context) {
+            let label = context.dataset.label || ''
+            if (label) {
+              label += ': '
+            }
+            if (context.parsed.y !== null) {
+              if (context.dataset.label.includes('Temperature')) {
+                label += context.parsed.y + '°F'
+              } else if (context.dataset.label.includes('Precipitation')) {
+                label += context.parsed.y + '%'
+              } else if (context.dataset.label.includes('Wind')) {
+                label += context.parsed.y + ' mph'
+              }
+            }
+            return label
+          }
+        }
+      }
     },
     scales: {
       x: {
         ticks: {
-          color: 'white'
+          color: 'white',
+          font: {
+            size: 11,
+            weight: 'bold'
+          }
         },
         grid: {
-          color: 'rgba(255, 255, 255, 0.1)'
+          color: 'rgba(255, 255, 255, 0.1)',
+          drawBorder: false
+        },
+        title: {
+          display: true,
+          text: 'Days',
+          color: 'white',
+          font: {
+            size: 12,
+            weight: 'bold'
+          }
         }
       },
       y: {
+        type: 'linear',
+        display: true,
+        position: 'left',
         ticks: {
           color: 'white',
+          font: {
+            size: 11
+          },
           callback: function(value) {
             return value + '°F'
           }
         },
         grid: {
-          color: 'rgba(255, 255, 255, 0.1)'
+          color: 'rgba(255, 255, 255, 0.1)',
+          drawBorder: false
         },
         title: {
           display: true,
           text: 'Temperature (°F)',
-          color: 'white'
+          color: 'white',
+          font: {
+            size: 12,
+            weight: 'bold'
+          }
         }
+      },
+      y1: {
+        type: 'linear',
+        display: true,
+        position: 'right',
+        ticks: {
+          color: 'white',
+          font: {
+            size: 11
+          },
+          callback: function(value) {
+            return value + '%'
+          }
+        },
+        grid: {
+          drawOnChartArea: false,
+          color: 'rgba(255, 255, 255, 0.05)',
+          drawBorder: false
+        },
+        title: {
+          display: true,
+          text: 'Precipitation % / Wind (mph)',
+          color: 'white',
+          font: {
+            size: 12,
+            weight: 'bold'
+          }
+        }
+      }
+    },
+    elements: {
+      line: {
+        tension: 0.4
+      },
+      point: {
+        hoverRadius: 8
       }
     }
   }
 
-  const renderDailyForecast = () => (
-    <div className="daily-forecast">
-      <div className="daily-header">
-        <h3>� Daily Forecast</h3>
-        <div className="daily-controls">
-          <button className="control-btn btn-primary" onClick={handleRefresh}>🔄 Refresh</button>
-          <button className="control-btn btn-secondary">📊 Export</button>
-          <button className="control-btn btn-secondary">📧 Share</button>
-        </div>
-      </div>
-      
-      {/* Temperature Trend Chart */}
-      <div className="temperature-chart-section">
-        <div className="chart-container">
-          <Line data={getTemperatureChartData()} options={chartOptions} />
-        </div>
-      </div>
-      
-      <div className="daily-grid">
-        {forecastData.slice(0, 7).map((day, index) => (
-          <div key={index} className="day-card">
-            <div className="day-date">
-              <div className="day-name">{day.dayName}</div>
-              <div className="day-date">{day.date}</div>
-            </div>
-            <div className="day-icon">
-              <WeatherIcon condition={day.condition} size={48} />
-            </div>
-            <div className="day-temps">
-              <div className="day-high">H: {day.high}°</div>
-              <div className="day-low">L: {day.low}°</div>
-            </div>
-            <div className="day-condition">{day.condition}</div>
-            <div className="day-details">
-              <div className="day-detail">
-                <span>� {day.precipitation}%</span>
-              </div>
-              <div className="day-detail">
-                <span>💨 {day.windSpeed} mph</span>
-              </div>
-              <div className="day-detail">
-                <span>🌡️ {day.humidity}%</span>
-              </div>
-            </div>
+  const renderDailyForecast = () => {
+    const [chartType, setChartType] = useState('all')
+
+    const getFilteredChartData = () => {
+      const fullData = getTemperatureChartData()
+
+      if (chartType === 'temperature') {
+        return {
+          ...fullData,
+          datasets: fullData.datasets.filter(dataset =>
+            dataset.label.includes('Temperature')
+          )
+        }
+      } else if (chartType === 'precipitation') {
+        return {
+          ...fullData,
+          datasets: fullData.datasets.filter(dataset =>
+            dataset.label.includes('Precipitation')
+          )
+        }
+      } else if (chartType === 'wind') {
+        return {
+          ...fullData,
+          datasets: fullData.datasets.filter(dataset =>
+            dataset.label.includes('Wind')
+          )
+        }
+      }
+
+      return fullData
+    }
+
+    return (
+      <div className="daily-forecast">
+        <div className="daily-header">
+          <h3>📅 Daily Forecast</h3>
+          <div className="daily-controls">
+            <button className="control-btn btn-primary" onClick={handleRefresh}>🔄 Refresh</button>
+            <button className="control-btn btn-secondary">📊 Export</button>
+            <button className="control-btn btn-secondary">📧 Share</button>
           </div>
-        ))}
+        </div>
+
+        {/* Enhanced Temperature Trend Chart */}
+        <div className="temperature-chart-section">
+          <div className="chart-container">
+            <Line data={getFilteredChartData()} options={chartOptions} />
+          </div>
+
+          {/* Chart Controls */}
+          <div className="chart-controls">
+            <button
+              className={`chart-control-btn ${chartType === 'all' ? 'active' : ''}`}
+              onClick={() => setChartType('all')}
+            >
+              📈 All Metrics
+            </button>
+            <button
+              className={`chart-control-btn ${chartType === 'temperature' ? 'active' : ''}`}
+              onClick={() => setChartType('temperature')}
+            >
+              🌡️ Temperature
+            </button>
+            <button
+              className={`chart-control-btn ${chartType === 'precipitation' ? 'active' : ''}`}
+              onClick={() => setChartType('precipitation')}
+            >
+              💧 Precipitation
+            </button>
+            <button
+              className={`chart-control-btn ${chartType === 'wind' ? 'active' : ''}`}
+              onClick={() => setChartType('wind')}
+            >
+              💨 Wind Speed
+            </button>
+          </div>
+        </div>
+
+        <div className="daily-grid">
+          {forecastData.slice(0, 7).map((day, index) => (
+            <div key={index} className="day-card">
+              <div className="day-date">
+                <div className="day-name">{day.dayName}</div>
+                <div className="day-date">{day.date}</div>
+              </div>
+              <div className="day-icon">
+                <WeatherIcon condition={day.condition} size={48} />
+              </div>
+              <div className="day-temps">
+                <div className="day-high">H: {day.high}°</div>
+                <div className="day-low">L: {day.low}°</div>
+              </div>
+              <div className="day-condition">{day.condition}</div>
+              <div className="day-details">
+                <div className="day-detail">
+                  <span>💧 {day.precipitation}%</span>
+                </div>
+                <div className="day-detail">
+                  <span>💨 {day.windSpeed} mph</span>
+                </div>
+                <div className="day-detail">
+                  <span>🌡️ {day.humidity}%</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
-  )
+    )
+  }
 
   const renderExtendedForecast = () => (
     <div className="extended-forecast">
