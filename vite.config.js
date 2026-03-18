@@ -4,7 +4,7 @@ export default defineConfig({
   esbuild: {
     jsx: 'automatic'
   },
-  base: './',
+  base: '/Weather-Forecaster/', // GitHub Pages repository name
   build: {
     outDir: 'docs',
     assetsDir: 'assets',
