@@ -17,7 +17,14 @@ export default defineConfig({
       }
     },
     sourcemap: false,
-    target: 'es2015'
+    target: 'es2015',
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true, // Remove console logs in production
+        drop_debugger: true
+      }
+    }
   },
   server: {
     port: 5173,
@@ -42,27 +49,24 @@ export default defineConfig({
     __HMR_RELOAD_DELAY__: JSON.stringify(0),
     __HMR_MAX_RETRIES__: JSON.stringify(0),
     __HMR_CLEAR_CONSOLE__: JSON.stringify(false),
-    __HMR_CLIENT__: JSON.stringify({}),
+    __HMR_CLIENT__: JSON.stringify(false),
     __HMR_WS__: JSON.stringify(false),
     __HMR_BROWSER__: JSON.stringify(false),
     __HMR_RUNTIME__: JSON.stringify(false),
     __HMR_DEAD_TIMEOUT__: JSON.stringify(30000),
     __HMR_HEADER__: JSON.stringify({}),
     __HMR_CLIENT_RECONNECT__: JSON.stringify(false),
-    __SERVER_HOST__: JSON.stringify(''),
-    __HMR_PROTOCOL__: JSON.stringify(''),
-    __HMR_PORT__: JSON.stringify(''),
-    __HMR_HOSTNAME__: JSON.stringify(''),
-    __HMR_DIRECT_TARGET__: JSON.stringify(false),
-    __WS_TOKEN__: JSON.stringify(''),
-    __HMR_BASE__: JSON.stringify('./'),
-    // Additional WebSocket/HMR fixes
-    __HMR_WEBSOCKET_RECONNECT__: JSON.stringify(false),
-    __HMR_WEBSOCKET_URL__: JSON.stringify(''),
     __HMR_CLIENT_PORT__: JSON.stringify(''),
     __HMR_CLIENT_HOST__: JSON.stringify(''),
     __HMR_CLIENT_PROTOCOL__: JSON.stringify(''),
     __HMR_CLIENT_TIMEOUT__: JSON.stringify(0),
-    __HMR_CLIENT_RETRY__: JSON.stringify(0)
+    __HMR_CLIENT_RETRY__: JSON.stringify(0),
+    __HMR_DIRECT_TARGET__: JSON.stringify(false),
+    __HMR_WEBSOCKET_RECONNECT__: JSON.stringify(false),
+    __HMR_WEBSOCKET_URL__: JSON.stringify(''),
+    __HMR_PROTOCOL__: JSON.stringify(''),
+    __HMR_PORT__: JSON.stringify(''),
+    __HMR_HOSTNAME__: JSON.stringify(''),
+    __WS_TOKEN__: JSON.stringify('')
   }
 })
