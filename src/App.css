@@ -65,6 +65,24 @@ html {
   box-sizing: border-box !important;
 }
 
+/* Mobile Bottom Navigation - Ensure it stays on top */
+@media (max-width: 1024px) {
+  .mobile-bottom-nav {
+    z-index: 9999 !important; /* Force high z-index on mobile */
+    position: fixed !important;
+  }
+  
+  /* Ensure all Leaflet controls stay below mobile nav */
+  .leaflet-control-container {
+    z-index: 999 !important;
+  }
+  
+  .leaflet-top,
+  .leaflet-bottom {
+    z-index: 999 !important;
+  }
+}
+
 /* Full-width map container - FIXED TO COVER WHOLE PAGE */
 .map-container {
   width: 100vw !important; /* Full viewport width - important to override */

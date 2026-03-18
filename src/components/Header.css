@@ -1058,7 +1058,7 @@
   background: linear-gradient(135deg, rgba(26, 26, 46, 0.98) 0%, rgba(15, 15, 30, 0.98) 100%);
   backdrop-filter: blur(25px);
   border-top: 2px solid rgba(255, 255, 255, 0.15);
-  z-index: 1000;
+  z-index: 9999; /* Increased z-index to stay above all map elements */
   padding: 12px 0 16px 0;
   box-shadow: 
     0 -8px 32px rgba(0, 0, 0, 0.5),
