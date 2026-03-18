@@ -11,20 +11,22 @@ A professional weather forecasting application with real-time radar, severe weat
 - **Severe Weather Alerts**: Real-time NWS alerts with interactive polygons
 
 ### 🛡️ Advanced Radar System
-- **6 Radar Sources**: Multiple redundant sources for maximum reliability
-  - RainViewer (Primary)
-  - Ventusky
-  - Weather.gov (NOAA)
-  - RadarScope
-- **Real-time Status**: Live radar health monitoring
-- **Smart Fallbacks**: Automatic source switching for uninterrupted coverage
-- **Multiple Layers**: Precipitation, wind, temperature, clouds, and pressure
+- **IEM NEXRAD**: Official Iowa State Environmental Mesonet radar (Primary)
+- **Smart Fallbacks**: 3-tier reliability system
+  - IEM NEXRAD (Primary)
+  - RainViewer (Backup)
+  - Ventusky (Final)
+- **Real-time Status**: Automatic source switching for uninterrupted coverage
+- **Optimized Performance**: Fast loading with minimal lag
+- **Clean Interface**: No UI clutter for maximum map visibility
 
 ### 🗺️ Interactive Maps
-- **Multiple Base Maps**: OpenStreetMap, Satellite, Terrain, Dark Mode
-- **Weather Overlays**: Radar, satellite, and weather data layers
-- **Alert Polygons**: Click-to-center severe weather warning areas
-- **Location Tracking**: GPS-based location with automatic updates
+- **Full-Screen Display**: Maximum map visibility with clean interface
+- **OpenStreetMap**: CartoDB Positron tiles optimized for mobile & PC
+- **Weather Overlays**: IEM NEXRAD radar with severe weather polygons
+- **Alert Polygons**: 448+ NWS severe weather warnings with interactive popups
+- **Location Tracking**: Pulsing location marker with GPS updates
+- **Scrolling Enabled**: Users can navigate through all app sections
 
 ### 📱 Responsive Design
 - **Mobile Optimized**: Works seamlessly on all devices
@@ -95,10 +97,10 @@ The build output is located in the `docs/` directory and can be deployed to any 
 - **NOAA**: Satellite and meteorological data
 
 ### Radar Sources
-- **RainViewer**: Real-time precipitation radar
-- **Ventusky**: Weather visualization
-- **Weather.gov**: Official NOAA radar
-- **RadarScope**: Aviation weather data
+- **Iowa State Environmental Mesonet**: Official NEXRAD reflectivity data
+- **RainViewer**: Real-time precipitation radar (backup)
+- **Ventusky**: Weather visualization (final backup)
+- **National Weather Service**: Severe weather alerts and polygons
 
 ## 🔧 Configuration
 
@@ -116,16 +118,17 @@ VITE_OPENWEATHER_API_KEY=your_api_key_here
 ## 🎯 Usage
 
 ### Basic Navigation
-1. **Location Search**: Use the search bar to find any location
-2. **Map Controls**: Zoom, pan, and switch between map layers
-3. **Weather Layers**: Toggle radar, satellite, and weather overlays
-4. **Alert Interaction**: Click on alert polygons for detailed information
+1. **Map Interaction**: Pan, zoom, and scroll through the full-screen map
+2. **Weather Alerts**: Click on severe weather polygons for detailed information
+3. **Location Tracking**: Pulsing marker shows your current location
+4. **Radar Display**: IEM NEXRAD radar with automatic fallbacks
 
 ### Advanced Features
-- **Layer Control**: Bottom-left panel for map and overlay selection
-- **Status Indicators**: Real-time radar and system status
-- **Location Updates**: Click anywhere on the map to update location
-- **Alert Centering**: Click weather alerts to center map on warning areas
+- **Smart Fallbacks**: Automatic radar source switching for reliability
+- **Optimized Performance**: Fast loading with minimal UI elements
+- **Clean Interface**: Maximum map visibility without clutter
+- **Responsive Design**: Works seamlessly on mobile and desktop
+- **Real-time Data**: Live severe weather alerts and radar updates
 
 ## 🐛 Troubleshooting
 
@@ -133,18 +136,23 @@ VITE_OPENWEATHER_API_KEY=your_api_key_here
 
 1. **Radar Not Loading**
    - Check internet connection
-   - Wait for automatic fallback to activate
-   - Status indicator shows active radar sources
+   - Wait for automatic fallback to activate (IEM → RainViewer → Ventusky)
+   - Refresh the page for latest data
 
-2. **Location Not Found**
-   - Enable location services in browser
-   - Try manual location search
-   - Check browser permissions
+2. **JavaScript Errors**
+   - Clear browser cache
+   - Ensure modern browser (Chrome, Firefox, Safari, Edge)
+   - Check console for specific error messages
 
 3. **Alerts Not Displaying**
    - Some areas may not have active alerts
    - Check NWS service status
-   - Refresh the page for latest data
+   - Click on polygons to view alert details
+
+4. **Scrolling Issues**
+   - Ensure CSS is properly loaded
+   - Check that map container is positioned correctly
+   - Refresh page if scrolling is disabled
 
 ### Performance Tips
 - Use modern browsers for best performance
@@ -183,10 +191,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- **OpenWeatherMap** for weather data APIs
-- **National Weather Service** for alert data
+- **Iowa State Environmental Mesonet** for official NEXRAD radar data
+- **National Weather Service** for severe weather alerts
+- **RainViewer** for backup radar imagery
+- **Ventusky** for weather visualization
 - **Leaflet.js** for mapping functionality
-- **RainViewer** for radar imagery
+- **OpenStreetMap** for base map tiles
 - **GitHub** for hosting and CI/CD
 
 ## 📞 Support
