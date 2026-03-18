@@ -55,6 +55,14 @@ export default defineConfig({
     __HMR_HOSTNAME__: JSON.stringify(''),
     __HMR_DIRECT_TARGET__: JSON.stringify(false),
     __WS_TOKEN__: JSON.stringify(''),
-    __HMR_BASE__: JSON.stringify('./')
+    __HMR_BASE__: JSON.stringify('./'),
+    // Additional WebSocket/HMR fixes
+    __HMR_WEBSOCKET_RECONNECT__: JSON.stringify(false),
+    __HMR_WEBSOCKET_URL__: JSON.stringify(''),
+    __HMR_CLIENT_PORT__: JSON.stringify(''),
+    __HMR_CLIENT_HOST__: JSON.stringify(''),
+    __HMR_CLIENT_PROTOCOL__: JSON.stringify(''),
+    __HMR_CLIENT_TIMEOUT__: JSON.stringify(0),
+    __HMR_CLIENT_RETRY__: JSON.stringify(0)
   }
 })
