@@ -4,7 +4,7 @@ export default defineConfig({
   esbuild: {
     jsx: 'automatic'
   },
-  base: './', // Use relative paths for GitHub Pages
+  base: '/Weather-Forecaster/', // GitHub Pages repository name
   build: {
     outDir: 'docs',
     assetsDir: 'assets',
@@ -35,13 +35,13 @@ export default defineConfig({
     'import.meta.env.DEV': JSON.stringify(false),
     'import.meta.env.PROD': JSON.stringify(true),
     'import.meta.env.MODE': JSON.stringify('production'),
-    'import.meta.env.BASE_URL': JSON.stringify('./'),
+    'import.meta.env.BASE_URL': JSON.stringify('/Weather-Forecaster/'),
     'import.meta.env.SSR': JSON.stringify(false),
     __DEV__: JSON.stringify(false),
     __PROD__: JSON.stringify(true),
     __TEST__: JSON.stringify(false),
     __BROWSER__: JSON.stringify(true),
-    __BASE__: JSON.stringify('./'),
+    __BASE__: JSON.stringify('/Weather-Forecaster/'),
     __DEFINES__: JSON.stringify({}),
     __HMR_CONFIG_NAME__: JSON.stringify(''),
     __HMR_ENABLE_OVERLAY__: JSON.stringify(false),
