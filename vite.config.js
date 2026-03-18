@@ -56,29 +56,5 @@ export default defineConfig({
     __HMR_DIRECT_TARGET__: JSON.stringify(false),
     __WS_TOKEN__: JSON.stringify(''),
     __HMR_BASE__: JSON.stringify('./')
-  },
-  plugins: [
-    {
-      name: 'remove-hmr',
-      generateBundle(options, bundle) {
-        // Remove HMR client code from production build
-        for (const [fileName, chunk] of Object.entries(bundle)) {
-          if (fileName.endsWith('.js') && chunk.type === 'chunk') {
-            chunk.code = chunk.code
-              .replace(/\/\*\* vite:client \*\*\/[\s\S]*?\/\*\* vite:modulepreload \*\*\//g, '')
-              .replace(/console\.debug\("\[vite\] connecting\.\.\."\);/g, '')
-              .replace(/const ti=new URL\(import\.meta\.url\),Lf=__SERVER_HOST__,fa=__HMR_PROTOCOL__\|\|\(ti\.protocol==="https:"\?"wss":"ws"\),bc=__HMR_PORT__,pa=`\${__HMR_HOSTNAME__\|\|ti\.hostname}\:\${bc\|\|ti\.port}\${__HMR_BASE__}`,ha=__HMR_DIRECT_TARGET__,ni="\.\/",Af=__WS_TOKEN__;.*?console\.error\(`\[vite\] failed to connect to websocket.*?`/g, '')
-              .replace(/__HMR_ENABLE_OVERLAY__/g, 'false')
-              .replace(/__HMR_BASE__/g, '"./"')
-              .replace(/__SERVER_HOST__/g, '""')
-              .replace(/__HMR_PROTOCOL__/g, '""')
-              .replace(/__HMR_PORT__/g, '""')
-              .replace(/__HMR_HOSTNAME__/g, '""')
-              .replace(/__HMR_DIRECT_TARGET__/g, 'false')
-              .replace(/__WS_TOKEN__/g, '""')
-          }
-        }
-      }
-    }
-  ]
+  }
 })
