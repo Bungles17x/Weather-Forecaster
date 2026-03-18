@@ -173,9 +173,9 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
     }
   }, []) // Empty dependency array - only run once
 
-  // Street map with radar overlay - REAL NEXRAD
+  // Street map with radar overlay - MOBILE & PC OPTIMIZED
   const initializeStreetMapWithRadar = () => {
-    console.log('🗺️ Initializing street map with NEXRAD radar overlay...')
+    console.log('🗺️ Initializing mobile & PC optimized street map with radar...')
     
     if (mapRef.current) {
       // Clear container
@@ -183,24 +183,55 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
       
       // Create map container
       const mapContainer = document.createElement('div')
-      mapContainer.id = 'street-map-with-radar'
+      mapContainer.id = 'mobile-pc-street-map'
       mapContainer.style.width = '100%'
       mapContainer.style.height = '100%'
       mapContainer.style.position = 'relative'
+      mapContainer.style.touchAction = 'none' // Better mobile touch support
       mapRef.current.appendChild(mapContainer)
       
-      // Initialize Leaflet map with street tiles - NO ATTRIBUTION
+      // Initialize Leaflet map with mobile-optimized street tiles
       const map = window.L.map(mapContainer, {
         center: [mapCenter?.lat || 40.7128, mapCenter?.lng || -74.0060],
         zoom: zoom || 10,
         zoomControl: true,
-        attributionControl: false // Completely disabled attribution
+        attributionControl: false, // Completely disabled attribution
+        // Mobile optimizations
+        tap: true, // Enable tap events for mobile
+        touchZoom: true, // Enable pinch-to-zoom
+        scrollWheelZoom: true, // Enable mouse wheel zoom
+        doubleClickZoom: true, // Enable double-click zoom
+        boxZoom: true, // Enable box zoom
+        keyboard: true, // Enable keyboard navigation
+        dragging: true, // Enable dragging
+        // Performance optimizations
+        updateWhenIdle: true, // Only update when idle
+        updateWhenZooming: false, // Don't update while zooming
+        preferCanvas: false, // Use DOM for better mobile performance
+        fadeAnimation: true, // Enable fade animations
+        markerZoomAnimation: true, // Enable marker zoom animations
+        transform3DLimit: 8388607, // Enable 3D transforms for better performance
+        zoomAnimation: true, // Enable zoom animations
+        zoomAnimationThreshold: 4 // Only animate zoom for significant changes
       })
       
-      // Add OpenStreetMap tiles (street map) - NO ATTRIBUTION
-      const streetLayer = window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '', // Empty attribution to remove any default text
-        maxZoom: 19
+      // Add CartoDB Positron tiles - MOBILE & PC OPTIMIZED
+      const streetLayer = window.L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '', // Empty attribution to remove any text
+        maxZoom: 19,
+        minZoom: 1,
+        // Mobile performance optimizations
+        updateWhenIdle: true,
+        updateWhenZooming: false,
+        detectRetina: false, // Disabled for mobile performance
+        keepBuffer: 2, // Reduced buffer for mobile
+        edgeBufferTiles: 1, // Reduced edge buffer
+        bounds: [[-85, -180], [85, 180]], // World bounds
+        noWrap: true, // Prevent world wrapping for mobile
+        continuousWorld: false, // Disable continuous world
+        tileSize: 256, // Standard tile size
+        subdomains: 'abcd', // Load balance across subdomains
+        errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
       }).addTo(map)
       
       // Add NEXRAD radar overlay
@@ -214,7 +245,12 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         addLocationMarkerOSM(map, coordinates)
       }
       
-      console.log('✅ Street map with NEXRAD radar initialized')
+      // Add mobile touch controls
+      if (window.L.control && window.L.control.touchZoom) {
+        window.L.control.touchZoom().addTo(map)
+      }
+      
+      console.log('✅ Mobile & PC optimized street map with radar initialized')
     }
   }
 
@@ -533,7 +569,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
 
   const initializeOpenStreetMap = () => {
     try {
-      console.log('🗺️ Initializing OpenStreetMap with Leaflet...')
+      console.log('🗺️ Initializing mobile & PC optimized OpenStreetMap...')
       
       // Check if container exists
       const container = mapRef.current
@@ -568,12 +604,29 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
 
       console.log('🗺️ Initializing map with coordinates:', { lat, lng })
 
-      // Initialize Leaflet map
+      // Initialize Leaflet map with mobile optimizations
       const map = window.L.map(container, {
         center: [lat, lng],
         zoom: zoom || 10,
         zoomControl: true,
-        attributionControl: false
+        attributionControl: false,
+        // Mobile optimizations
+        tap: true, // Enable tap events for mobile
+        touchZoom: true, // Enable pinch-to-zoom
+        scrollWheelZoom: true, // Enable mouse wheel zoom
+        doubleClickZoom: true, // Enable double-click zoom
+        boxZoom: true, // Enable box zoom
+        keyboard: true, // Enable keyboard navigation
+        dragging: true, // Enable dragging
+        // Performance optimizations
+        updateWhenIdle: true, // Only update when idle
+        updateWhenZooming: false, // Don't update while zooming
+        preferCanvas: false, // Use DOM for better mobile performance
+        fadeAnimation: true, // Enable fade animations
+        markerZoomAnimation: true, // Enable marker zoom animations
+        transform3DLimit: 8388607, // Enable 3D transforms for better performance
+        zoomAnimation: true, // Enable zoom animations
+        zoomAnimationThreshold: 4 // Only animate zoom for significant changes
       })
 
       // Store map reference for cleanup
@@ -581,13 +634,26 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
 
       console.log('🗺️ Leaflet map created successfully')
 
-      // Add OpenStreetMap tiles - NO ATTRIBUTION
-      const osmLayer = window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      // Add CartoDB Positron tiles - MOBILE & PC OPTIMIZED
+      const osmLayer = window.L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
         attribution: '', // Empty attribution to remove any text
-        maxZoom: 19
+        maxZoom: 19,
+        minZoom: 1,
+        // Mobile performance optimizations
+        updateWhenIdle: true,
+        updateWhenZooming: false,
+        detectRetina: false, // Disabled for mobile performance
+        keepBuffer: 2, // Reduced buffer for mobile
+        edgeBufferTiles: 1, // Reduced edge buffer
+        bounds: [[-85, -180], [85, 180]], // World bounds
+        noWrap: true, // Prevent world wrapping for mobile
+        continuousWorld: false, // Disable continuous world
+        tileSize: 256, // Standard tile size
+        subdomains: 'abcd', // Load balance across subdomains
+        errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
       }).addTo(map)
 
-      console.log('🗺️ OpenStreetMap tiles added')
+      console.log('🗺️ Mobile & PC optimized street tiles added')
 
       // Add NOAA/NWS radar layers
       addRadarLayersOSM(map)
@@ -607,8 +673,13 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         addLocationMarkerOSM(map, { latitude: mapCenter.lat, longitude: mapCenter.lng })
       }
 
+      // Add mobile touch controls
+      if (window.L.control && window.L.control.touchZoom) {
+        window.L.control.touchZoom().addTo(map)
+      }
+
       setLoading(false)
-      console.log('🗺️ OpenStreetMap initialization complete')
+      console.log('🗺️ Mobile & PC optimized OpenStreetMap initialization complete')
 
     } catch (error) {
       console.error('🗺️ Error initializing OpenStreetMap:', error)
