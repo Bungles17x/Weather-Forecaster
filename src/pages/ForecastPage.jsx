@@ -3,7 +3,31 @@ import { Link, useLocation } from 'react-router-dom'
 import Header from '../components/Header'
 import { WeatherIcon } from '../components/WeatherIcons'
 import { useLocation as useGlobalLocation } from '../contexts/LocationContext'
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+} from 'chart.js'
+import { Line } from 'react-chartjs-2'
 import './ForecastPage.css'
+
+// Register Chart.js components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+)
 
 const ForecastPage = () => {
   const [activeTab, setActiveTab] = useState('today')
@@ -281,14 +305,99 @@ const ForecastPage = () => {
     </div>
   )
 
+  // Generate sample chart data for temperature trends
+  const getTemperatureChartData = () => {
+    const labels = forecastData.slice(0, 7).map(day => day.dayName)
+    const highTemps = forecastData.slice(0, 7).map(day => day.high || Math.floor(Math.random() * 15) + 70)
+    const lowTemps = forecastData.slice(0, 7).map(day => day.low || Math.floor(Math.random() * 10) + 50)
+    
+    return {
+      labels,
+      datasets: [
+        {
+          label: 'High Temperature',
+          data: highTemps,
+          borderColor: 'rgb(255, 99, 132)',
+          backgroundColor: 'rgba(255, 99, 132, 0.2)',
+          tension: 0.4,
+          fill: true,
+        },
+        {
+          label: 'Low Temperature',
+          data: lowTemps,
+          borderColor: 'rgb(54, 162, 235)',
+          backgroundColor: 'rgba(54, 162, 235, 0.2)',
+          tension: 0.4,
+          fill: true,
+        },
+      ],
+    }
+  }
+
+  const chartOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top',
+        labels: {
+          color: 'white',
+          font: {
+            size: 12
+          }
+        }
+      },
+      title: {
+        display: true,
+        text: '7-Day Temperature Trend',
+        color: 'white',
+        font: {
+          size: 16
+        }
+      },
+    },
+    scales: {
+      x: {
+        ticks: {
+          color: 'white'
+        },
+        grid: {
+          color: 'rgba(255, 255, 255, 0.1)'
+        }
+      },
+      y: {
+        ticks: {
+          color: 'white',
+          callback: function(value) {
+            return value + '°F'
+          }
+        },
+        grid: {
+          color: 'rgba(255, 255, 255, 0.1)'
+        },
+        title: {
+          display: true,
+          text: 'Temperature (°F)',
+          color: 'white'
+        }
+      }
+    }
+  }
+
   const renderDailyForecast = () => (
     <div className="daily-forecast">
       <div className="daily-header">
-        <h3>📅 Daily Forecast</h3>
+        <h3>� Daily Forecast</h3>
         <div className="daily-controls">
           <button className="control-btn btn-primary" onClick={handleRefresh}>🔄 Refresh</button>
           <button className="control-btn btn-secondary">📊 Export</button>
           <button className="control-btn btn-secondary">📧 Share</button>
+        </div>
+      </div>
+      
+      {/* Temperature Trend Chart */}
+      <div className="temperature-chart-section">
+        <div className="chart-container">
+          <Line data={getTemperatureChartData()} options={chartOptions} />
         </div>
       </div>
       
@@ -309,7 +418,7 @@ const ForecastPage = () => {
             <div className="day-condition">{day.condition}</div>
             <div className="day-details">
               <div className="day-detail">
-                <span>💧 {day.precipitation}%</span>
+                <span>� {day.precipitation}%</span>
               </div>
               <div className="day-detail">
                 <span>💨 {day.windSpeed} mph</span>
