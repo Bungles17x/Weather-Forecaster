@@ -40,15 +40,18 @@
   color: var(--text-primary);
   transition: background 0.3s ease, color 0.3s ease;
   box-sizing: border-box !important;
+  min-width: 100vw !important; /* Ensure minimum width */
+  min-height: 100vh !important; /* Ensure minimum height */
 }
 
-/* Allow body scrolling */
+/* Allow body scrolling - FULL SCREEN */
 body {
   overflow: auto !important; /* Allow scrolling */
   margin: 0 !important;
   padding: 0 !important;
   width: 100vw !important;
-  min-height: 100vh !important; /* Minimum height */
+  height: 100vh !important; /* Full height */
+  min-height: 100vh !important;
   box-sizing: border-box !important;
 }
 
@@ -57,7 +60,8 @@ html {
   margin: 0 !important;
   padding: 0 !important;
   width: 100vw !important;
-  min-height: 100vh !important; /* Minimum height */
+  height: 100vh !important; /* Full height */
+  min-height: 100vh !important;
   box-sizing: border-box !important;
 }
 
