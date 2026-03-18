@@ -173,7 +173,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
     }
   }, []) // Empty dependency array - only run once
 
-  // Street map with radar overlay - FULL SCREEN WIDTH
+  // Street map with radar overlay - FULL SCREEN WIDTH, ANTI-SHRINK
   const initializeStreetMapWithRadar = () => {
     console.log('🗺️ Initializing full-width street map with radar...')
     
@@ -219,6 +219,28 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         zoomAnimationThreshold: 4 // Only animate zoom for significant changes
       })
       
+      // Add resize handler to prevent shrinking
+      const handleResize = () => {
+        console.log('🔄 Handling window resize to prevent map shrinking...')
+        setTimeout(() => {
+          if (map && map.invalidateSize) {
+            map.invalidateSize()
+          }
+          // Force map container to stay full size
+          if (mapRef.current) {
+            mapRef.current.style.width = '100vw !important'
+            mapRef.current.style.height = '100vh !important'
+          }
+        }, 100)
+      }
+      
+      // Add resize listeners
+      window.addEventListener('resize', handleResize)
+      window.addEventListener('orientationchange', handleResize)
+      
+      // Store resize handler for cleanup
+      window._mapResizeHandler = handleResize
+      
       // Add CartoDB Positron tiles - MOBILE & PC OPTIMIZED
       const streetLayer = window.L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
         attribution: '', // Empty attribution to remove any text
@@ -253,6 +275,11 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
       if (window.L.control && window.L.control.touchZoom) {
         window.L.control.touchZoom().addTo(map)
       }
+      
+      // Initial resize to ensure full size
+      setTimeout(() => {
+        handleResize()
+      }, 500)
       
       console.log('✅ Full-width mobile & PC optimized street map with radar initialized')
     }
