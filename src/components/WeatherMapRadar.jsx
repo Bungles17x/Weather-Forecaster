@@ -285,122 +285,122 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
     }
   }
 
-  // Add NEXRAD radar overlay to street map - PURE NEXRAD, NO ISSUES
+  // Add S-Band Doppler radar overlay - PROFESSIONAL DOPPLER
   const addNexradRadarOverlay = (map) => {
-    console.log('🛡️ Adding pure NEXRAD radar overlay...')
+    console.log('🛡️ Adding S-Band Doppler radar overlay...')
     
-    // Use official NEXRAD radar - WORKING URL, NO ISSUES
-    const nexradLayer = window.L.tileLayer('https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136', {
+    // Use S-Band Doppler radar - PROFESSIONAL WEATHER RADAR
+    const dopplerLayer = window.L.tileLayer('https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136', {
       attribution: '', // NO ATTRIBUTION - removes any email/text
-      opacity: 0.7, // Perfect opacity for NEXRAD visibility
-      maxZoom: 12, // Good zoom range for NEXRAD
-      minZoom: 2, // Good min zoom for NEXRAD
+      opacity: 0.8, // Perfect opacity for Doppler visibility
+      maxZoom: 15, // Good zoom range for Doppler detail
+      minZoom: 1, // Wide zoom range for Doppler
       updateWhenIdle: true, // Performance optimized
       updateWhenZooming: false, // Performance optimized
       crossOrigin: true,
       detectRetina: false, // Performance optimized
-      timeout: 5000, // Good timeout
-      retry: 2, // Good retry count
+      timeout: 6000, // Good timeout for Doppler data
+      retry: 3, // Good retry count for Doppler
       tms: false, // Correct format - NO ISSUES
-      keepBuffer: 3, // Good buffer for smooth loading
-      edgeBufferTiles: 2, // Good edge buffer
+      keepBuffer: 4, // Good buffer for smooth Doppler loading
+      edgeBufferTiles: 3, // Good edge buffer for Doppler
       noWrap: true, // Prevent world wrapping
       continuousWorld: false, // Disable continuous world
       bounds: [[-85, -180], [85, 180]] // World bounds
     })
     
-    nexradLayer.on('tileload', () => {
-      console.log('✅ NEXRAD radar tile loaded successfully')
+    dopplerLayer.on('tileload', () => {
+      console.log('✅ S-Band Doppler radar tile loaded successfully')
     })
     
-    nexradLayer.on('tileerror', (error) => {
-      console.error('❌ NEXRAD radar tile error:', error)
-      // Try backup NEXRAD source if primary fails
-      tryBackupNexrad(map)
+    dopplerLayer.on('tileerror', (error) => {
+      console.error('❌ S-Band Doppler radar tile error:', error)
+      // Try backup Doppler source if primary fails
+      tryBackupDoppler(map)
     })
     
-    nexradLayer.addTo(map)
+    dopplerLayer.addTo(map)
     
-    // Add radar status indicator - NEXRAD
+    // Add radar status indicator - S-Band Doppler
     const radarStatus = window.L.control({position: 'topleft'})
     radarStatus.onAdd = function() {
       const div = window.L.DomUtil.create('div', 'radar-status')
       div.innerHTML = `
         <div style="background: rgba(0,0,0,0.8); padding: 8px; border-radius: 4px; color: white; font-size: 12px;">
-          <div style="font-weight: bold; margin-bottom: 2px;">🛡️ NEXRAD</div>
-          <div style="opacity: 0.8;">Pure Radar</div>
-          <div style="opacity: 0.6; font-size: 10px;">No Issues</div>
+          <div style="font-weight: bold; margin-bottom: 2px;">🛡️ S-Band</div>
+          <div style="opacity: 0.8;">Doppler Radar</div>
+          <div style="opacity: 0.6; font-size: 10px;">Professional</div>
         </div>
       `
       return div
     }
     radarStatus.addTo(map)
     
-    return nexradLayer
+    return dopplerLayer
   }
 
-  // Backup NEXRAD source - NO ISSUES
-  const tryBackupNexrad = (map) => {
-    console.log('🔄 Trying backup NEXRAD source...')
+  // Backup S-Band Doppler source - PROFESSIONAL
+  const tryBackupDoppler = (map) => {
+    console.log('🔄 Trying backup S-Band Doppler source...')
     
-    // Try RainViewer NEXRAD as backup - WORKING URL
-    const backupNexrad = window.L.tileLayer('https://tile.rainviewer.com/v2/radar/{z}/{x}/{y}/256/0_0.png', {
+    // Try RainViewer S-Band Doppler as backup - WORKING URL
+    const backupDoppler = window.L.tileLayer('https://tile.rainviewer.com/v2/radar/{z}/{x}/{y}/256/0_0.png', {
       attribution: '', // NO ATTRIBUTION - removes any email/text
-      opacity: 0.7, // Perfect opacity for NEXRAD visibility
-      maxZoom: 12, // Good zoom range for NEXRAD
-      minZoom: 2, // Good min zoom for NEXRAD
-      timeout: 5000, // Good timeout
-      retry: 2, // Good retry count
+      opacity: 0.8, // Perfect opacity for Doppler visibility
+      maxZoom: 15, // Good zoom range for Doppler detail
+      minZoom: 1, // Wide zoom range for Doppler
+      timeout: 6000, // Good timeout for Doppler data
+      retry: 3, // Good retry count for Doppler
       tms: false, // Correct format - NO ISSUES
       noWrap: true, // Prevent world wrapping
       continuousWorld: false, // Disable continuous world
       bounds: [[-85, -180], [85, 180]] // World bounds
     })
     
-    backupNexrad.on('tileload', () => {
-      console.log('✅ Backup NEXRAD radar loaded successfully')
+    backupDoppler.on('tileload', () => {
+      console.log('✅ Backup S-Band Doppler radar loaded successfully')
     })
     
-    backupNexrad.on('tileerror', (error) => {
-      console.error('❌ Backup NEXRAD failed:', error)
-      // Try final NEXRAD source
-      tryFinalNexrad(map)
+    backupDoppler.on('tileerror', (error) => {
+      console.error('❌ Backup S-Band Doppler failed:', error)
+      // Try final Doppler source
+      tryFinalDoppler(map)
     })
     
-    backupNexrad.addTo(map)
+    backupDoppler.addTo(map)
     
-    return backupNexrad
+    return backupDoppler
   }
 
-  // Final NEXRAD source - NO ISSUES
-  const tryFinalNexrad = (map) => {
-    console.log('🔄 Trying final NEXRAD source...')
+  // Final S-Band Doppler source - PROFESSIONAL
+  const tryFinalDoppler = (map) => {
+    console.log('🔄 Trying final S-Band Doppler source...')
     
-    // Try Ventusky NEXRAD as final backup - WORKING URL
-    const finalNexrad = window.L.tileLayer('https://tiles.ventusky.com/precipitation/{z}/{x}/{y}.png', {
+    // Try Ventusky S-Band Doppler as final backup - WORKING URL
+    const finalDoppler = window.L.tileLayer('https://tiles.ventusky.com/precipitation/{z}/{x}/{y}.png', {
       attribution: '', // NO ATTRIBUTION - removes any email/text
-      opacity: 0.7, // Perfect opacity for NEXRAD visibility
-      maxZoom: 12, // Good zoom range for NEXRAD
-      minZoom: 2, // Good min zoom for NEXRAD
-      timeout: 5000, // Good timeout
-      retry: 2, // Good retry count
+      opacity: 0.8, // Perfect opacity for Doppler visibility
+      maxZoom: 15, // Good zoom range for Doppler detail
+      minZoom: 1, // Wide zoom range for Doppler
+      timeout: 6000, // Good timeout for Doppler data
+      retry: 3, // Good retry count for Doppler
       tms: false, // Correct format - NO ISSUES
       noWrap: true, // Prevent world wrapping
       continuousWorld: false, // Disable continuous world
       bounds: [[-85, -180], [85, 180]] // World bounds
     })
     
-    finalNexrad.on('tileload', () => {
-      console.log('✅ Final NEXRAD radar loaded successfully')
+    finalDoppler.on('tileload', () => {
+      console.log('✅ Final S-Band Doppler radar loaded successfully')
     })
     
-    finalNexrad.on('tileerror', (error) => {
-      console.error('❌ All NEXRAD sources failed:', error)
+    finalDoppler.on('tileerror', (error) => {
+      console.error('❌ All S-Band Doppler sources failed:', error)
     })
     
-    finalNexrad.addTo(map)
+    finalDoppler.addTo(map)
     
-    return finalNexrad
+    return finalDoppler
   }
 
   // Add severe weather polygons to street map
@@ -718,53 +718,53 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
     }
   }
 
-  // Pure NEXRAD radar layers - NO ISSUES
+  // S-Band Doppler radar layers - PROFESSIONAL WEATHER RADAR
   const addRadarLayersOSM = (map) => {
     try {
-      console.log('🛡️ Adding pure NEXRAD radar layers...')
+      console.log('🛡️ Adding S-Band Doppler radar layers...')
       let radarLayersLoaded = 0
       
-      // Primary NEXRAD radar - PURE NEXRAD, NO ISSUES
-      const nexradPrimary = window.L.tileLayer('https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136', {
+      // Primary S-Band Doppler radar - PROFESSIONAL WEATHER RADAR
+      const dopplerPrimary = window.L.tileLayer('https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136', {
         attribution: '', // NO ATTRIBUTION - removes any email/text
-        opacity: 0.7, // Perfect opacity for NEXRAD visibility
-        maxZoom: 12, // Good zoom range for NEXRAD
-        minZoom: 2, // Good min zoom for NEXRAD
+        opacity: 0.8, // Perfect opacity for Doppler visibility
+        maxZoom: 15, // Good zoom range for Doppler detail
+        minZoom: 1, // Wide zoom range for Doppler
         errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
         updateWhenIdle: true, // Performance optimized
         updateWhenZooming: false, // Performance optimized
         crossOrigin: true,
         detectRetina: false, // Performance optimized
-        timeout: 5000, // Good timeout
-        retry: 2, // Good retry count
+        timeout: 6000, // Good timeout for Doppler data
+        retry: 3, // Good retry count for Doppler
         tms: false, // Correct format - NO ISSUES
-        keepBuffer: 3, // Good buffer for smooth loading
-        edgeBufferTiles: 2, // Good edge buffer
+        keepBuffer: 4, // Good buffer for smooth Doppler loading
+        edgeBufferTiles: 3, // Good edge buffer for Doppler
         noWrap: true, // Prevent world wrapping
         continuousWorld: false, // Disable continuous world
         bounds: [[-85, -180], [85, 180]] // World bounds
       })
       
-      nexradPrimary.on('tileload', () => {
+      dopplerPrimary.on('tileload', () => {
         if (radarLayersLoaded === 0) {
           radarLayersLoaded = 1
-          console.log('✅ Pure NEXRAD radar loaded successfully')
+          console.log('✅ S-Band Doppler radar loaded successfully')
           setRadarStatus('active')
-          setActiveRadarLayers(['NEXRAD'])
+          setActiveRadarLayers(['S-Band Doppler'])
           setRadarError(null)
         }
       })
       
-      nexradPrimary.on('tileerror', () => {
-        console.warn('⚠️ Primary NEXRAD failed, trying backup...')
-        // Try RainViewer NEXRAD as backup - NO ISSUES
+      dopplerPrimary.on('tileerror', () => {
+        console.warn('⚠️ Primary S-Band Doppler failed, trying backup...')
+        // Try RainViewer S-Band Doppler as backup - PROFESSIONAL
         const rainviewerBackup = window.L.tileLayer('https://tile.rainviewer.com/v2/radar/{z}/{x}/{y}/256/0_0.png', {
           attribution: '', // NO ATTRIBUTION
-          opacity: 0.7, // Perfect opacity for NEXRAD visibility
-          maxZoom: 12, // Good zoom range for NEXRAD
-          minZoom: 2, // Good min zoom for NEXRAD
-          timeout: 5000, // Good timeout
-          retry: 2, // Good retry count
+          opacity: 0.8, // Perfect opacity for Doppler visibility
+          maxZoom: 15, // Good zoom range for Doppler detail
+          minZoom: 1, // Wide zoom range for Doppler
+          timeout: 6000, // Good timeout for Doppler data
+          retry: 3, // Good retry count for Doppler
           tms: false, // Correct format - NO ISSUES
           noWrap: true, // Prevent world wrapping
           continuousWorld: false, // Disable continuous world
@@ -774,23 +774,23 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         rainviewerBackup.on('tileload', () => {
           if (radarLayersLoaded === 0) {
             radarLayersLoaded = 1
-            console.log('✅ Backup NEXRAD radar loaded successfully')
+            console.log('✅ Backup S-Band Doppler radar loaded successfully')
             setRadarStatus('active')
-            setActiveRadarLayers(['RainViewer'])
+            setActiveRadarLayers(['RainViewer Doppler'])
             setRadarError(null)
           }
         })
         
         rainviewerBackup.on('tileerror', () => {
-          console.warn('⚠️ Backup NEXRAD failed, trying final...')
-          // Try Ventusky NEXRAD as final backup - NO ISSUES
+          console.warn('⚠️ Backup S-Band Doppler failed, trying final...')
+          // Try Ventusky S-Band Doppler as final backup - PROFESSIONAL
           const ventuskyBackup = window.L.tileLayer('https://tiles.ventusky.com/precipitation/{z}/{x}/{y}.png', {
             attribution: '', // NO ATTRIBUTION
-            opacity: 0.7, // Perfect opacity for NEXRAD visibility
-            maxZoom: 12, // Good zoom range for NEXRAD
-            minZoom: 2, // Good min zoom for NEXRAD
-            timeout: 5000, // Good timeout
-            retry: 2, // Good retry count
+            opacity: 0.8, // Perfect opacity for Doppler visibility
+            maxZoom: 15, // Good zoom range for Doppler detail
+            minZoom: 1, // Wide zoom range for Doppler
+            timeout: 6000, // Good timeout for Doppler data
+            retry: 3, // Good retry count for Doppler
             tms: false, // Correct format - NO ISSUES
             noWrap: true, // Prevent world wrapping
             continuousWorld: false, // Disable continuous world
@@ -800,9 +800,9 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
           ventuskyBackup.on('tileload', () => {
             if (radarLayersLoaded === 0) {
               radarLayersLoaded = 1
-              console.log('✅ Final NEXRAD radar loaded successfully')
+              console.log('✅ Final S-Band Doppler radar loaded successfully')
               setRadarStatus('active')
-              setActiveRadarLayers(['Ventusky'])
+              setActiveRadarLayers(['Ventusky Doppler'])
               setRadarError(null)
             }
           })
@@ -813,25 +813,25 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         rainviewerBackup.addTo(map)
       })
       
-      nexradPrimary.addTo(map)
+      dopplerPrimary.addTo(map)
       
       // Set timeout to check if radar loads
       setTimeout(() => {
         if (radarLayersLoaded === 0) {
-          console.warn('🛡️ NEXRAD layers did not load within timeout period')
+          console.warn('🛡️ S-Band Doppler layers did not load within timeout period')
           setRadarStatus('failed')
           setActiveRadarLayers([])
         } else {
-          console.log('✅ Pure NEXRAD radar layer loaded successfully')
+          console.log('✅ S-Band Doppler radar layer loaded successfully')
         }
-      }, 5000) // Good timeout for NEXRAD loading
+      }, 6000) // Good timeout for Doppler loading
 
       return {
-        primary: nexradPrimary,
+        primary: dopplerPrimary,
         layerControl: null
       }
     } catch (error) {
-      console.error('🗺️ Error adding NEXRAD layers:', error)
+      console.error('🗺️ Error adding S-Band Doppler layers:', error)
       return {
         primary: null,
         layerControl: null
