@@ -22,6 +22,8 @@ export default defineConfig({
     host: true
   },
   define: {
-    __DEFINES__: JSON.stringify({})
+    __DEFINES__: JSON.stringify({}),
+    __HMR_CONFIG_NAME__: JSON.stringify(''),
+    __DEV__: JSON.stringify(false)
   }
 })
