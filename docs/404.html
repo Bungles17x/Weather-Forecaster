@@ -56,8 +56,8 @@
         // Redirect to main app for GitHub Pages SPA routing
         window.location.replace('./index.html');
       } else {
-        // Load main app
-        window.location.replace('./index.html' + window.location.hash + window.location.search);
+        // Load main app with hash and search parameters
+        window.location.replace('./index.html' + (window.location.hash || '') + (window.location.search || ''));
       }
     </script>
   </body>
