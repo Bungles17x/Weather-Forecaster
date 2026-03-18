@@ -218,67 +218,69 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
     }
   }
 
-  // Add NEXRAD radar overlay to street map
+  // Add NEXRAD radar overlay to street map - OPTIMIZED
   const addNexradRadarOverlay = (map) => {
-    console.log('🛡️ Adding radar overlay to street map...')
+    console.log('🛡️ Adding NEXRAD radar overlay to street map...')
     
-    // Use RainViewer as primary radar - more reliable
-    const rainviewerLayer = window.L.tileLayer('https://tile.rainviewer.com/v2/radar/{z}/{x}/{y}/256/0_0.png', {
+    // Use Iowa State NEXRAD - OPTIMIZED FOR PERFORMANCE
+    const nexradLayer = window.L.tileLayer('https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/ridge::USCOMP-N0Q::0/256/{z}/{x}/{y}.png', {
       attribution: '', // NO ATTRIBUTION - removes any email/text
-      opacity: 0.7,
-      maxZoom: 12,
-      minZoom: 2,
-      updateWhenIdle: false,
-      updateWhenZooming: false,
+      opacity: 0.6, // Reduced opacity for performance
+      maxZoom: 10, // Reduced max zoom for performance
+      minZoom: 3, // Increased min zoom for performance
+      updateWhenIdle: true, // Only update when idle for performance
+      updateWhenZooming: false, // Don't update while zooming for performance
       crossOrigin: true,
-      detectRetina: true,
-      timeout: 5000,
-      retry: 2,
-      tms: false // Important: This is NOT a TMS tile server
+      detectRetina: false, // Disabled for performance
+      timeout: 3000, // Reduced timeout
+      retry: 1, // Reduced retries for performance
+      tms: false, // Important: This is NOT a TMS tile server
+      keepBuffer: 2, // Reduced buffer for performance
+      edgeBufferTiles: 1 // Reduced edge buffer for performance
     })
     
-    rainviewerLayer.on('tileload', () => {
-      console.log('✅ RainViewer radar tile loaded')
+    nexradLayer.on('tileload', () => {
+      console.log('✅ NEXRAD radar tile loaded')
     })
     
-    rainviewerLayer.on('tileerror', (error) => {
-      console.error('❌ RainViewer radar tile error:', error)
+    nexradLayer.on('tileerror', (error) => {
+      console.error('❌ NEXRAD radar tile error:', error)
       // Try alternative URL if primary fails
       tryAlternativeRadar(map)
     })
     
-    rainviewerLayer.addTo(map)
+    nexradLayer.addTo(map)
     
-    // Add radar status indicator - UPDATED
+    // Add radar status indicator - NEXRAD
     const radarStatus = window.L.control({position: 'topleft'})
     radarStatus.onAdd = function() {
       const div = window.L.DomUtil.create('div', 'radar-status')
       div.innerHTML = `
         <div style="background: rgba(0,0,0,0.8); padding: 8px; border-radius: 4px; color: white; font-size: 12px;">
-          <div style="font-weight: bold; margin-bottom: 2px;">🌧️ RainViewer</div>
+          <div style="font-weight: bold; margin-bottom: 2px;">🛡️ NEXRAD</div>
           <div style="opacity: 0.8;">Radar Active</div>
-          <div style="opacity: 0.6; font-size: 10px;">Real-time</div>
+          <div style="opacity: 0.6; font-size: 10px;">Optimized</div>
         </div>
       `
       return div
     }
     radarStatus.addTo(map)
     
-    return rainviewerLayer
+    return nexradLayer
   }
 
-  // Try alternative radar sources if primary fails - NO ATTRIBUTION
+  // Try alternative radar sources if primary fails - OPTIMIZED
   const tryAlternativeRadar = (map) => {
     console.log('🔄 Trying alternative radar sources...')
     
-    // Try Ventusky radar as fallback - NO ATTRIBUTION
+    // Try Ventusky radar as fallback - OPTIMIZED
     const ventuskyRadar = window.L.tileLayer('https://tiles.ventusky.com/precipitation/{z}/{x}/{y}.png', {
       attribution: '', // NO ATTRIBUTION - removes any email/text
-      opacity: 0.6,
-      maxZoom: 12,
-      minZoom: 2,
-      timeout: 5000,
-      retry: 2
+      opacity: 0.5, // Reduced opacity for performance
+      maxZoom: 10, // Reduced max zoom for performance
+      minZoom: 3, // Increased min zoom for performance
+      timeout: 3000, // Reduced timeout
+      retry: 1 // Reduced retries for performance
     })
     
     ventuskyRadar.on('tileload', () => {
@@ -287,40 +289,11 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
     
     ventuskyRadar.on('tileerror', (error) => {
       console.error('❌ Ventusky radar failed:', error)
-      // Final fallback - try OpenWeatherMap
-      tryFinalRadarFallback(map)
     })
     
     ventuskyRadar.addTo(map)
     
     return ventuskyRadar
-  }
-
-  // Final radar fallback
-  const tryFinalRadarFallback = (map) => {
-    console.log('🔄 Trying final radar fallback...')
-    
-    // Try OpenWeatherMap radar as final fallback - NO ATTRIBUTION
-    const owmRadar = window.L.tileLayer('https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136', {
-      attribution: '', // NO ATTRIBUTION - removes any email/text
-      opacity: 0.6,
-      maxZoom: 12,
-      minZoom: 2,
-      timeout: 5000,
-      retry: 2
-    })
-    
-    owmRadar.on('tileload', () => {
-      console.log('✅ OpenWeatherMap radar loaded as final fallback')
-    })
-    
-    owmRadar.on('tileerror', (error) => {
-      console.error('❌ OpenWeatherMap radar failed:', error)
-    })
-    
-    owmRadar.addTo(map)
-    
-    return owmRadar
   }
 
   // Add severe weather polygons to street map
@@ -600,48 +573,50 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
     }
   }
 
-  // Original working radar layers - SIMPLIFIED WITH NEW PROVIDER
+  // Original working radar layers - BACK TO NEXRAD + OPTIMIZED
   const addRadarLayersOSM = (map) => {
     try {
-      console.log('🛡️ Adding radar layers...')
+      console.log('🛡️ Adding NEXRAD radar layers...')
       let radarLayersLoaded = 0
       
-      // Primary radar from RainViewer - NEW PROVIDER
-      const rainviewerPrimary = window.L.tileLayer('https://tile.rainviewer.com/v2/radar/{z}/{x}/{y}/256/0_0.png', {
+      // Primary NEXRAD radar from Iowa State - OPTIMIZED
+      const nexradPrimary = window.L.tileLayer('https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/ridge::USCOMP-N0Q::0/256/{z}/{x}/{y}.png', {
         attribution: '', // NO ATTRIBUTION - removes any email/text
-        opacity: 0.8,
-        maxZoom: 12,
-        minZoom: 2,
+        opacity: 0.6, // Reduced opacity for performance
+        maxZoom: 10, // Reduced max zoom for performance
+        minZoom: 3, // Increased min zoom for performance
         errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
-        updateWhenIdle: false,
-        updateWhenZooming: false,
+        updateWhenIdle: true, // Only update when idle for performance
+        updateWhenZooming: false, // Don't update while zooming for performance
         crossOrigin: true,
-        detectRetina: true,
-        timeout: 5000,
-        retry: 2,
-        tms: false
+        detectRetina: false, // Disabled for performance
+        timeout: 3000, // Reduced timeout
+        retry: 1, // Reduced retries for performance
+        tms: false, // Explicitly set this is NOT a TMS server
+        keepBuffer: 2, // Reduced buffer for performance
+        edgeBufferTiles: 1 // Reduced edge buffer for performance
       })
       
-      rainviewerPrimary.on('tileload', () => {
+      nexradPrimary.on('tileload', () => {
         if (radarLayersLoaded === 0) {
           radarLayersLoaded = 1
-          console.log('✅ RainViewer radar loaded successfully')
+          console.log('✅ NEXRAD radar loaded successfully')
           setRadarStatus('active')
-          setActiveRadarLayers(['RainViewer'])
+          setActiveRadarLayers(['NEXRAD'])
           setRadarError(null)
         }
       })
       
-      rainviewerPrimary.on('tileerror', () => {
-        console.warn('⚠️ RainViewer radar failed, trying fallback...')
+      nexradPrimary.on('tileerror', () => {
+        console.warn('⚠️ NEXRAD radar failed, trying fallback...')
         // Try Ventusky as fallback
         const ventuskyFallback = window.L.tileLayer('https://tiles.ventusky.com/precipitation/{z}/{x}/{y}.png', {
           attribution: '', // NO ATTRIBUTION
-          opacity: 0.6,
-          maxZoom: 12,
-          minZoom: 2,
-          timeout: 5000,
-          retry: 2
+          opacity: 0.5, // Reduced opacity for performance
+          maxZoom: 10, // Reduced max zoom for performance
+          minZoom: 3, // Increased min zoom for performance
+          timeout: 3000, // Reduced timeout
+          retry: 1 // Reduced retries for performance
         })
         
         ventuskyFallback.on('tileload', () => {
@@ -657,7 +632,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         ventuskyFallback.addTo(map)
       })
       
-      rainviewerPrimary.addTo(map)
+      nexradPrimary.addTo(map)
       
       // Set timeout to check if radar loads
       setTimeout(() => {
@@ -666,12 +641,12 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
           setRadarStatus('failed')
           setActiveRadarLayers([])
         } else {
-          console.log('✅ Radar layer loaded successfully')
+          console.log('✅ NEXRAD radar layer loaded successfully')
         }
-      }, 5000)
+      }, 3000) // Reduced timeout for performance
 
       return {
-        primary: rainviewerPrimary,
+        primary: nexradPrimary,
         layerControl: null
       }
     } catch (error) {
