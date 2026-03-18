@@ -74,17 +74,32 @@ Visit the live application: [Weather Forecaster](https://Bungles17x.github.io/We
 ## 🚀 Deployment
 
 ### GitHub Pages
-The application is configured for automatic deployment to GitHub Pages:
+The application is configured for automatic deployment to GitHub Pages with multiple methods:
 
-1. **Build the application**
-   ```bash
-   npm run build
-   ```
+**Method 1: GitHub Actions (Automatic)**
+- Automatic deployment on push to main branch
+- Uses peaceiris/actions-gh-pages@v3 workflow
+- Requires repository permissions setup
 
-2. **Deploy to GitHub Pages**
-   ```bash
-   npm run deploy
-   ```
+**Method 2: GitHub Pages Action (Alternative)**
+- Modern GitHub Pages deployment
+- Uses actions/deploy-pages@v4 workflow
+- Direct deployment to GitHub Pages
+
+**Method 3: Manual Deployment**
+```bash
+npm run build
+npx gh-pages --dist docs --repo https://github.com/Bungles17x/Weather-Forecaster.git
+```
+
+**Method 4: Deployment Scripts**
+```bash
+# Linux/macOS
+bash deploy.sh
+
+# Windows
+.\deploy.bat
+```
 
 ### Manual Deployment
 The build output is located in the `docs/` directory and can be deployed to any static hosting service.
