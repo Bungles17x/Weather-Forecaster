@@ -31,18 +31,45 @@ export default defineConfig({
     host: true
   },
   define: {
+    // Environment variables
     'process.env.NODE_ENV': JSON.stringify('production'),
     'import.meta.env.DEV': JSON.stringify(false),
     'import.meta.env.PROD': JSON.stringify(true),
     'import.meta.env.MODE': JSON.stringify('production'),
     'import.meta.env.BASE_URL': JSON.stringify('/Weather-Forecaster/'),
     'import.meta.env.SSR': JSON.stringify(false),
+    // Vite internal variables
     '__DEFINES__': JSON.stringify({}),
     '__DEV__': JSON.stringify(false),
     '__PROD__': JSON.stringify(true),
     '__TEST__': JSON.stringify(false),
     '__BROWSER__': JSON.stringify(true),
-    '__BASE__': JSON.stringify('/Weather-Forecaster/')
+    '__BASE__': JSON.stringify('/Weather-Forecaster/'),
+    '__WS_TOKEN__': JSON.stringify(''),
+    '__HMR_CONFIG_NAME__': JSON.stringify(''),
+    '__HMR_ENABLE_OVERLAY__': JSON.stringify(false),
+    '__HMR_TIMEOUT__': JSON.stringify(30000),
+    '__HMR_RELOAD_DELAY__': JSON.stringify(0),
+    '__HMR_MAX_RETRIES__': JSON.stringify(0),
+    '__HMR_CLEAR_CONSOLE__': JSON.stringify(false),
+    '__HMR_CLIENT__': JSON.stringify(false),
+    '__HMR_WS__': JSON.stringify(false),
+    '__HMR_BROWSER__': JSON.stringify(false),
+    '__HMR_RUNTIME__': JSON.stringify(false),
+    '__HMR_DEAD_TIMEOUT__': JSON.stringify(30000),
+    '__HMR_HEADER__': JSON.stringify({}),
+    '__HMR_CLIENT_RECONNECT__': JSON.stringify(false),
+    '__HMR_CLIENT_PORT__': JSON.stringify(''),
+    '__HMR_CLIENT_HOST__': JSON.stringify(''),
+    '__HMR_CLIENT_PROTOCOL__': JSON.stringify(''),
+    '__HMR_CLIENT_TIMEOUT__': JSON.stringify(0),
+    '__HMR_CLIENT_RETRY__': JSON.stringify(0),
+    '__HMR_DIRECT_TARGET__': JSON.stringify(false),
+    '__HMR_WEBSOCKET_RECONNECT__': JSON.stringify(false),
+    '__HMR_WEBSOCKET_URL__': JSON.stringify(''),
+    '__HMR_PROTOCOL__': JSON.stringify(''),
+    '__HMR_PORT__': JSON.stringify(''),
+    '__HMR_HOSTNAME__': JSON.stringify('')
   },
   optimizeDeps: {
     exclude: ['react-devtools', 'react-dom/devtools'] // Exclude development dependencies
