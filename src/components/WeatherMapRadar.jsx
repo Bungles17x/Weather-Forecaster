@@ -285,12 +285,12 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
     }
   }
 
-  // Add NEXRAD radar overlay - OPTIMIZED FOR PERFORMANCE
+  // Add NEXRAD radar overlay - IEM NEXRAD
   const addNexradRadarOverlay = (map) => {
-    console.log('🛡️ Adding optimized NEXRAD radar overlay...')
+    console.log('🛡️ Adding IEM NEXRAD radar overlay...')
     
-    // Use optimized NEXRAD radar from RainViewer - PERFORMANCE FOCUSED
-    const nexradLayer = window.L.tileLayer('https://tile.rainviewer.com/v2/radar/{z}/{x}/{y}/256/0_0.png', {
+    // Use IEM NEXRAD radar - OFFICIAL IEM SOURCE
+    const nexradLayer = window.L.tileLayer('https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png', {
       attribution: '', // NO ATTRIBUTION - removes any email/text
       opacity: 0.7, // Reduced opacity for better performance
       maxZoom: 12, // Reduced max zoom for performance
@@ -310,11 +310,11 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
     })
     
     nexradLayer.on('tileload', () => {
-      console.log('✅ Optimized NEXRAD radar tile loaded successfully')
+      console.log('✅ IEM NEXRAD radar tile loaded successfully')
     })
     
     nexradLayer.on('tileerror', (error) => {
-      console.error('❌ Optimized NEXRAD radar tile error:', error)
+      console.error('❌ IEM NEXRAD radar tile error:', error)
       // Try backup NEXRAD source if primary fails
       tryBackupNexrad(map)
     })
@@ -327,10 +327,10 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
 
   // Backup NEXRAD source - OPTIMIZED
   const tryBackupNexrad = (map) => {
-    console.log('🔄 Trying optimized backup NEXRAD source...')
+    console.log('🔄 Trying backup NEXRAD source...')
     
-    // Try Ventusky NEXRAD as backup - OPTIMIZED URL
-    const backupNexrad = window.L.tileLayer('https://tiles.ventusky.com/precipitation/{z}/{x}/{y}.png', {
+    // Try RainViewer NEXRAD as backup - OPTIMIZED URL
+    const backupNexrad = window.L.tileLayer('https://tile.rainviewer.com/v2/radar/{z}/{x}/{y}/256/0_0.png', {
       attribution: '', // NO ATTRIBUTION - removes any email/text
       opacity: 0.7, // Reduced opacity for better performance
       maxZoom: 12, // Reduced max zoom for performance
@@ -344,11 +344,11 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
     })
     
     backupNexrad.on('tileload', () => {
-      console.log('✅ Optimized backup NEXRAD radar loaded successfully')
+      console.log('✅ Backup NEXRAD radar loaded successfully')
     })
     
     backupNexrad.on('tileerror', (error) => {
-      console.error('❌ Optimized backup NEXRAD failed:', error)
+      console.error('❌ Backup NEXRAD failed:', error)
       // Try final NEXRAD source
       tryFinalNexrad(map)
     })
@@ -360,10 +360,10 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
 
   // Final NEXRAD source - OPTIMIZED
   const tryFinalNexrad = (map) => {
-    console.log('🔄 Trying optimized final NEXRAD source...')
+    console.log('🔄 Trying final NEXRAD source...')
     
-    // Try OpenWeatherMap NEXRAD as final backup - OPTIMIZED URL
-    const finalNexrad = window.L.tileLayer('https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136', {
+    // Try Ventusky NEXRAD as final backup - OPTIMIZED URL
+    const finalNexrad = window.L.tileLayer('https://tiles.ventusky.com/precipitation/{z}/{x}/{y}.png', {
       attribution: '', // NO ATTRIBUTION - removes any email/text
       opacity: 0.7, // Reduced opacity for better performance
       maxZoom: 12, // Reduced max zoom for performance
@@ -377,11 +377,11 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
     })
     
     finalNexrad.on('tileload', () => {
-      console.log('✅ Optimized final NEXRAD radar loaded successfully')
+      console.log('✅ Final NEXRAD radar loaded successfully')
     })
     
     finalNexrad.on('tileerror', (error) => {
-      console.error('❌ All optimized NEXRAD sources failed:', error)
+      console.error('❌ All NEXRAD sources failed:', error)
     })
     
     finalNexrad.addTo(map)
@@ -672,14 +672,14 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
     }
   }
 
-  // Optimized NEXRAD radar layers - PERFORMANCE FOCUSED
+  // IEM NEXRAD radar layers - OFFICIAL IEM SOURCE
   const addRadarLayersOSM = (map) => {
     try {
-      console.log('🛡️ Adding optimized NEXRAD radar layers...')
+      console.log('🛡️ Adding IEM NEXRAD radar layers...')
       let radarLayersLoaded = 0
       
-      // Primary optimized NEXRAD radar - PERFORMANCE FOCUSED
-      const nexradPrimary = window.L.tileLayer('https://tile.rainviewer.com/v2/radar/{z}/{x}/{y}/256/0_0.png', {
+      // Primary IEM NEXRAD radar - OFFICIAL IEM SOURCE
+      const nexradPrimary = window.L.tileLayer('https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png', {
         attribution: '', // NO ATTRIBUTION - removes any email/text
         opacity: 0.7, // Reduced opacity for better performance
         maxZoom: 12, // Reduced max zoom for performance
@@ -702,17 +702,17 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
       nexradPrimary.on('tileload', () => {
         if (radarLayersLoaded === 0) {
           radarLayersLoaded = 1
-          console.log('✅ Optimized NEXRAD radar loaded successfully')
+          console.log('✅ IEM NEXRAD radar loaded successfully')
           setRadarStatus('active')
-          setActiveRadarLayers(['NEXRAD'])
+          setActiveRadarLayers(['IEM NEXRAD'])
           setRadarError(null)
         }
       })
       
       nexradPrimary.on('tileerror', () => {
-        console.warn('⚠️ Primary optimized NEXRAD failed, trying backup...')
-        // Try Ventusky NEXRAD as backup - OPTIMIZED
-        const ventuskyBackup = window.L.tileLayer('https://tiles.ventusky.com/precipitation/{z}/{x}/{y}.png', {
+        console.warn('⚠️ Primary IEM NEXRAD failed, trying backup...')
+        // Try RainViewer NEXRAD as backup - OPTIMIZED
+        const rainviewerBackup = window.L.tileLayer('https://tile.rainviewer.com/v2/radar/{z}/{x}/{y}/256/0_0.png', {
           attribution: '', // NO ATTRIBUTION
           opacity: 0.7, // Reduced opacity for better performance
           maxZoom: 12, // Reduced max zoom for performance
@@ -725,20 +725,20 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
           bounds: [[-85, -180], [85, 180]] // World bounds
         })
         
-        ventuskyBackup.on('tileload', () => {
+        rainviewerBackup.on('tileload', () => {
           if (radarLayersLoaded === 0) {
             radarLayersLoaded = 1
-            console.log('✅ Optimized backup NEXRAD radar loaded successfully')
+            console.log('✅ Backup NEXRAD radar loaded successfully')
             setRadarStatus('active')
-            setActiveRadarLayers(['Ventusky NEXRAD'])
+            setActiveRadarLayers(['RainViewer NEXRAD'])
             setRadarError(null)
           }
         })
         
-        ventuskyBackup.on('tileerror', () => {
-          console.warn('⚠️ Backup optimized NEXRAD failed, trying final...')
-          // Try OpenWeatherMap NEXRAD as final backup - OPTIMIZED
-          const openweatherBackup = window.L.tileLayer('https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=01c50e8c663fe1d38db9f79fbedb3136', {
+        rainviewerBackup.on('tileerror', () => {
+          console.warn('⚠️ Backup NEXRAD failed, trying final...')
+          // Try Ventusky NEXRAD as final backup - OPTIMIZED
+          const ventuskyBackup = window.L.tileLayer('https://tiles.ventusky.com/precipitation/{z}/{x}/{y}.png', {
             attribution: '', // NO ATTRIBUTION
             opacity: 0.7, // Reduced opacity for better performance
             maxZoom: 12, // Reduced max zoom for performance
@@ -751,20 +751,20 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
             bounds: [[-85, -180], [85, 180]] // World bounds
           })
           
-          openweatherBackup.on('tileload', () => {
+          ventuskyBackup.on('tileload', () => {
             if (radarLayersLoaded === 0) {
               radarLayersLoaded = 1
-              console.log('✅ Optimized final NEXRAD radar loaded successfully')
+              console.log('✅ Final NEXRAD radar loaded successfully')
               setRadarStatus('active')
-              setActiveRadarLayers(['OpenWeatherMap NEXRAD'])
+              setActiveRadarLayers(['Ventusky NEXRAD'])
               setRadarError(null)
             }
           })
           
-          openweatherBackup.addTo(map)
+          ventuskyBackup.addTo(map)
         })
         
-        ventuskyBackup.addTo(map)
+        rainviewerBackup.addTo(map)
       })
       
       nexradPrimary.addTo(map)
@@ -772,11 +772,11 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
       // Set timeout to check if radar loads
       setTimeout(() => {
         if (radarLayersLoaded === 0) {
-          console.warn('🛡️ Optimized NEXRAD layers did not load within timeout period')
+          console.warn('🛡️ IEM NEXRAD layers did not load within timeout period')
           setRadarStatus('failed')
           setActiveRadarLayers([])
         } else {
-          console.log('✅ Optimized NEXRAD radar layer loaded successfully')
+          console.log('✅ IEM NEXRAD radar layer loaded successfully')
         }
       }, 3000) // Reduced timeout for performance
 
@@ -785,7 +785,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         layerControl: null
       }
     } catch (error) {
-      console.error('🗺️ Error adding optimized NEXRAD layers:', error)
+      console.error('🗺️ Error adding IEM NEXRAD layers:', error)
       return {
         primary: null,
         layerControl: null
