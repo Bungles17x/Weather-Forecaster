@@ -173,25 +173,29 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
     }
   }, []) // Empty dependency array - only run once
 
-  // Street map with radar overlay - MOBILE & PC OPTIMIZED
+  // Street map with radar overlay - FULL SCREEN WIDTH
   const initializeStreetMapWithRadar = () => {
-    console.log('🗺️ Initializing mobile & PC optimized street map with radar...')
+    console.log('🗺️ Initializing full-width street map with radar...')
     
     if (mapRef.current) {
       // Clear container
       mapRef.current.innerHTML = ''
       
-      // Create map container
-      const mapContainer = document.createElement('div')
-      mapContainer.id = 'mobile-pc-street-map'
-      mapContainer.style.width = '100%'
-      mapContainer.style.height = '100%'
-      mapContainer.style.position = 'relative'
-      mapContainer.style.touchAction = 'none' // Better mobile touch support
-      mapRef.current.appendChild(mapContainer)
+      // Add full-width map container class
+      mapRef.current.className = 'map-container'
+      
+      // Create map wrapper
+      const mapWrapper = document.createElement('div')
+      mapWrapper.className = 'map-wrapper'
+      mapWrapper.id = 'mobile-pc-street-map'
+      mapWrapper.style.width = '100%'
+      mapWrapper.style.height = '100%'
+      mapWrapper.style.position = 'relative'
+      mapWrapper.style.touchAction = 'none' // Better mobile touch support
+      mapRef.current.appendChild(mapWrapper)
       
       // Initialize Leaflet map with mobile-optimized street tiles
-      const map = window.L.map(mapContainer, {
+      const map = window.L.map(mapWrapper, {
         center: [mapCenter?.lat || 40.7128, mapCenter?.lng || -74.0060],
         zoom: zoom || 10,
         zoomControl: true,
@@ -250,7 +254,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         window.L.control.touchZoom().addTo(map)
       }
       
-      console.log('✅ Mobile & PC optimized street map with radar initialized')
+      console.log('✅ Full-width mobile & PC optimized street map with radar initialized')
     }
   }
 
@@ -569,7 +573,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
 
   const initializeOpenStreetMap = () => {
     try {
-      console.log('🗺️ Initializing mobile & PC optimized OpenStreetMap...')
+      console.log('🗺️ Initializing full-width mobile & PC optimized OpenStreetMap...')
       
       // Check if container exists
       const container = mapRef.current
@@ -592,6 +596,9 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         container._leaflet_map = null
       }
 
+      // Add full-width map container class
+      container.className = 'map-container'
+
       // Validate coordinates
       const lat = mapCenter?.lat || 40.7128
       const lng = mapCenter?.lng || -74.0060
@@ -602,9 +609,9 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         return
       }
 
-      console.log('🗺️ Initializing map with coordinates:', { lat, lng })
+      console.log('🗺️ Initializing full-width map with coordinates:', { lat, lng })
 
-      // Initialize Leaflet map with mobile optimizations
+      // Initialize Leaflet map with full width and mobile optimizations
       const map = window.L.map(container, {
         center: [lat, lng],
         zoom: zoom || 10,
@@ -632,7 +639,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
       // Store map reference for cleanup
       container._leaflet_map = map
 
-      console.log('🗺️ Leaflet map created successfully')
+      console.log('🗺️ Full-width Leaflet map created successfully')
 
       // Add CartoDB Positron tiles - MOBILE & PC OPTIMIZED
       const osmLayer = window.L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
@@ -653,7 +660,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
         errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
       }).addTo(map)
 
-      console.log('🗺️ Mobile & PC optimized street tiles added')
+      console.log('🗺️ Full-width mobile & PC optimized street tiles added')
 
       // Add NOAA/NWS radar layers
       addRadarLayersOSM(map)
@@ -679,7 +686,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
       }
 
       setLoading(false)
-      console.log('🗺️ Mobile & PC optimized OpenStreetMap initialization complete')
+      console.log('🗺️ Full-width mobile & PC optimized OpenStreetMap initialization complete')
 
     } catch (error) {
       console.error('🗺️ Error initializing OpenStreetMap:', error)
