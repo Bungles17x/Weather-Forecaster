@@ -15,24 +15,28 @@ export default defineConfig({
         chunkFileNames: '[name].js',
         assetFileNames: '[name].[ext]'
       }
-    }
+    },
+    sourcemap: false,
+    target: 'es2015'
   },
   server: {
     port: 5173,
     host: true
   },
   define: {
+    'process.env.NODE_ENV': JSON.stringify('production'),
+    'import.meta.env.DEV': JSON.stringify(false),
+    'import.meta.env.PROD': JSON.stringify(true),
+    'import.meta.env.MODE': JSON.stringify('production'),
+    'import.meta.env.BASE_URL': JSON.stringify('./'),
+    'import.meta.env.SSR': JSON.stringify(false),
+    __DEV__: JSON.stringify(false),
+    __PROD__: JSON.stringify(true),
+    __TEST__: JSON.stringify(false),
+    __BROWSER__: JSON.stringify(true),
+    __BASE__: JSON.stringify('./'),
     __DEFINES__: JSON.stringify({}),
     __HMR_CONFIG_NAME__: JSON.stringify(''),
-    __DEV__: JSON.stringify(false),
-    __BASE__: JSON.stringify('./'),
-    __HMR_BASE__: JSON.stringify('./'),
-    __SERVER_HOST__: JSON.stringify(''),
-    __HMR_PROTOCOL__: JSON.stringify(''),
-    __HMR_PORT__: JSON.stringify(''),
-    __HMR_HOSTNAME__: JSON.stringify(''),
-    __HMR_DIRECT_TARGET__: JSON.stringify(false),
-    __WS_TOKEN__: JSON.stringify(''),
     __HMR_ENABLE_OVERLAY__: JSON.stringify(false),
     __HMR_TIMEOUT__: JSON.stringify(30000),
     __HMR_RELOAD_DELAY__: JSON.stringify(0),
@@ -45,9 +49,12 @@ export default defineConfig({
     __HMR_DEAD_TIMEOUT__: JSON.stringify(30000),
     __HMR_HEADER__: JSON.stringify({}),
     __HMR_CLIENT_RECONNECT__: JSON.stringify(false),
-    'import.meta.env.BASE_URL': JSON.stringify('./'),
-    'import.meta.env.MODE': JSON.stringify('production'),
-    'import.meta.env.PROD': JSON.stringify(true),
-    'import.meta.env.DEV': JSON.stringify(false)
+    __SERVER_HOST__: JSON.stringify(''),
+    __HMR_PROTOCOL__: JSON.stringify(''),
+    __HMR_PORT__: JSON.stringify(''),
+    __HMR_HOSTNAME__: JSON.stringify(''),
+    __HMR_DIRECT_TARGET__: JSON.stringify(false),
+    __WS_TOKEN__: JSON.stringify(''),
+    __HMR_BASE__: JSON.stringify('./')
   }
 })
