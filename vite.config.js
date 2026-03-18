@@ -14,7 +14,8 @@ export default defineConfig({
         entryFileNames: '[name].js',
         chunkFileNames: '[name].js',
         assetFileNames: '[name].[ext]'
-      }
+      },
+      external: ['@vite/client']
     },
     sourcemap: false,
     target: 'es2015',
@@ -72,6 +73,6 @@ export default defineConfig({
     '__HMR_HOSTNAME__': JSON.stringify('')
   },
   optimizeDeps: {
-    exclude: ['react-devtools', 'react-dom/devtools'] // Exclude development dependencies
+    exclude: ['react-devtools', 'react-dom/devtools', '@vite/client'] // Exclude development dependencies
   }
 })
