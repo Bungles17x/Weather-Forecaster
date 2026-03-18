@@ -36,7 +36,13 @@ export default defineConfig({
     'import.meta.env.PROD': JSON.stringify(true),
     'import.meta.env.MODE': JSON.stringify('production'),
     'import.meta.env.BASE_URL': JSON.stringify('/Weather-Forecaster/'),
-    'import.meta.env.SSR': JSON.stringify(false)
+    'import.meta.env.SSR': JSON.stringify(false),
+    '__DEFINES__': JSON.stringify({}),
+    '__DEV__': JSON.stringify(false),
+    '__PROD__': JSON.stringify(true),
+    '__TEST__': JSON.stringify(false),
+    '__BROWSER__': JSON.stringify(true),
+    '__BASE__': JSON.stringify('/Weather-Forecaster/')
   },
   optimizeDeps: {
     exclude: ['react-devtools', 'react-dom/devtools'] // Exclude development dependencies
