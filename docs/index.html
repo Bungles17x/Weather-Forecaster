@@ -20,8 +20,8 @@
     <meta name="twitter:title" content="Weather Forecaster - Professional Weather App" />
     <meta name="twitter:description" content="Professional weather app with real-time forecasts, interactive radar, and weather alerts." />
     <meta name="twitter:image" content="/Weather-Forecaster/weather-icon.svg" />
-    <script type="module" crossorigin src="/Weather-Forecaster/index.js?v=15&t=1710878460000"></script>
-    <link rel="stylesheet" crossorigin href="/Weather-Forecaster/index.css?v=15&t=1710878460000">
+    <script type="module" crossorigin src="/Weather-Forecaster/index.js?v=16&t=1710878520000"></script>
+    <link rel="stylesheet" crossorigin href="/Weather-Forecaster/index.css?v=16&t=1710878520000">
     <style>
       /* Enhanced loading screen */
       .loading-screen {
@@ -286,17 +286,6 @@
               timestamp: new Date().toISOString()
             });
           });
-        }
-        
-        // Force clear service worker registration
-        if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.register('/Weather-Forecaster/sw-force-clear.js')
-            .then(function(registration) {
-              console.log('Force clear service worker registered:', registration.scope);
-            })
-            .catch(function(error) {
-              console.log('Force clear service worker registration failed:', error);
-            });
         }
       })();
     </script>
