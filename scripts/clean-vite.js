@@ -50,6 +50,16 @@ try {
   // Remove any malformed import statements
   content = content.replace(/import\s*["'][^"']*["'];?\s*/g, '');
   
+  // Additional cleanup for any remaining Vite-related patterns
+  content = content.replace(/__vite_plugin_react_preamble_installed__/g, 'undefined');
+  content = content.replace(/globalThis\.__vite_plugin_react_preamble_installed__/g, 'undefined');
+  content = content.replace(/globalThis\.__VITE_HMR_RUNTIME__/g, 'undefined');
+  content = content.replace(/globalThis\.__VITE_HMR_CLIENT__/g, 'undefined');
+  
+  // Remove any development-specific code that might have leaked
+  content = content.replace(/if\s*\(__DEV__\)\s*\{[^}]*\}/g, '');
+  content = content.replace(/if\s*\(__DEVELOPMENT__\)\s*\{[^}]*\}/g, '');
+  
   const cleanedSize = content.length;
   const sizeReduction = originalSize - cleanedSize;
   
@@ -64,12 +74,34 @@ try {
   // Verify no Vite references remain
   const hasVite = content.includes('@vite') || 
                   content.includes('vite/client') || 
-                  content.includes('/@vite/client');
+                  content.includes('/@vite/client') ||
+                  content.includes('__VITE_HMR_') ||
+                  content.includes('__vite_plugin_');
   
   if (hasVite) {
     console.warn('⚠️  Warning: Vite references may still remain');
+    // Find remaining references for debugging
+    const remainingRefs = [];
+    if (content.includes('@vite')) remainingRefs.push('@vite');
+    if (content.includes('vite/client')) remainingRefs.push('vite/client');
+    if (content.includes('/@vite/client')) remainingRefs.push('/@vite/client');
+    if (content.includes('__VITE_HMR_')) remainingRefs.push('__VITE_HMR_');
+    if (content.includes('__vite_plugin_')) remainingRefs.push('__vite_plugin_');
+    console.log('Remaining references:', remainingRefs.join(', '));
   } else {
     console.log('🎉 Verified: No Vite references found in cleaned file');
+  }
+  
+  // Additional verification for GitHub Pages compatibility
+  const hasGitHubPagesIssues = content.includes('/Weather-Forecaster//') || 
+                               content.includes('//Weather-Forecaster');
+  
+  if (hasGitHubPagesIssues) {
+    console.warn('⚠️  GitHub Pages path issues detected, fixing...');
+    content = content.replace(/\/Weather-Forecaster\/\//g, '/Weather-Forecaster/');
+    content = content.replace(/\/\/Weather-Forecaster/g, '/Weather-Forecaster');
+    fs.writeFileSync(indexPath, content);
+    console.log('✅ GitHub Pages path issues fixed');
   }
   
 } catch (error) {

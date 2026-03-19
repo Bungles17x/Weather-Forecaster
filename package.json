@@ -5,12 +5,19 @@
   "type": "module",
   "homepage": "https://Bungles17x.github.io/Weather-Forecaster",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host --open",
     "build": "vite build && node scripts/clean-vite.js",
+    "build:dev": "vite build --mode development && node scripts/clean-vite.js",
+    "build:prod": "vite build --mode production && node scripts/clean-vite.js",
+    "preview": "vite preview --host --port 4173",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d docs --repo https://github.com/Bungles17x/Weather-Forecaster.git"
+    "lint:fix": "eslint . --ext js,jsx --fix",
+    "start": "npm run dev",
+    "serve": "npm run preview",
+    "clean": "rimraf docs",
+    "predeploy": "npm run build:prod",
+    "deploy": "gh-pages -d docs --repo https://github.com/Bungles17x/Weather-Forecaster.git",
+    "deploy:local": "npm run build:prod && npm run preview"
   },
   "dependencies": {
     "chart.js": "^4.5.1",

@@ -4,30 +4,40 @@ import react from '@vitejs/plugin-react'
 export default defineConfig(({ mode }) => {
   const isProduction = mode === 'production'
   const isDevelopment = mode === 'development'
-  
+
   return {
     plugins: [
       react({
-        // Ensure JSX is properly compiled
+        // Ensure JSX is properly compiled for both environments
         jsxRuntime: 'automatic',
-        jsxImportSource: 'react'
+        jsxImportSource: 'react',
+        // Enable fast refresh in development
+        fastRefresh: isDevelopment
       })
     ],
     esbuild: {
       jsx: 'automatic',
-      // Force remove all Vite imports in production
+      // Environment-specific configurations
       define: isProduction ? {
         'import.meta.hot': 'undefined',
         'import.meta.env.HMR': 'false',
         'import.meta.env.DEV': 'false',
         'module.hot': 'undefined',
         'hot': 'undefined'
-      } : {}
+      } : {
+        // Development-specific definitions
+        'import.meta.hot': 'undefined',
+        'import.meta.env.DEV': 'true'
+      }
     },
-    base: isProduction ? '/Weather-Forecaster/' : '/', // Use relative base for development
+    // Base path configuration for both environments
+    base: isProduction ? '/Weather-Forecaster/' : '/',
     build: {
       outDir: 'docs',
       assetsDir: 'assets',
+      sourcemap: isDevelopment, // Enable sourcemaps in development only
+      minify: isProduction ? 'terser' : false, // Don't minify in development for easier debugging
+      target: 'es2015',
       rollupOptions: {
         output: {
           manualChunks: undefined,
@@ -50,71 +60,36 @@ export default defineConfig(({ mode }) => {
           'vite',
           'vite/client',
           'vite/env'
-        ],
-        // Remove custom plugin to avoid potential syntax issues
-        // plugins: [
-        //   {
-        //     name: 'strip-vite-imports',
-        //     generateBundle(options, bundle) {
-        //       // Remove any remaining Vite references
-        //       Object.keys(bundle).forEach(fileName => {
-        //         if (fileName.endsWith('.js')) {
-        //           const chunk = bundle[fileName]
-        //           if (chunk.type === 'chunk') {
-        //             // Replace any remaining Vite imports
-        //             chunk.code = chunk.code
-        //               .replace(/import\s+.*?from\s+['"]@vite\/client['"];?/g, '')
-        //               .replace(/import\s+.*?from\s+['"]vite\/client['"];?/g, '')
-        //               .replace(/import\s+.*?from\s+['"]@vite\/env['"];?/g, '')
-        //               .replace(/import\.meta\.hot/g, 'undefined')
-        //               .replace(/module\.hot/g, 'undefined')
-        //               .replace(/import\.meta\.env\.HMR/g, 'false')
-        //               .replace(/import\.meta\.env\.DEV/g, 'false')
-        //               // Remove any remaining Vite-related code
-        //               .replace(/__HMR_BASE__/g, '"/Weather-Forecaster/"')
-        //               .replace(/__VITE_HMR_RUNTIME__/g, 'null')
-        //               .replace(/__VITE_HMR_CLIENT__/g, 'null')
-        //               .replace(/__VITE_HMR_WS__/g, 'null')
-        //               .replace(/__VITE_HMR_PORT__/g, 'null')
-        //               .replace(/__VITE_HMR_HOST__/g, 'null')
-        //               .replace(/__VITE_HMR_PROTOCOL__/g, '""')
-        //           }
-        //         }
-        //       })
-        //     }
-        //   }
-        // ]
+        ]
       },
-      sourcemap: false,
-      target: 'es2015',
-      minify: 'terser',
-      terserOptions: {
+      terserOptions: isProduction ? {
         compress: {
-          drop_console: isProduction, // Only remove console in production
-          drop_debugger: isProduction,
-          pure_funcs: isProduction ? ['console.log', 'console.warn', 'console.error'] : [],
-          // Remove dead code including Vite imports
+          drop_console: true, // Remove console logs in production
+          drop_debugger: true,
+          pure_funcs: ['console.log', 'console.warn', 'console.error'],
           dead_code: true,
           unused: true,
-          // Remove if statements that will never be true
           conditionals: true,
-          // Remove unreachable code
           evaluate: true,
-          passes: 3, // Run compression multiple times
-          // Remove all references to Vite modules
+          passes: 3,
           side_effects: false
         },
         mangle: {
           reserved: ['React', 'useState', 'useEffect']
         }
-      }
+      } : {}
     },
     server: {
       port: 5173,
       host: true,
+      open: true, // Auto-open browser in development
       hmr: {
         overlay: true // Enable HMR overlay in development
       }
+    },
+    preview: {
+      port: 4173,
+      host: true
     },
     define: {
       // Environment variables - dynamic based on mode
@@ -124,7 +99,7 @@ export default defineConfig(({ mode }) => {
       'import.meta.env.MODE': JSON.stringify(mode),
       'import.meta.env.BASE_URL': JSON.stringify(isProduction ? '/Weather-Forecaster/' : '/'),
       'import.meta.env.SSR': JSON.stringify(false),
-      
+
       // Vite internal variables - only set in production
       ...(isProduction ? {
         '__DEFINES__': JSON.stringify({}),
@@ -160,7 +135,7 @@ export default defineConfig(({ mode }) => {
         '__HMR_HOSTNAME__': JSON.stringify(''),
         '__HMR_BASE__': JSON.stringify('/Weather-Forecaster/'),
         '__HMR_OVERLAY__': JSON.stringify(false),
-        
+
         // Additional development variables that might cause issues
         '__SERVER_HOST__': JSON.stringify(''),
         '__SERVER_PORT__': JSON.stringify(''),
