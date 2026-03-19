@@ -43,39 +43,39 @@ export default defineConfig(({ mode }) => {
           'vite/client',
           'vite/env'
         ],
-        // Custom plugin to strip Vite imports
-        plugins: [
-          {
-            name: 'strip-vite-imports',
-            generateBundle(options, bundle) {
-              // Remove any remaining Vite references
-              Object.keys(bundle).forEach(fileName => {
-                if (fileName.endsWith('.js')) {
-                  const chunk = bundle[fileName]
-                  if (chunk.type === 'chunk') {
-                    // Replace any remaining Vite imports
-                    chunk.code = chunk.code
-                      .replace(/import\s+.*?from\s+['"]@vite\/client['"];?/g, '')
-                      .replace(/import\s+.*?from\s+['"]vite\/client['"];?/g, '')
-                      .replace(/import\s+.*?from\s+['"]@vite\/env['"];?/g, '')
-                      .replace(/import\.meta\.hot/g, 'undefined')
-                      .replace(/module\.hot/g, 'undefined')
-                      .replace(/import\.meta\.env\.HMR/g, 'false')
-                      .replace(/import\.meta\.env\.DEV/g, 'false')
-                      // Remove any remaining Vite-related code
-                      .replace(/__HMR_BASE__/g, '"/Weather-Forecaster/"')
-                      .replace(/__VITE_HMR_RUNTIME__/g, 'null')
-                      .replace(/__VITE_HMR_CLIENT__/g, 'null')
-                      .replace(/__VITE_HMR_WS__/g, 'null')
-                      .replace(/__VITE_HMR_PORT__/g, 'null')
-                      .replace(/__VITE_HMR_HOST__/g, 'null')
-                      .replace(/__VITE_HMR_PROTOCOL__/g, '""')
-                  }
-                }
-              })
-            }
-          }
-        ]
+        // Remove custom plugin to avoid potential syntax issues
+        // plugins: [
+        //   {
+        //     name: 'strip-vite-imports',
+        //     generateBundle(options, bundle) {
+        //       // Remove any remaining Vite references
+        //       Object.keys(bundle).forEach(fileName => {
+        //         if (fileName.endsWith('.js')) {
+        //           const chunk = bundle[fileName]
+        //           if (chunk.type === 'chunk') {
+        //             // Replace any remaining Vite imports
+        //             chunk.code = chunk.code
+        //               .replace(/import\s+.*?from\s+['"]@vite\/client['"];?/g, '')
+        //               .replace(/import\s+.*?from\s+['"]vite\/client['"];?/g, '')
+        //               .replace(/import\s+.*?from\s+['"]@vite\/env['"];?/g, '')
+        //               .replace(/import\.meta\.hot/g, 'undefined')
+        //               .replace(/module\.hot/g, 'undefined')
+        //               .replace(/import\.meta\.env\.HMR/g, 'false')
+        //               .replace(/import\.meta\.env\.DEV/g, 'false')
+        //               // Remove any remaining Vite-related code
+        //               .replace(/__HMR_BASE__/g, '"/Weather-Forecaster/"')
+        //               .replace(/__VITE_HMR_RUNTIME__/g, 'null')
+        //               .replace(/__VITE_HMR_CLIENT__/g, 'null')
+        //               .replace(/__VITE_HMR_WS__/g, 'null')
+        //               .replace(/__VITE_HMR_PORT__/g, 'null')
+        //               .replace(/__VITE_HMR_HOST__/g, 'null')
+        //               .replace(/__VITE_HMR_PROTOCOL__/g, '""')
+        //           }
+        //         }
+        //       })
+        //     }
+        //   }
+        // ]
       },
       sourcemap: false,
       target: 'es2015',
