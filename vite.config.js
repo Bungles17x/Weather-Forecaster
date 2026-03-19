@@ -84,6 +84,8 @@ export default defineConfig(({ mode }) => {
         '__HMR_PROTOCOL__': JSON.stringify(''),
         '__HMR_PORT__': JSON.stringify(''),
         '__HMR_HOSTNAME__': JSON.stringify(''),
+        '__HMR_BASE__': JSON.stringify('/Weather-Forecaster/'),
+        '__HMR_OVERLAY__': JSON.stringify(false),
         
         // Additional development variables that might cause issues
         '__SERVER_HOST__': JSON.stringify(''),
@@ -92,7 +94,21 @@ export default defineConfig(({ mode }) => {
         '__DEVTOOLS__': JSON.stringify(false),
         '__REACT_DEVTOOLS_GLOBAL_HOOK__': JSON.stringify({}),
         '__VITE_HMR_RUNTIME__': JSON.stringify(null),
-        '__VITE_HMR_CLIENT__': JSON.stringify(null)
+        '__VITE_HMR_CLIENT__': JSON.stringify(null),
+        '__VITE_HMR_OVERLAY__': JSON.stringify(null),
+        '__VITE_HMR_WS__': JSON.stringify(null),
+        '__VITE_HMR_PORT__': JSON.stringify(null),
+        '__VITE_HMR_HOST__': JSON.stringify(null),
+        '__VITE_HMR_PROTOCOL__': JSON.stringify(null),
+        '__VITE_HMR_TIMEOUT__': JSON.stringify(null),
+        '__VITE_HMR_RELOAD_DELAY__': JSON.stringify(null),
+        '__VITE_HMR_MAX_RETRIES__': JSON.stringify(null),
+        '__VITE_HMR_CLEAR_CONSOLE__': JSON.stringify(null),
+        '__VITE_HMR_DEAD_TIMEOUT__': JSON.stringify(null),
+        '__VITE_HMR_HEADER__': JSON.stringify({}),
+        '__VITE_HMR_CLIENT_RECONNECT__': JSON.stringify(false),
+        '__VITE_HMR_BROWSER__': JSON.stringify(false),
+        '__VITE_HMR_HOSTNAME__': JSON.stringify('')
       } : {})
     },
     optimizeDeps: {
