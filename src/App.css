@@ -12,6 +12,12 @@
   --error-bg: rgba(255, 0, 0, 0.1);
   --error-border: rgba(255, 0, 0, 0.3);
   --error-text: #ffcdd2;
+  --success-bg: rgba(76, 175, 80, 0.1);
+  --success-border: rgba(76, 175, 80, 0.3);
+  --success-text: #c8e6c9;
+  --warning-bg: rgba(255, 193, 7, 0.1);
+  --warning-border: rgba(255, 193, 7, 0.3);
+  --warning-text: #fff3cd;
 }
 
 /* Light theme */
@@ -50,9 +56,331 @@ body {
   margin: 0 !important;
   padding: 0 !important;
   width: 100vw !important;
-  height: 100vh !important; /* Full height */
-  min-height: 100vh !important;
-  box-sizing: border-box !important;
+  height: 100vh !important;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Enhanced error boundary styles */
+.error-boundary {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.error-boundary-container {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 2rem;
+  border-radius: 15px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  max-width: 500px;
+  text-align: left;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.error-boundary h2 {
+  margin: 0 0 1rem 0;
+  color: #ff6b6b;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.error-boundary p {
+  margin: 0.5rem 0;
+  opacity: 0.8;
+  line-height: 1.5;
+}
+
+.error-boundary details {
+  white-space: pre-wrap;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 1rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+  font-size: 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.error-boundary summary {
+  cursor: pointer;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  color: #4fc3f7;
+  transition: color 0.3s ease;
+}
+
+.error-boundary summary:hover {
+  color: #29b6f6;
+}
+
+.error-boundary pre {
+  font-size: 0.7rem;
+  overflow: auto;
+  max-height: 200px;
+  background: rgba(0, 0, 0, 0.1);
+  padding: 0.5rem;
+  border-radius: 4px;
+  margin-top: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.error-boundary-buttons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.error-boundary button {
+  background: #4fc3f7;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.error-boundary button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.error-boundary button.primary {
+  background: #4fc3f7;
+}
+
+.error-boundary button.primary:hover {
+  background: #29b6f6;
+}
+
+.error-boundary button.secondary {
+  background: #ff6b6b;
+}
+
+.error-boundary button.secondary:hover {
+  background: #e55555;
+}
+
+/* Offline indicator styles */
+.offline-indicator {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  background: #ff6b6b;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: bold;
+  z-index: 9999;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  animation: slideIn 0.3s ease-out;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Animations */
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Loading states */
+.loading {
+  position: relative;
+  overflow: hidden;
+}
+
+.loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .error-boundary-container {
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+  
+  .error-boundary h2 {
+    font-size: 1.25rem;
+  }
+  
+  .error-boundary-buttons {
+    flex-direction: column;
+  }
+  
+  .error-boundary button {
+    width: 100%;
+  }
+  
+  .offline-indicator {
+    top: 5px;
+    right: 5px;
+    font-size: 0.75rem;
+    padding: 0.4rem 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .error-boundary-container {
+    margin: 0.5rem;
+    padding: 1rem;
+  }
+  
+  .error-boundary h2 {
+    font-size: 1.1rem;
+  }
+  
+  .error-boundary details {
+    font-size: 0.8rem;
+  }
+  
+  .error-boundary pre {
+    font-size: 0.6rem;
+  }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .error-boundary-container {
+    border: 2px solid white;
+  }
+  
+  .error-boundary button {
+    border: 2px solid white;
+  }
+}
+
+/* Focus styles for accessibility */
+.error-boundary button:focus,
+.error-boundary summary:focus {
+  outline: 2px solid #4fc3f7;
+  outline-offset: 2px;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .error-boundary {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  }
+  
+  .error-boundary-container {
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+}
+
+/* Performance optimizations */
+.error-boundary-container {
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.error-boundary button {
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* Print styles */
+@media print {
+  .error-boundary {
+    background: white;
+    color: black;
+  }
+  
+  .error-boundary-container {
+    background: white;
+    border: 1px solid black;
+    box-shadow: none;
+  }
+  
+  .error-boundary-buttons {
+    display: none;
+  }
+  
+  .offline-indicator {
+    display: none;
+  }
+}
+
+/* Ensure full viewport coverage */
+* {
+  box-sizing: border-box;
 }
 
 html {

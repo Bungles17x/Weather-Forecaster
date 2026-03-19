@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import Header from './Header'
 import { WeatherIcon } from './WeatherIcons'
 import { useLocation as useGlobalLocation } from '../contexts/LocationContext'
@@ -6,11 +6,11 @@ import { useAlerts } from '../contexts/AlertContext'
 import { useSettings } from '../contexts/SettingsContext'
 import './WeatherApp.css'
 
-// Cache busting timestamp - FORCE RELOAD
-console.log('🔄 WeatherApp.jsx loaded at:', new Date().toISOString(), 'CACHE BUST: 2024-03-15-18-27')
-
 const WeatherApp = () => {
-  console.log('🚀 WeatherApp component mounting...')
+  // Refs for cleanup and performance
+  const abortControllerRef = useRef(null)
+  const retryTimeoutRef = useRef(null)
+  const mountedRef = useRef(true)
   
   // Use global location context
   const { location: globalLocation, coordinates, setLocation: setGlobalLocation, setCoordinates } = useGlobalLocation()
@@ -36,8 +36,114 @@ const WeatherApp = () => {
   const [lastUpdate, setLastUpdate] = useState(null)
   const [spcOutlook, setSpcOutlook] = useState(null)
   const [loadingSpc, setLoadingSpc] = useState(false)
+  const [retryCount, setRetryCount] = useState(0)
+  const [networkStatus, setNetworkStatus] = useState(navigator.onLine ? 'online' : 'offline')
 
-  console.log('📊 WeatherApp state initialized:', { loading, error, coordinates })
+  // Performance monitoring
+  const [performanceMetrics, setPerformanceMetrics] = useState({
+    apiResponseTime: null,
+    renderTime: null,
+    dataFetchTime: null
+  })
+
+  console.log('📊 WeatherApp state initialized:', { 
+    loading, 
+    error, 
+    coordinates, 
+    networkStatus,
+    retryCount 
+  })
+
+  // Network status monitoring
+  useEffect(() => {
+    const handleOnline = () => {
+      setNetworkStatus('online')
+      console.log('🌐 Network status: Online')
+      // Retry fetching data when coming back online
+      if (weatherData === null && !loading) {
+        fetchWeatherData()
+      }
+    }
+    
+    const handleOffline = () => {
+      setNetworkStatus('offline')
+      console.log('📴 Network status: Offline')
+    }
+
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  }, [weatherData, loading])
+
+  // Cleanup function
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort()
+      }
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current)
+      }
+    }
+  }, [])
+
+  // Enhanced error handling with retry logic
+  const handleError = useCallback((error, context = 'Unknown') => {
+    if (!mountedRef.current) return
+    
+    console.error(`🚨 WeatherApp Error in ${context}:`, {
+      error: error.message,
+      stack: error.stack,
+      context,
+      timestamp: new Date().toISOString(),
+      coordinates,
+      location: globalLocation,
+      retryCount,
+      networkStatus
+    })
+
+    let errorMessage = 'An unexpected error occurred'
+    
+    if (error.name === 'AbortError') {
+      errorMessage = 'Request was cancelled'
+    } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      errorMessage = networkStatus === 'offline' 
+        ? 'You are currently offline. Please check your internet connection.'
+        : 'Network error. Please try again.'
+    } else if (error.message.includes('404')) {
+      errorMessage = 'Weather data not found for this location'
+    } else if (error.message.includes('500')) {
+      errorMessage = 'Weather service is temporarily unavailable'
+    } else if (error.message.includes('timeout')) {
+      errorMessage = 'Request timed out. Please try again.'
+    }
+
+    setError({
+      message: errorMessage,
+      originalError: error,
+      context,
+      timestamp: new Date().toISOString(),
+      retryCount
+    })
+
+    // Auto-retry logic for network errors
+    if (retryCount < 3 && (error.name === 'TypeError' || error.message.includes('timeout'))) {
+      const delay = Math.pow(2, retryCount) * 1000 // Exponential backoff
+      console.log(`🔄 Auto-retry in ${delay}ms (attempt ${retryCount + 1}/3)`)
+      
+      retryTimeoutRef.current = setTimeout(() => {
+        if (mountedRef.current) {
+          setRetryCount(prev => prev + 1)
+          fetchWeatherData()
+        }
+      }, delay)
+    }
+  }, [coordinates, globalLocation, retryCount, networkStatus])
 
   // NWS API endpoints
   const NWS_BASE_URL = 'https://api.weather.gov'
@@ -45,6 +151,10 @@ const WeatherApp = () => {
 
   // Get coordinates from location name using OpenStreetMap Nominatim
   const getCoordinatesFromLocation = useCallback(async (locationName) => {
+    if (!mountedRef.current) return null
+    
+    const startTime = performance.now()
+    
     try {
       // Fallback coordinates for major cities
       const fallbackCities = {

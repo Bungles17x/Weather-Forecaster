@@ -23,13 +23,20 @@ export default defineConfig({
     terserOptions: {
       compress: {
         drop_console: true, // Remove console logs in production
-        drop_debugger: true
+        drop_debugger: true,
+        pure_funcs: ['console.log', 'console.warn', 'console.error'] // Remove specific console calls
+      },
+      mangle: {
+        reserved: ['React', 'useState', 'useEffect'] // Preserve React hooks
       }
     }
   },
   server: {
     port: 5173,
-    host: true
+    host: true,
+    hmr: {
+      overlay: false // Disable HMR overlay in production
+    }
   },
   define: {
     // Environment variables
@@ -39,7 +46,8 @@ export default defineConfig({
     'import.meta.env.MODE': JSON.stringify('production'),
     'import.meta.env.BASE_URL': JSON.stringify('/Weather-Forecaster/'),
     'import.meta.env.SSR': JSON.stringify(false),
-    // Vite internal variables
+    
+    // Vite internal variables - comprehensive coverage
     '__DEFINES__': JSON.stringify({}),
     '__DEV__': JSON.stringify(false),
     '__PROD__': JSON.stringify(true),
@@ -70,9 +78,39 @@ export default defineConfig({
     '__HMR_WEBSOCKET_URL__': JSON.stringify(''),
     '__HMR_PROTOCOL__': JSON.stringify(''),
     '__HMR_PORT__': JSON.stringify(''),
-    '__HMR_HOSTNAME__': JSON.stringify('')
+    '__HMR_HOSTNAME__': JSON.stringify(''),
+    
+    // Additional development variables that might cause issues
+    '__SERVER_HOST__': JSON.stringify(''),
+    '__SERVER_PORT__': JSON.stringify(''),
+    '__SERVER_PROTOCOL__': JSON.stringify(''),
+    '__DEVTOOLS__': JSON.stringify(false),
+    '__REACT_DEVTOOLS_GLOBAL_HOOK__': JSON.stringify({}),
+    '__VITE_HMR_RUNTIME__': JSON.stringify(null),
+    '__VITE_HMR_CLIENT__': JSON.stringify(null)
   },
   optimizeDeps: {
-    exclude: ['react-devtools', 'react-dom/devtools', '@vite/client'] // Exclude development dependencies
+    exclude: [
+      'react-devtools', 
+      'react-dom/devtools', 
+      '@vite/client',
+      'react-refresh',
+      'react-refresh/runtime'
+    ]
+  },
+  resolve: {
+    alias: {
+      // Ensure React is properly resolved
+      'react': 'react',
+      'react-dom': 'react-dom'
+    }
+  },
+  css: {
+    devSourcemap: false,
+    preprocessorOptions: {
+      css: {
+        charset: false
+      }
+    }
   }
 })
