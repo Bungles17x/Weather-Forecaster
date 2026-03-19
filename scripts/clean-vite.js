@@ -23,12 +23,19 @@ function cleanViteReferences() {
   // Remove all Vite-related imports and references
   const originalSize = content.length;
   
-  // Remove Vite client imports
-  content = content.replace(/import["']\/@vite\/client["'];?/g, '');
-  content = content.replace(/import["']@vite\/client["'];?/g, '');
-  content = content.replace(/import["']vite\/client["'];?/g, '');
-  content = content.replace(/import["']@vite\/env["'];?/g, '');
-  content = content.replace(/import["']vite\/env["'];?/g, '');
+  // More aggressive Vite client imports removal
+  content = content.replace(/import\s*["']\/@vite\/client["'];?/g, '');
+  content = content.replace(/import\s*["']@vite\/client["'];?/g, '');
+  content = content.replace(/import\s*["']vite\/client["'];?/g, '');
+  content = content.replace(/import\s*["']@vite\/env["'];?/g, '');
+  content = content.replace(/import\s*["']vite\/env["'];?/g, '');
+  
+  // Remove any encoded or minified Vite references
+  content = content.replace(/["']\/@vite\/client["']/g, '""');
+  content = content.replace(/["']@vite\/client["']/g, '""');
+  content = content.replace(/["']vite\/client["']/g, '""');
+  content = content.replace(/["']@vite\/env["']/g, '""');
+  content = content.replace(/["']vite\/env["']/g, '""');
   
   // Remove Vite-related function calls and references
   content = content.replace(/__vite_plugin_react_preamble_installed__/g, 'undefined');
@@ -44,16 +51,24 @@ function cleanViteReferences() {
   content = content.replace(/import\.meta\.env\.HMR/g, 'false');
   content = content.replace(/import\.meta\.env\.DEV/g, 'false');
   
-  // Remove any remaining Vite-related patterns
+  // Remove any remaining Vite-related patterns (including encoded)
   content = content.replace(/\/@vite\/client/g, '');
   content = content.replace(/@vite\/client/g, '');
   content = content.replace(/vite\/client/g, '');
   content = content.replace(/@vite\/env/g, '');
   content = content.replace(/vite\/env/g, '');
   
+  // Remove any potential dynamic imports
+  content = content.replace(/import\s*\(\s*["']\/@vite\/client["']\s*\)/g, 'Promise.resolve()');
+  content = content.replace(/import\s*\(\s*["']@vite\/client["']\s*\)/g, 'Promise.resolve()');
+  content = content.replace(/import\s*\(\s*["']vite\/client["']\s*\)/g, 'Promise.resolve()');
+  
   // Clean up any remaining malformed import statements
   content = content.replace(/import\s*;?\s*/g, '');
   content = content.replace(/;\s*;/g, ';');
+  
+  // Remove any empty lines created by replacements
+  content = content.replace(/\n\s*\n\s*\n/g, '\n');
   
   const cleanedSize = content.length;
   const reduction = originalSize - cleanedSize;
@@ -65,6 +80,14 @@ function cleanViteReferences() {
   console.log(`📊 Size reduction: ${reduction} bytes (${(reduction/originalSize*100).toFixed(2)}%)`);
   console.log(`📦 Original size: ${originalSize} bytes`);
   console.log(`📦 Cleaned size: ${cleanedSize} bytes`);
+  
+  // Verify no Vite references remain
+  const hasVite = content.includes('@vite') || content.includes('vite/client') || content.includes('/@vite/client');
+  if (hasVite) {
+    console.warn('⚠️  Warning: Vite references may still remain in the built file');
+  } else {
+    console.log('🎉 Verified: No Vite references found in cleaned file');
+  }
 }
 
 // Run the cleaning function
