@@ -19,7 +19,18 @@ export default defineConfig(({ mode }) => {
           chunkFileNames: '[name].js',
           assetFileNames: '[name].[ext]'
         },
-        external: ['@vite/client']
+        external: [
+          '@vite/client',
+          '@vite/env',
+          'vite/client',
+          'vite/env',
+          '/@vite/client',
+          '/@vite/env',
+          'react-devtools',
+          'react-dom/devtools',
+          'react-refresh',
+          'react-refresh/runtime'
+        ]
       },
       sourcemap: false,
       target: 'es2015',
@@ -108,7 +119,14 @@ export default defineConfig(({ mode }) => {
         '__VITE_HMR_HEADER__': JSON.stringify({}),
         '__VITE_HMR_CLIENT_RECONNECT__': JSON.stringify(false),
         '__VITE_HMR_BROWSER__': JSON.stringify(false),
-        '__VITE_HMR_HOSTNAME__': JSON.stringify('')
+        '__VITE_HMR_HOSTNAME__': JSON.stringify(''),
+        
+        // Aggressive exclusion of all Vite development modules
+        'import.meta.hot': JSON.stringify(undefined),
+        'import.meta.env.HMR': JSON.stringify(false),
+        'import.meta.env.DEV': JSON.stringify(false),
+        'module.hot': JSON.stringify(undefined),
+        'hot': JSON.stringify(undefined)
       } : {})
     },
     optimizeDeps: {
@@ -116,6 +134,9 @@ export default defineConfig(({ mode }) => {
         'react-devtools', 
         'react-dom/devtools', 
         '@vite/client',
+        '@vite/env',
+        'vite/client',
+        'vite/env',
         'react-refresh',
         'react-refresh/runtime'
       ] : []
