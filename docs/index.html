@@ -2,6 +2,9 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <link rel="icon" type="image/svg+xml" href="/Weather-Forecaster/weather-icon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="Content-Security-Policy" content="default-src *; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline' 'unsafe-eval' https://fonts.googleapis.com; font-src * data: https://fonts.gstatic.com https://fonts.googleapis.com; img-src * data: blob:; connect-src *;">
@@ -17,8 +20,8 @@
     <meta name="twitter:title" content="Weather Forecaster - Professional Weather App" />
     <meta name="twitter:description" content="Professional weather app with real-time forecasts, interactive radar, and weather alerts." />
     <meta name="twitter:image" content="/Weather-Forecaster/weather-icon.svg" />
-    <script type="module" crossorigin src="/Weather-Forecaster/index.js?v=13"></script>
-    <link rel="stylesheet" crossorigin href="/Weather-Forecaster/index.css?v=13">
+    <script type="module" crossorigin src="/Weather-Forecaster/index.js?v=14&t=1710878400000"></script>
+    <link rel="stylesheet" crossorigin href="/Weather-Forecaster/index.css?v=14&t=1710878400000">
     <style>
       /* Enhanced loading screen */
       .loading-screen {
@@ -146,6 +149,9 @@
         <button class="error-button" onclick="window.location.reload()">
           🔄 Try Again
         </button>
+        <button class="error-button" onclick="clearCachesAndReload()">
+          🧹 Clear Cache & Reload
+        </button>
       </div>
     </div>
     
@@ -161,6 +167,41 @@
         let root = document.getElementById('root');
         let loadTimeout;
         let errorTimeout;
+        
+        // Force clear caches function
+        window.clearCachesAndReload = async function() {
+          try {
+            console.log('🧹 Force clearing all caches...');
+            
+            // Clear all service workers
+            if ('serviceWorker' in navigator) {
+              const registrations = await navigator.serviceWorker.getRegistrations();
+              for (const registration of registrations) {
+                await registration.unregister();
+                console.log('Unregistered service worker:', registration.scope);
+              }
+            }
+            
+            // Clear all caches
+            if ('caches' in window) {
+              const cacheNames = await caches.keys();
+              for (const cacheName of cacheNames) {
+                await caches.delete(cacheName);
+                console.log('Deleted cache:', cacheName);
+              }
+            }
+            
+            // Clear storage
+            localStorage.clear();
+            sessionStorage.clear();
+            
+            console.log('✅ All caches cleared, reloading...');
+            window.location.reload(true);
+          } catch (error) {
+            console.error('❌ Error clearing caches:', error);
+            alert('Error clearing caches: ' + error.message);
+          }
+        };
         
         // Hide loading screen after app loads
         function hideLoadingScreen() {
@@ -221,7 +262,12 @@
         // Global error handling
         window.addEventListener('error', function(e) {
           console.error('Global error:', e.error);
-          showErrorFallback();
+          if (e.message && e.message.includes('vite/client')) {
+            console.log('🔍 Detected Vite client error, clearing caches...');
+            clearCachesAndReload();
+          } else {
+            showErrorFallback();
+          }
         });
         
         window.addEventListener('unhandledrejection', function(e) {
@@ -241,14 +287,14 @@
           });
         }
         
-        // Service Worker registration for offline support
+        // Force clear service worker registration
         if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.register('/Weather-Forecaster/sw.js')
+          navigator.serviceWorker.register('/Weather-Forecaster/sw-force-clear.js')
             .then(function(registration) {
-              console.log('Service Worker registered:', registration.scope);
+              console.log('Force clear service worker registered:', registration.scope);
             })
             .catch(function(error) {
-              console.log('Service Worker registration failed:', error);
+              console.log('Force clear service worker registration failed:', error);
             });
         }
       })();
