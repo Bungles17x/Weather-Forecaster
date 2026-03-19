@@ -6,7 +6,15 @@ export default defineConfig(({ mode }) => {
   
   return {
     esbuild: {
-      jsx: 'automatic'
+      jsx: 'automatic',
+      // Force remove all Vite imports in production
+      define: isProduction ? {
+        'import.meta.hot': 'undefined',
+        'import.meta.env.HMR': 'false',
+        'import.meta.env.DEV': 'false',
+        'module.hot': 'undefined',
+        'hot': 'undefined'
+      } : {}
     },
     base: isProduction ? '/Weather-Forecaster/' : '/', // Use relative base for development
     build: {
@@ -29,7 +37,37 @@ export default defineConfig(({ mode }) => {
           'react-devtools',
           'react-dom/devtools',
           'react-refresh',
-          'react-refresh/runtime'
+          'react-refresh/runtime',
+          '@vitejs/plugin-react',
+          'vite',
+          'vite/client',
+          'vite/env'
+        ],
+        // Custom plugin to strip Vite imports
+        plugins: [
+          {
+            name: 'strip-vite-imports',
+            generateBundle(options, bundle) {
+              // Remove any remaining Vite references
+              Object.keys(bundle).forEach(fileName => {
+                if (fileName.endsWith('.js')) {
+                  const chunk = bundle[fileName]
+                  if (chunk.type === 'chunk') {
+                    // Replace any remaining Vite imports
+                    chunk.code = chunk.code
+                      .replace(/import\s+.*?from\s+['"]@vite\/client['"];?/g, '')
+                      .replace(/import\s+.*?from\s+['"]vite\/client['"];?/g, '')
+                      .replace(/import\s+.*?from\s+['"]@vite\/env['"];?/g, '')
+                      .replace(/import\s+.*?from\s+['"]vite\/env['"];?/g, '')
+                      .replace(/import\.meta\.hot/g, 'undefined')
+                      .replace(/module\.hot/g, 'undefined')
+                      .replace(/import\.meta\.env\.HMR/g, 'false')
+                      .replace(/import\.meta\.env\.DEV/g, 'false')
+                  }
+                }
+              })
+            }
+          }
         ]
       },
       sourcemap: false,
@@ -39,7 +77,15 @@ export default defineConfig(({ mode }) => {
         compress: {
           drop_console: isProduction, // Only remove console in production
           drop_debugger: isProduction,
-          pure_funcs: isProduction ? ['console.log', 'console.warn', 'console.error'] : []
+          pure_funcs: isProduction ? ['console.log', 'console.warn', 'console.error'] : [],
+          // Remove dead code including Vite imports
+          dead_code: true,
+          unused: true,
+          // Remove if statements that will never be true
+          conditionals: true,
+          // Remove unreachable code
+          evaluate: true,
+          passes: 3 // Run compression multiple times
         },
         mangle: {
           reserved: ['React', 'useState', 'useEffect']
@@ -126,7 +172,12 @@ export default defineConfig(({ mode }) => {
         'import.meta.env.HMR': JSON.stringify(false),
         'import.meta.env.DEV': JSON.stringify(false),
         'module.hot': JSON.stringify(undefined),
-        'hot': JSON.stringify(undefined)
+        'hot': JSON.stringify(undefined),
+        
+        // Force undefined for any remaining Vite references
+        'globalThis.__vite_plugin_react_preamble_installed__': JSON.stringify(undefined),
+        'globalThis.__VITE_HMR_RUNTIME__': JSON.stringify(undefined),
+        'globalThis.__VITE_HMR_CLIENT__': JSON.stringify(undefined)
       } : {})
     },
     optimizeDeps: {
@@ -138,7 +189,9 @@ export default defineConfig(({ mode }) => {
         'vite/client',
         'vite/env',
         'react-refresh',
-        'react-refresh/runtime'
+        'react-refresh/runtime',
+        '@vitejs/plugin-react',
+        'vite'
       ] : []
     },
     resolve: {
