@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import Header from '../components/Header'
 import { WeatherIcon } from '../components/WeatherIcons'
 import { useLocation as useGlobalLocation } from '../contexts/LocationContext'
+import HourlyForecast from '../components/HourlyForecast'
+import TenDayForecast from '../components/TenDayForecast'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -12,9 +14,10 @@ import {
   Title,
   Tooltip,
   Legend,
-  Filler
+  Filler,
+  BarElement
 } from 'chart.js'
-import { Line } from 'react-chartjs-2'
+import { Line, Bar } from 'react-chartjs-2'
 import './ForecastPage.css'
 
 // Register Chart.js components
@@ -23,6 +26,7 @@ ChartJS.register(
   LinearScale,
   PointElement,
   LineElement,
+  BarElement,
   Title,
   Tooltip,
   Legend,
@@ -36,7 +40,10 @@ const ForecastPage = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [currentWeather, setCurrentWeather] = useState(null)
-  const [chartType, setChartType] = useState('all')
+  const [selectedMetric, setSelectedMetric] = useState('temperature')
+  const [expandedForecast, setExpandedForecast] = useState(false)
+  const [weatherAlerts, setWeatherAlerts] = useState([])
+  const [lastUpdated, setLastUpdated] = useState(null)
   
   // Use global location context
   const { location: globalLocation, coordinates, setLocation: setGlobalLocation } = useGlobalLocation()
@@ -45,7 +52,7 @@ const ForecastPage = () => {
   // Get location from global context or URL state
   const location = globalLocation || locationState.state?.location || 'New York, NY'
 
-  // Fetch real weather data from NWS API
+  // Enhanced fetch with better error handling and GitHub Pages compatibility
   const fetchWeatherData = useCallback(async () => {
     if (!globalLocation) return
     
@@ -62,26 +69,43 @@ const ForecastPage = () => {
         lon = coordinates.lon
         console.log('📍 ForecastPage: Using cached coordinates:', { lat, lon })
       } else {
-        // Geocode location to get coordinates
-        const geocodeResponse = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(globalLocation)}&limit=1`)
-        const geocodeData = await geocodeResponse.json()
-        
-        if (!geocodeData || geocodeData.length === 0) {
-          throw new Error('Location not found')
+        // Geocode location to get coordinates with fallback
+        try {
+          const geocodeResponse = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(globalLocation)}&limit=1`)
+          const geocodeData = await geocodeResponse.json()
+          
+          if (!geocodeData || geocodeData.length === 0) {
+            throw new Error('Location not found')
+          }
+          
+          lat = geocodeData[0].lat
+          lon = geocodeData[0].lon
+          console.log('📍 ForecastPage: Coordinates found:', { lat, lon })
+          
+          // Cache coordinates in global context
+          setGlobalLocation(globalLocation)
+        } catch (geocodeError) {
+          console.warn('⚠️ Geocoding failed, using default coordinates:', geocodeError)
+          // Fallback to New York coordinates
+          lat = 40.7128
+          lon = -74.0060
         }
-        
-        lat = geocodeData[0].lat
-        lon = geocodeData[0].lon
-        console.log('📍 ForecastPage: Coordinates found:', { lat, lon })
       }
       
-      // Step 2: Get NWS grid point
-      const pointsResponse = await fetch(`https://api.weather.gov/points/${lat},${lon}`)
-      if (!pointsResponse.ok) {
-        throw new Error('Weather data not available for this location')
+      // Step 2: Get NWS grid point with better error handling
+      let pointsResponse, pointsData
+      try {
+        pointsResponse = await fetch(`https://api.weather.gov/points/${lat},${lon}`)
+        if (!pointsResponse.ok) {
+          throw new Error(`Weather data not available: ${pointsResponse.status}`)
+        }
+        pointsData = await pointsResponse.json()
+      } catch (nwsError) {
+        console.warn('⚠️ NWS API failed, using OpenWeatherMap fallback:', nwsError)
+        // Fallback to OpenWeatherMap
+        return await fetchOpenWeatherData(lat, lon)
       }
       
-      const pointsData = await pointsResponse.json()
       const { forecast, forecastHourly, forecastGridData } = pointsData.properties
       console.log('🏢 ForecastPage: NWS office:', pointsData.properties.cwa)
       
@@ -98,75 +122,51 @@ const ForecastPage = () => {
           if (observationsData.properties) {
             const obs = observationsData.properties
             setCurrentWeather({
-              temperature: Math.round(obs.temperature?.value * 9/5 + 32 || 0),
-              condition: obs.textDescription || 'Unknown',
-              humidity: Math.round(obs.relativeHumidity?.value || 0),
-              windSpeed: Math.round((obs.windSpeed?.value || 0) * 2.237), // m/s to mph
-              windDirection: obs.windDirection?.value || 0,
-              visibility: Math.round((obs.visibility?.value || 0) * 0.621371), // km to miles
-              pressure: Math.round((obs.barometricPressure?.value || 0) * 0.02953), // Pa to inHg
-              timestamp: obs.timestamp
+              temperature: obs.temperature?.value ? Math.round(obs.temperature.value * 9/5 + 32) : null,
+              humidity: obs.relativeHumidity?.value || null,
+              windSpeed: obs.windSpeed?.value ? Math.round(obs.windSpeed.value * 2.237) : null,
+              windDirection: obs.windDirection?.value || null,
+              pressure: obs.barometricPressure?.value ? Math.round(obs.barometricPressure.value * 0.02953) : null,
+              visibility: obs.visibility?.value ? Math.round(obs.visibility.value * 0.000621371) : null,
+              conditions: obs.textDescription || 'Unknown',
+              timestamp: obs.timestamp || new Date().toISOString()
             })
-            console.log('🌡️ ForecastPage: Current weather loaded')
           }
         }
       } catch (obsError) {
-        console.log('⚠️ ForecastPage: Could not fetch current observations:', obsError.message)
+        console.warn('⚠️ Could not fetch current conditions:', obsError)
       }
       
-      // Step 4: Get daily forecast
-      const forecastResponse = await fetch(forecast)
-      const forecastResult = await forecastResponse.json()
+      // Step 4: Get forecast data
+      const [dailyResponse, hourlyResponse] = await Promise.all([
+        fetch(forecast),
+        fetch(forecastHourly)
+      ])
       
-      // Step 5: Get hourly forecast
-      const hourlyResponse = await fetch(forecastHourly)
-      const hourlyResult = await hourlyResponse.json()
+      if (!dailyResponse.ok || !hourlyResponse.ok) {
+        throw new Error('Forecast data not available')
+      }
       
-      console.log('📅 ForecastPage: Processing forecast data...')
+      const [dailyData, hourlyDataRaw] = await Promise.all([
+        dailyResponse.json(),
+        hourlyResponse.json()
+      ])
       
-      // Process daily forecast data
-      const dailyForecast = forecastResult.properties.periods
-        .filter(period => period.isDaytime) // Only daytime periods
-        .slice(0, 10) // Get 10 days
-        .map((period, index) => {
-          // Find corresponding nighttime period for low temperature
-          const nightPeriod = forecastResult.properties.periods.find((p, i) => 
-            i > index * 2 && !p.isDaytime
-          )
-          
-          return {
-            date: new Date(period.startTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-            dayName: new Date(period.startTime).toLocaleDateString('en-US', { weekday: 'long' }),
-            high: Math.round(period.temperature || 0),
-            low: nightPeriod ? Math.round(nightPeriod.temperature || 0) : Math.round(period.temperature - 10),
-            condition: period.shortForecast || 'Unknown',
-            precipitation: period.probabilityOfPrecipitation?.value || 0,
-            windSpeed: period.windSpeed?.split(' ')[0] || '10',
-            windDirection: period.windDirection || 'N',
-            humidity: 65, // NWS doesn't provide humidity in daily forecast
-            detailedForecast: period.detailedForecast || '',
-            icon: period.icon || ''
-          }
-        })
+      // Process and set data
+      setForecastData(dailyData.properties.periods || [])
+      setHourlyData(hourlyDataRaw.properties.periods || [])
+      setLastUpdated(new Date().toISOString())
       
-      // Process hourly forecast data
-      const hourlyForecast = hourlyResult.properties.periods
-        .slice(0, 48) // Get 48 hours
-        .map(period => ({
-          time: new Date(period.startTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-          temperature: Math.round(period.temperature || 0),
-          condition: period.shortForecast || 'Unknown',
-          precipitation: period.probabilityOfPrecipitation?.value || 0,
-          windSpeed: period.windSpeed?.split(' ')[0] || '10',
-          windDirection: period.windDirection || 'N',
-          humidity: 65, // NWS doesn't provide humidity in hourly forecast
-          icon: period.icon || '',
-          detailedForecast: period.detailedForecast || ''
-        }))
-      
-      setForecastData(dailyForecast)
-      setHourlyData(hourlyForecast)
-      console.log('✅ ForecastPage: Real weather data loaded successfully')
+      // Step 5: Get weather alerts
+      try {
+        const alertsResponse = await fetch(`https://api.weather.gov/alerts/active?point=${lat},${lon}`)
+        if (alertsResponse.ok) {
+          const alertsData = await alertsResponse.json()
+          setWeatherAlerts(alertsData.features || [])
+        }
+      } catch (alertsError) {
+        console.warn('⚠️ Could not fetch weather alerts:', alertsError)
+      }
       
     } catch (error) {
       console.error('❌ ForecastPage: Error fetching weather data:', error)
@@ -174,717 +174,411 @@ const ForecastPage = () => {
     } finally {
       setLoading(false)
     }
-  }, [globalLocation, coordinates])
+  }, [globalLocation, coordinates, setGlobalLocation])
 
-  // Refresh function
-  const handleRefresh = useCallback(() => {
-    fetchWeatherData()
-  }, [fetchWeatherData])
-
-  useEffect(() => {
-    fetchWeatherData()
-  }, [fetchWeatherData])
-
-  const handleLocationChange = (newLocation) => {
-    console.log('📍 ForecastPage: Location changed to:', newLocation)
-    setGlobalLocation(newLocation)
-  }
-
-  const tabs = [
-    { id: 'today', label: 'Today', icon: '☀️' },
-    { id: 'hourly', label: 'Hourly', icon: '⏰' },
-    { id: 'daily', label: 'Daily', icon: '📅' },
-    { id: 'extended', label: 'Extended', icon: '📆' },
-    { id: 'tenDay', label: '10-Day', icon: '🗓️' },
-    { id: 'summary', label: 'Summary', icon: '📊' }
-  ]
-
-  const renderTodayForecast = () => {
-    const today = forecastData[0] || {}
-    const currentHour = hourlyData[0] || {}
+  // OpenWeatherMap fallback for GitHub Pages compatibility
+  const fetchOpenWeatherData = async (lat, lon) => {
+    console.log('🌐 Using OpenWeatherMap fallback for:', { lat, lon })
     
-    return (
-      <div className="today-forecast">
-        <div className="today-main">
-          <div className="today-current">
-            <div className="current-icon">
-              <WeatherIcon condition={currentWeather?.condition || today.condition} size={80} />
-            </div>
-            <div className="current-details">
-              <h2>Today</h2>
-              <div className="current-temp">
-                {currentWeather?.temperature || currentHour.temperature || today.high || '--'}°
-              </div>
-              <div className="current-condition">
-                {currentWeather?.condition || today.condition || 'Loading...'}
-              </div>
-              <div className="current-high-low">
-                <span>H: {today.high || '--'}°</span>
-                <span>L: {today.low || '--'}°</span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="today-details">
-            <div className="detail-row">
-              <span className="detail-label">💧 Precipitation:</span>
-              <span className="detail-value">{today.precipitation || 0}%</span>
-            </div>
-            <div className="detail-row">
-              <span className="detail-label">💨 Wind:</span>
-              <span className="detail-value">
-                {currentWeather?.windSpeed || currentHour.windSpeed || today.windSpeed || '--'} mph {currentWeather?.windDirection || today.windDirection || ''}
-              </span>
-            </div>
-            <div className="detail-row">
-              <span className="detail-label">🌡️ Humidity:</span>
-              <span className="detail-value">{currentWeather?.humidity || currentHour.humidity || today.humidity || '--'}%</span>
-            </div>
-            {currentWeather?.visibility && (
-              <div className="detail-row">
-                <span className="detail-label">👁️ Visibility:</span>
-                <span className="detail-value">{(currentWeather.visibility * 0.000621371).toFixed(1)} mi</span>
-              </div>
-            )}
-            {currentWeather?.pressure && (
-              <div className="detail-row">
-                <span className="detail-label">🔵 Pressure:</span>
-                <span className="detail-value">{(currentWeather.pressure * 0.01).toFixed(1)} mb</span>
-              </div>
-            )}
-          </div>
-        </div>
-        
-        <div className="hourly-preview">
-          <h3>⏰ Hourly Preview</h3>
-          <div className="hourly-scroll">
-            {hourlyData.slice(0, 8).map((hour, index) => (
-              <div key={index} className="hour-item">
-                <div className="hour-time">{hour.time}</div>
-                <div className="hour-icon">
-                  <WeatherIcon condition={hour.condition} size={24} />
-                </div>
-                <div className="hour-temp">{hour.temperature}°</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  const renderHourlyForecast = () => (
-    <div className="hourly-forecast">
-      <div className="hourly-header">
-        <h3>⏰ Hourly Forecast</h3>
-        <div className="hourly-controls">
-          <button className="control-btn btn-primary" onClick={handleRefresh}>🔄 Refresh</button>
-          <button className="control-btn btn-secondary">📊 Export</button>
-        </div>
-      </div>
+    try {
+      // Get 5-day forecast
+      const forecastResponse = await fetch(
+        `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=imperial&appid=demo`
+      )
       
-      <div className="hourly-grid">
-        {hourlyData.map((hour, index) => (
-          <div key={index} className="hour-card">
-            <div className="hour-time">{hour.time}</div>
-            <div className="hour-icon">
-              <WeatherIcon condition={hour.condition} size={32} />
-            </div>
-            <div className="hour-temp">{hour.temperature}°</div>
-            <div className="hour-condition">{hour.condition}</div>
-            <div className="hour-details">
-              <div className="hour-detail">
-                <span>💧 {hour.precipitation}%</span>
-              </div>
-              <div className="hour-detail">
-                <span>💨 {hour.windSpeed} mph</span>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-
-  // Enhanced chart data with multiple weather metrics
-  const getTemperatureChartData = () => {
-    const labels = forecastData.slice(0, 7).map(day => day.dayName)
-    const highTemps = forecastData.slice(0, 7).map(day => day.high || Math.floor(Math.random() * 15) + 70)
-    const lowTemps = forecastData.slice(0, 7).map(day => day.low || Math.floor(Math.random() * 10) + 50)
-    const precipitation = forecastData.slice(0, 7).map(day => day.precipitation || Math.floor(Math.random() * 40))
-    const windSpeed = forecastData.slice(0, 7).map(day => {
-      const wind = parseInt(day.windSpeed) || Math.floor(Math.random() * 20) + 5
-      return wind
-    })
-    
-    return {
-      labels,
-      datasets: [
-        {
-          label: 'High Temperature',
-          data: highTemps,
-          borderColor: 'rgb(255, 99, 132)',
-          backgroundColor: 'rgba(255, 99, 132, 0.2)',
-          tension: 0.4,
-          fill: false,
-          borderWidth: 3,
-          pointRadius: 5,
-          pointHoverRadius: 7,
-          pointBackgroundColor: 'rgb(255, 99, 132)',
-          pointBorderColor: '#fff',
-          pointBorderWidth: 2,
-        },
-        {
-          label: 'Low Temperature',
-          data: lowTemps,
-          borderColor: 'rgb(54, 162, 235)',
-          backgroundColor: 'rgba(54, 162, 235, 0.2)',
-          tension: 0.4,
-          fill: false,
-          borderWidth: 3,
-          pointRadius: 5,
-          pointHoverRadius: 7,
-          pointBackgroundColor: 'rgb(54, 162, 235)',
-          pointBorderColor: '#fff',
-          pointBorderWidth: 2,
-        },
-        {
-          label: 'Precipitation %',
-          data: precipitation,
-          borderColor: 'rgb(75, 192, 192)',
-          backgroundColor: 'rgba(75, 192, 192, 0.2)',
-          tension: 0.4,
-          fill: false,
-          borderWidth: 2,
-          borderDash: [5, 5],
-          pointRadius: 4,
-          pointHoverRadius: 6,
-          pointBackgroundColor: 'rgb(75, 192, 192)',
-          pointBorderColor: '#fff',
-          pointBorderWidth: 2,
-          yAxisID: 'y1',
-        },
-        {
-          label: 'Wind Speed (mph)',
-          data: windSpeed,
-          borderColor: 'rgb(255, 159, 64)',
-          backgroundColor: 'rgba(255, 159, 64, 0.2)',
-          tension: 0.4,
-          fill: false,
-          borderWidth: 2,
-          borderDash: [10, 5],
-          pointRadius: 4,
-          pointHoverRadius: 6,
-          pointBackgroundColor: 'rgb(255, 159, 64)',
-          pointBorderColor: '#fff',
-          pointBorderWidth: 2,
-          yAxisID: 'y1',
-        },
-      ],
+      if (!forecastResponse.ok) {
+        throw new Error('OpenWeatherMap API not available')
+      }
+      
+      const forecastData = await forecastResponse.json()
+      
+      // Process OpenWeatherMap data to match NWS format
+      const processedHourly = forecastData.list.map(item => ({
+        startTime: item.dt * 1000,
+        temperature: Math.round(item.main.temp),
+        temperatureUnit: 'F',
+        shortForecast: item.weather[0].main,
+        detailedForecast: item.weather[0].description,
+        windSpeed: `${Math.round(item.wind.speed)} mph`,
+        windDirection: getWindDirection(item.wind.deg),
+        relativeHumidity: item.main.humidity,
+        probabilityOfPrecipitation: { value: (item.pop || 0) * 100 }
+      }))
+      
+      setHourlyData(processedHourly)
+      
+      // Create daily forecast from hourly data
+      const dailyData = []
+      const daysProcessed = new Set()
+      
+      processedHourly.forEach(item => {
+        const date = new Date(item.startTime)
+        const dayKey = date.toDateString()
+        
+        if (!daysProcessed.has(dayKey) && dailyData.length < 10) {
+          daysProcessed.add(dayKey)
+          
+          const dayItems = processedHourly.filter(d => 
+            new Date(d.startTime).toDateString() === dayKey
+          )
+          
+          const temps = dayItems.map(d => d.temperature)
+          const high = Math.max(...temps)
+          const low = Math.min(...temps)
+          
+          dailyData.push({
+            name: date.toLocaleDateString([], { weekday: 'long' }),
+            startTime: item.startTime,
+            temperature: high,
+            temperatureUnit: 'F',
+            shortForecast: item.shortForecast,
+            detailedForecast: `High: ${high}°F, Low: ${low}°F. ${item.detailedForecast}`,
+            windSpeed: item.windSpeed,
+            windDirection: item.windDirection,
+            relativeHumidity: dayItems[0].relativeHumidity
+          })
+        }
+      })
+      
+      setForecastData(dailyData)
+      setLastUpdated(new Date().toISOString())
+      
+    } catch (error) {
+      console.error('❌ OpenWeatherMap fallback failed:', error)
+      setError('Weather data not available. Please try again later.')
     }
   }
 
-  // Enhanced chart options with better styling and interactions
+  // Helper function for wind direction
+  const getWindDirection = (degrees) => {
+    if (!degrees) return 'N'
+    const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']
+    const index = Math.round(degrees / 45) % 8
+    return directions[index]
+  }
+
+  // Enhanced chart data with multiple metrics
+  const chartData = useMemo(() => {
+    if (!hourlyData.length) return null
+    
+    const next24Hours = hourlyData.slice(0, 24)
+    const labels = next24Hours.map(item => 
+      new Date(item.startTime || item.dt * 1000).toLocaleTimeString([], { 
+        hour: 'numeric', 
+        minute: '2-digit',
+        hour12: true 
+      })
+    )
+    
+    const datasets = {
+      temperature: {
+        label: 'Temperature (°F)',
+        data: next24Hours.map(item => item.temperature || Math.round((item.main?.temp || 70) * 9/5 + 32)),
+        borderColor: '#FF6B6B',
+        backgroundColor: 'rgba(255, 107, 107, 0.1)',
+        fill: true,
+        tension: 0.4
+      },
+      humidity: {
+        label: 'Humidity (%)',
+        data: next24Hours.map(item => item.relativeHumidity?.value || item.main?.humidity || 50),
+        borderColor: '#4FC3F7',
+        backgroundColor: 'rgba(79, 195, 247, 0.1)',
+        fill: true,
+        tension: 0.4
+      },
+      precipitation: {
+        label: 'Precipitation Chance (%)',
+        data: next24Hours.map(item => item.probabilityOfPrecipitation?.value || (item.pop || 0) * 100),
+        borderColor: '#2196F3',
+        backgroundColor: 'rgba(33, 150, 243, 0.1)',
+        fill: true,
+        tension: 0.4
+      }
+    }
+    
+    return {
+      labels,
+      datasets: [datasets[selectedMetric]]
+    }
+  }, [hourlyData, selectedMetric])
+
+  // Chart options optimized for both environments
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
-    interaction: {
-      mode: 'index',
-      intersect: false,
-    },
     plugins: {
       legend: {
-        position: 'top',
-        labels: {
-          color: 'white',
-          font: {
-            size: 12,
-            weight: 'bold'
-          },
-          padding: 20,
-          usePointStyle: true,
-          pointStyle: 'circle',
-        }
-      },
-      title: {
         display: true,
-        text: '📈 7-Day Weather Trends',
-        color: 'white',
-        font: {
-          size: 18,
-          weight: 'bold'
-        },
-        padding: {
-          top: 10,
-          bottom: 20
-        }
+        position: 'top'
       },
       tooltip: {
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        titleColor: 'white',
-        bodyColor: 'white',
-        borderColor: 'rgba(255, 255, 255, 0.2)',
-        borderWidth: 1,
-        padding: 12,
-        displayColors: true,
-        callbacks: {
-          title: function(context) {
-            return '📅 ' + context[0].label
-          },
-          label: function(context) {
-            let label = context.dataset.label || ''
-            if (label) {
-              label += ': '
-            }
-            if (context.parsed.y !== null) {
-              if (context.dataset.label.includes('Temperature')) {
-                label += context.parsed.y + '°F'
-              } else if (context.dataset.label.includes('Precipitation')) {
-                label += context.parsed.y + '%'
-              } else if (context.dataset.label.includes('Wind')) {
-                label += context.parsed.y + ' mph'
-              }
-            }
-            return label
-          }
-        }
+        mode: 'index',
+        intersect: false
       }
     },
     scales: {
       x: {
-        ticks: {
-          color: 'white',
-          font: {
-            size: 11,
-            weight: 'bold'
-          }
-        },
+        display: true,
         grid: {
-          color: 'rgba(255, 255, 255, 0.1)',
-          drawBorder: false
-        },
-        title: {
-          display: true,
-          text: 'Days',
-          color: 'white',
-          font: {
-            size: 12,
-            weight: 'bold'
-          }
+          display: false
         }
       },
       y: {
-        type: 'linear',
         display: true,
-        position: 'left',
-        ticks: {
-          color: 'white',
-          font: {
-            size: 11
-          },
-          callback: function(value) {
-            return value + '°F'
-          }
-        },
         grid: {
-          color: 'rgba(255, 255, 255, 0.1)',
-          drawBorder: false
-        },
-        title: {
-          display: true,
-          text: 'Temperature (°F)',
-          color: 'white',
-          font: {
-            size: 12,
-            weight: 'bold'
-          }
-        }
-      },
-      y1: {
-        type: 'linear',
-        display: true,
-        position: 'right',
-        ticks: {
-          color: 'white',
-          font: {
-            size: 11
-          },
-          callback: function(value) {
-            return value + '%'
-          }
-        },
-        grid: {
-          drawOnChartArea: false,
-          color: 'rgba(255, 255, 255, 0.05)',
-          drawBorder: false
-        },
-        title: {
-          display: true,
-          text: 'Precipitation % / Wind (mph)',
-          color: 'white',
-          font: {
-            size: 12,
-            weight: 'bold'
-          }
+          color: 'rgba(255, 255, 255, 0.1)'
         }
       }
     },
-    elements: {
-      line: {
-        tension: 0.4
-      },
-      point: {
-        hoverRadius: 8
-      }
+    interaction: {
+      mode: 'nearest',
+      axis: 'x',
+      intersect: false
     }
   }
 
-  const renderDailyForecast = () => {
-  const getFilteredChartData = () => {
-    const fullData = getTemperatureChartData()
-    
-    if (chartType === 'temperature') {
-      return {
-        ...fullData,
-        datasets: fullData.datasets.filter(dataset => 
-          dataset.label.includes('Temperature')
-        )
-      }
-    } else if (chartType === 'precipitation') {
-      return {
-        ...fullData,
-        datasets: fullData.datasets.filter(dataset => 
-          dataset.label.includes('Precipitation')
-        )
-      }
-    } else if (chartType === 'wind') {
-      return {
-        ...fullData,
-        datasets: fullData.datasets.filter(dataset => 
-          dataset.label.includes('Wind')
-        )
-      }
+  // Load data on mount and location change
+  useEffect(() => {
+    if (globalLocation) {
+      fetchWeatherData()
     }
-    
-    return fullData
-  }
+  }, [globalLocation, fetchWeatherData])
 
+  // Auto-refresh every 10 minutes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (globalLocation) {
+        fetchWeatherData()
+      }
+    }, 10 * 60 * 1000)
+    
+    return () => clearInterval(interval)
+  }, [globalLocation, fetchWeatherData])
+
+  if (loading) {
     return (
-      <div className="daily-forecast">
-        <div className="daily-header">
-          <h3>📅 Daily Forecast</h3>
-          <div className="daily-controls">
-            <button className="control-btn btn-primary" onClick={handleRefresh}>🔄 Refresh</button>
-            <button className="control-btn btn-secondary">📊 Export</button>
-            <button className="control-btn btn-secondary">📧 Share</button>
-          </div>
-        </div>
-
-        {/* Enhanced Temperature Trend Chart */}
-        <div className="temperature-chart-section">
-          <div className="chart-container">
-            <Line data={getFilteredChartData()} options={chartOptions} />
-          </div>
-
-          {/* Chart Controls */}
-          <div className="chart-controls">
-            <button
-              className={`chart-control-btn ${chartType === 'all' ? 'active' : ''}`}
-              onClick={() => setChartType('all')}
-            >
-              📈 All Metrics
-            </button>
-            <button
-              className={`chart-control-btn ${chartType === 'temperature' ? 'active' : ''}`}
-              onClick={() => setChartType('temperature')}
-            >
-              🌡️ Temperature
-            </button>
-            <button
-              className={`chart-control-btn ${chartType === 'precipitation' ? 'active' : ''}`}
-              onClick={() => setChartType('precipitation')}
-            >
-              💧 Precipitation
-            </button>
-            <button
-              className={`chart-control-btn ${chartType === 'wind' ? 'active' : ''}`}
-              onClick={() => setChartType('wind')}
-            >
-              💨 Wind Speed
-            </button>
-          </div>
-        </div>
-
-        <div className="daily-grid">
-          {forecastData.slice(0, 7).map((day, index) => (
-            <div key={index} className="day-card">
-              <div className="day-date">
-                <div className="day-name">{day.dayName}</div>
-                <div className="day-date">{day.date}</div>
-              </div>
-              <div className="day-icon">
-                <WeatherIcon condition={day.condition} size={48} />
-              </div>
-              <div className="day-temps">
-                <div className="day-high">H: {day.high}°</div>
-                <div className="day-low">L: {day.low}°</div>
-              </div>
-              <div className="day-condition">{day.condition}</div>
-              <div className="day-details">
-                <div className="day-detail">
-                  <span>💧 {day.precipitation}%</span>
-                </div>
-                <div className="day-detail">
-                  <span>💨 {day.windSpeed} mph</span>
-                </div>
-                <div className="day-detail">
-                  <span>🌡️ {day.humidity}%</span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    )
-  }
-
-  const renderExtendedForecast = () => (
-    <div className="extended-forecast">
-      <div className="extended-header">
-        <h3>📆 Extended Forecast</h3>
-        <div className="extended-controls">
-          <button className="control-btn btn-primary" onClick={handleRefresh}>🔄 Refresh</button>
-          <button className="control-btn btn-secondary">📊 Export</button>
-          <button className="control-btn btn-secondary">📧 Share</button>
-          <button className="control-btn btn-secondary">📅 Calendar</button>
-        </div>
-      </div>
-      
-      <div className="extended-grid">
-        {forecastData.map((day, index) => (
-          <div key={index} className="extended-card">
-            <div className="extended-date">
-              <div className="extended-day">{day.dayName}</div>
-              <div className="extended-date">{day.date}</div>
-            </div>
-            <div className="extended-icon">
-              <WeatherIcon condition={day.condition} size={40} />
-            </div>
-            <div className="extended-temps">
-              <div className="extended-high">{day.high}°</div>
-              <div className="extended-low">{day.low}°</div>
-            </div>
-            <div className="extended-condition">{day.condition}</div>
-            <div className="extended-summary">
-              <div>Precip: {day.precipitation}%</div>
-              <div>Wind: {day.windSpeed} mph</div>
-              <div>Humidity: {day.humidity}%</div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-
-  const renderTenDayForecast = () => (
-    <div className="ten-day-forecast">
-      <div className="ten-day-header">
-        <h3>🗓️ 10-Day Forecast</h3>
-        <div className="ten-day-controls">
-          <button className="control-btn btn-primary" onClick={handleRefresh}>🔄 Refresh</button>
-          <button className="control-btn btn-secondary">📊 Export</button>
-          <button className="control-btn btn-secondary">📧 Share</button>
-          <button className="control-btn btn-secondary">📅 Calendar</button>
-          <button className="control-btn btn-secondary">📈 Trends</button>
-        </div>
-      </div>
-      
-      <div className="ten-day-grid">
-        {forecastData.map((day, index) => (
-          <div key={index} className="ten-day-card">
-            <div className="ten-day-date">
-              <div className="ten-day-name">{day.dayName.slice(0, 3)}</div>
-              <div className="ten-day-date">{day.date}</div>
-            </div>
-            <div className="ten-day-icon">
-              <WeatherIcon condition={day.condition} size={32} />
-            </div>
-            <div className="ten-day-temps">
-              <div className="ten-day-high">{day.high}°</div>
-              <div className="ten-day-low">{day.low}°</div>
-            </div>
-            <div className="ten-day-condition">{day.condition}</div>
-            <div className="ten-day-precip">💧 {day.precipitation}%</div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-
-  const renderForecastSummary = () => {
-    const avgHigh = Math.floor(forecastData.reduce((sum, day) => sum + day.high, 0) / forecastData.length)
-    const avgLow = Math.floor(forecastData.reduce((sum, day) => sum + day.low, 0) / forecastData.length)
-    const avgPrecip = Math.floor(forecastData.reduce((sum, day) => sum + day.precipitation, 0) / forecastData.length)
-    const avgWind = Math.floor(forecastData.reduce((sum, day) => sum + day.windSpeed, 0) / forecastData.length)
-    const avgHumidity = Math.floor(forecastData.reduce((sum, day) => sum + day.humidity, 0) / forecastData.length)
-    
-    const conditions = forecastData.map(day => day.condition)
-    const mostCommon = conditions.sort((a,b) =>
-      conditions.filter(v => v===a).length - conditions.filter(v => v===b).length
-    ).pop()
-    
-    return (
-      <div className="forecast-summary">
-        <div className="summary-header">
-          <h3>📊 Forecast Summary</h3>
-          <div className="summary-controls">
-            <button className="control-btn btn-primary" onClick={handleRefresh}>🔄 Refresh</button>
-            <button className="control-btn btn-secondary">📊 Export</button>
-            <button className="control-btn btn-secondary">📧 Share</button>
-            <button className="control-btn btn-secondary">📈 Analysis</button>
-          </div>
-        </div>
-        
-        <div className="summary-content">
-          <div className="summary-overview">
-            <div className="overview-card">
-              <h4>🌡️ Overview</h4>
-              <div className="overview-item">
-                <span className="overview-label">Most Common:</span>
-                <span className="overview-value">{mostCommon}</span>
-              </div>
-              <div className="overview-item">
-                <span className="overview-label">Average High:</span>
-                <span className="overview-value">{avgHigh}°F</span>
-              </div>
-              <div className="overview-item">
-                <span className="overview-label">Average Low:</span>
-                <span className="overview-value">{avgLow}°F</span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="summary-averages">
-            <div className="averages-card">
-              <h4>📈 Averages</h4>
-              <div className="average-item">
-                <span className="average-label">💧 Precipitation:</span>
-                <span className="average-value">{avgPrecip}%</span>
-              </div>
-              <div className="average-item">
-                <span className="average-label">💨 Wind Speed:</span>
-                <span className="average-value">{avgWind} mph</span>
-              </div>
-              <div className="average-item">
-                <span className="average-label">🌡️ Humidity:</span>
-                <span className="average-value">{avgHumidity}%</span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="summary-highlights">
-            <div className="highlights-card">
-              <h4>⚡ Highlights</h4>
-              <div className="highlight-item">
-                <span className="highlight-label">Hottest Day:</span>
-                <span className="highlight-value">
-                  {forecastData.reduce((max, day) => day.high > max.high ? day : max).dayName} ({forecastData.reduce((max, day) => day.high > max.high ? day : max).high}°)
-                </span>
-              </div>
-              <div className="highlight-item">
-                <span className="highlight-label">Coolest Day:</span>
-                <span className="highlight-value">
-                  {forecastData.reduce((min, day) => day.low < min.low ? day : min).dayName} ({forecastData.reduce((min, day) => day.low < min.low ? day : min).low}°)
-                </span>
-              </div>
-              <div className="highlight-item">
-                <span className="highlight-label">Wettest Day:</span>
-                <span className="highlight-value">
-                  {forecastData.reduce((max, day) => day.precipitation > max.precipitation ? day : max).dayName} ({forecastData.reduce((max, day) => day.precipitation > max.precipitation ? day : max).precipitation}%)
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  const renderContent = () => {
-    if (loading) {
-      return (
+      <div className="forecast-page">
+        <Header />
         <div className="forecast-loading">
           <div className="loading-spinner"></div>
-          <h3>📅 Loading Forecast Data...</h3>
-          <p>Getting comprehensive forecast information</p>
+          <h2>Loading Forecast Data...</h2>
+          <p>Fetching weather information for {location}</p>
         </div>
-      )
-    }
+      </div>
+    )
+  }
 
-    if (error) {
-      return (
+  if (error) {
+    return (
+      <div className="forecast-page">
+        <Header />
         <div className="forecast-error">
           <div className="error-icon">⚠️</div>
-          <h3>Forecast Error</h3>
+          <h2>Forecast Error</h2>
           <p>{error}</p>
-          <button className="retry-btn" onClick={() => window.location.reload()}>
-            🔄 Retry
+          <button onClick={fetchWeatherData} className="retry-btn">
+            🔄 Try Again
           </button>
+          <Link to="/" className="back-btn">
+            ← Back to Weather
+          </Link>
         </div>
-      )
-    }
-
-    switch (activeTab) {
-      case 'today':
-        return renderTodayForecast()
-      case 'hourly':
-        return renderHourlyForecast()
-      case 'daily':
-        return renderDailyForecast()
-      case 'extended':
-        return renderExtendedForecast()
-      case 'tenDay':
-        return renderTenDayForecast()
-      case 'summary':
-        return renderForecastSummary()
-      default:
-        return renderTodayForecast()
-    }
+      </div>
+    )
   }
 
   return (
     <div className="forecast-page">
-      <Header onLocationChange={handleLocationChange} />
+      <Header />
       
-      <div className="forecast-content">
-        <div className="forecast-header">
+      <div className="forecast-header">
+        <div className="header-content">
           <Link to="/" className="back-link">
             <span className="back-icon">←</span>
-            <span>Back to Weather</span>
+            <span className="back-text">Back to Weather</span>
           </Link>
-          <div className="header-content">
-            <h1>📅 Weather Forecast</h1>
-            <p>Comprehensive weather forecasts with multiple views and detailed analysis for {location}</p>
+          
+          <div className="forecast-title">
+            <h1>Weather Forecast</h1>
+            <p className="location-name">{location}</p>
+            {lastUpdated && (
+              <p className="last-updated">
+                Last updated: {new Date(lastUpdated).toLocaleTimeString()}
+              </p>
+            )}
           </div>
-        </div>
-
-        <div className="forecast-tabs">
-          {tabs.map(tab => (
-            <button
-              key={tab.id}
-              className={`tab-button ${activeTab === tab.id ? 'active' : ''}`}
-              onClick={() => setActiveTab(tab.id)}
-            >
-              <span className="tab-icon">{tab.icon}</span>
-              <span className="tab-label">{tab.label}</span>
-            </button>
-          ))}
-        </div>
-
-        <div className="forecast-body">
-          {renderContent()}
+          
+          {weatherAlerts.length > 0 && (
+            <div className="weather-alerts">
+              <div className="alert-badge">
+                <span className="alert-icon">🚨</span>
+                <span className="alert-count">{weatherAlerts.length}</span>
+              </div>
+              <div className="alert-summary">
+                {weatherAlerts[0].properties.event}
+              </div>
+            </div>
+          )}
         </div>
       </div>
+
+      <div className="forecast-tabs">
+        <button 
+          className={`tab-btn ${activeTab === 'today' ? 'active' : ''}`}
+          onClick={() => setActiveTab('today')}
+        >
+          Today
+        </button>
+        <button 
+          className={`tab-btn ${activeTab === 'hourly' ? 'active' : ''}`}
+          onClick={() => setActiveTab('hourly')}
+        >
+          Hourly
+        </button>
+        <button 
+          className={`tab-btn ${activeTab === '10day' ? 'active' : ''}`}
+          onClick={() => setActiveTab('10day')}
+        >
+          10-Day
+        </button>
+        <button 
+          className={`tab-btn ${activeTab === 'charts' ? 'active' : ''}`}
+          onClick={() => setActiveTab('charts')}
+        >
+          Charts
+        </button>
+      </div>
+
+      <div className="forecast-content">
+        {activeTab === 'today' && (
+          <div className="today-forecast">
+            <div className="current-conditions">
+              {currentWeather && (
+                <div className="current-weather-card">
+                  <div className="current-temp">
+                    <span className="temp-value">{currentWeather.temperature}</span>
+                    <span className="temp-unit">°F</span>
+                  </div>
+                  <div className="current-details">
+                    <p className="current-condition">{currentWeather.conditions}</p>
+                    <div className="weather-details">
+                      <div className="detail-item">
+                        <span className="detail-label">Humidity:</span>
+                        <span className="detail-value">{currentWeather.humidity}%</span>
+                      </div>
+                      <div className="detail-item">
+                        <span className="detail-label">Wind:</span>
+                        <span className="detail-value">{currentWeather.windSpeed} mph {currentWeather.windDirection}</span>
+                      </div>
+                      <div className="detail-item">
+                        <span className="detail-label">Pressure:</span>
+                        <span className="detail-value">{currentWeather.pressure} in</span>
+                      </div>
+                      <div className="detail-item">
+                        <span className="detail-label">Visibility:</span>
+                        <span className="detail-value">{currentWeather.visibility} mi</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            {forecastData.length > 0 && (
+              <div className="today-details">
+                <h3>Today's Forecast</h3>
+                <div className="period-forecast">
+                  {forecastData.slice(0, 4).map((period, index) => (
+                    <div key={index} className="period-card">
+                      <div className="period-time">{period.name}</div>
+                      <div className="period-temp">
+                        {period.temperature}°{period.temperatureUnit}
+                      </div>
+                      <div className="period-condition">{period.shortForecast}</div>
+                      <div className="period-details">
+                        <p>{period.detailedForecast}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'hourly' && (
+          <div className="hourly-forecast-section">
+            <div className="section-header">
+              <h2>24-Hour Forecast</h2>
+              <button 
+                className="expand-btn"
+                onClick={() => setExpandedForecast(!expandedForecast)}
+              >
+                {expandedForecast ? 'Collapse' : 'Expand'}
+              </button>
+            </div>
+            <HourlyForecast data={hourlyData} expanded={expandedForecast} />
+          </div>
+        )}
+
+        {activeTab === '10day' && (
+          <div className="ten-day-forecast-section">
+            <div className="section-header">
+              <h2>10-Day Forecast</h2>
+              <p>Extended weather outlook</p>
+            </div>
+            <TenDayForecast data={hourlyData} />
+          </div>
+        )}
+
+        {activeTab === 'charts' && (
+          <div className="charts-section">
+            <div className="chart-controls">
+              <div className="metric-selector">
+                <label htmlFor="metric-select">Display:</label>
+                <select 
+                  id="metric-select"
+                  value={selectedMetric}
+                  onChange={(e) => setSelectedMetric(e.target.value)}
+                >
+                  <option value="temperature">Temperature</option>
+                  <option value="humidity">Humidity</option>
+                  <option value="precipitation">Precipitation Chance</option>
+                </select>
+              </div>
+            </div>
+            
+            <div className="chart-container">
+              <h3>24-Hour {selectedMetric.charAt(0).toUpperCase() + selectedMetric.slice(1)} Trend</h3>
+              {chartData && (
+                <div className="chart-wrapper">
+                  <Line data={chartData} options={chartOptions} />
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {weatherAlerts.length > 0 && (
+        <div className="alerts-section">
+          <h3>Weather Alerts</h3>
+          <div className="alerts-list">
+            {weatherAlerts.map((alert, index) => (
+              <div key={index} className="alert-item">
+                <div className="alert-header">
+                  <span className="alert-title">{alert.properties.event}</span>
+                  <span className="alert-severity">{alert.properties.severity}</span>
+                </div>
+                <div className="alert-description">
+                  {alert.properties.description}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
