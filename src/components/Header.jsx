@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { useLocation as useGlobalLocation } from '../contexts/LocationContext'
 import './Header.css'
 import { LogoIcon } from './WeatherIcons'
+import VersionManager from '../utils/versionManager'
 
 const Header = ({ onLocationChange }) => {
   // Use global location context
@@ -18,7 +19,47 @@ const Header = ({ onLocationChange }) => {
   const [currentCoordinates, setCurrentCoordinates] = useState(null)
   const [showLocationSearch, setShowLocationSearch] = useState(false)
   const [locationSearchInput, setLocationSearchInput] = useState('')
+  const [updateAvailable, setUpdateAvailable] = useState(false)
+  const [currentVersion, setCurrentVersion] = useState('v1.0.0')
+  const [latestVersion, setLatestVersion] = useState('v1.0.0')
+  const [versionManager] = useState(() => new VersionManager())
   const location = useLocation()
+
+  // Version checking logic
+  useEffect(() => {
+    const checkVersion = () => {
+      const versionInfo = versionManager.checkForUpdates()
+      setCurrentVersion(versionInfo.currentVersion)
+      setLatestVersion(versionInfo.latestVersion)
+      setUpdateAvailable(versionInfo.updateAvailable)
+    }
+    
+    checkVersion()
+    
+    // Check for updates every 5 minutes
+    const interval = setInterval(checkVersion, 5 * 60 * 1000)
+    
+    return () => clearInterval(interval)
+  }, [versionManager])
+
+  // Make version manager globally accessible for debugging
+  useEffect(() => {
+    window.debugVersionManager = versionManager
+    console.log('🔧 Debug: Version manager available at window.debugVersionManager')
+    console.log('💡 To trigger update: window.debugVersionManager.debugTriggerUpdate()')
+  }, [versionManager])
+
+  // Handle app restart for update
+  const handleRestartForUpdate = () => {
+    console.log('🔄 Restarting app for update...')
+    versionManager.restartForUpdate()
+  }
+
+  // Handle dismissing update notification
+  const handleDismissUpdate = () => {
+    setUpdateAvailable(false)
+    versionManager.clearUpdate()
+  }
 
   // Sync location input with global location
   useEffect(() => {
@@ -389,6 +430,38 @@ const Header = ({ onLocationChange }) => {
           </div>
           
           <div className="header-right">
+            {/* Version Display and Update Button */}
+            {updateAvailable && (
+              <div className="update-notification">
+                <div className="update-info">
+                  <span className="update-badge">🔄</span>
+                  <span className="update-text">Update Available</span>
+                  <span className="version-info">{latestVersion}</span>
+                </div>
+                <div className="update-actions">
+                  <button 
+                    className="update-btn"
+                    onClick={handleRestartForUpdate}
+                    title="Restart to update to latest version"
+                  >
+                    Restart
+                  </button>
+                  <button 
+                    className="dismiss-btn"
+                    onClick={handleDismissUpdate}
+                    title="Dismiss update notification"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            {/* Current Version Display */}
+            <div className="version-display" title={`Current version: ${currentVersion}`}>
+              <span className="version-text">{currentVersion}</span>
+            </div>
+            
             <nav className="header-nav">
               <button
                 onClick={handleLocateMe}
