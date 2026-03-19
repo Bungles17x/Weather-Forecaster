@@ -58,11 +58,18 @@ export default defineConfig(({ mode }) => {
                       .replace(/import\s+.*?from\s+['"]@vite\/client['"];?/g, '')
                       .replace(/import\s+.*?from\s+['"]vite\/client['"];?/g, '')
                       .replace(/import\s+.*?from\s+['"]@vite\/env['"];?/g, '')
-                      .replace(/import\s+.*?from\s+['"]vite\/env['"];?/g, '')
                       .replace(/import\.meta\.hot/g, 'undefined')
                       .replace(/module\.hot/g, 'undefined')
                       .replace(/import\.meta\.env\.HMR/g, 'false')
                       .replace(/import\.meta\.env\.DEV/g, 'false')
+                      // Remove any remaining Vite-related code
+                      .replace(/__HMR_BASE__/g, '"/Weather-Forecaster/"')
+                      .replace(/__VITE_HMR_RUNTIME__/g, 'null')
+                      .replace(/__VITE_HMR_CLIENT__/g, 'null')
+                      .replace(/__VITE_HMR_WS__/g, 'null')
+                      .replace(/__VITE_HMR_PORT__/g, 'null')
+                      .replace(/__VITE_HMR_HOST__/g, 'null')
+                      .replace(/__VITE_HMR_PROTOCOL__/g, '""')
                   }
                 }
               })
@@ -85,7 +92,9 @@ export default defineConfig(({ mode }) => {
           conditionals: true,
           // Remove unreachable code
           evaluate: true,
-          passes: 3 // Run compression multiple times
+          passes: 3, // Run compression multiple times
+          // Remove all references to Vite modules
+          side_effects: false
         },
         mangle: {
           reserved: ['React', 'useState', 'useEffect']
