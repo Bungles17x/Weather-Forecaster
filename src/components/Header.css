@@ -170,11 +170,25 @@
 
 /* Responsive adjustments for version display */
 @media (max-width: 768px) {
+  .header-content {
+    padding: 0 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex-wrap: wrap;
+  }
+  
   .update-notification {
     flex-direction: column;
     gap: 0.25rem;
     padding: 0.5rem;
     margin-right: 0.5rem;
+    max-width: 200px;
   }
   
   .update-info {
@@ -188,7 +202,15 @@
   }
   
   .version-display {
-    display: none; /* Hide version display on mobile */
+    display: flex; /* Show version display on mobile */
+    font-size: 0.6rem;
+    padding: 0.2rem 0.4rem;
+    margin-right: 0.5rem;
+    min-width: fit-content;
+  }
+  
+  .version-text {
+    font-size: 0.55rem;
   }
 }
 
@@ -196,6 +218,7 @@
   .update-notification {
     margin-right: 0.25rem;
     padding: 0.25rem 0.5rem;
+    max-width: 180px;
   }
   
   .update-text {
@@ -215,6 +238,16 @@
     width: 20px;
     height: 20px;
     font-size: 0.7rem;
+  }
+  
+  .version-display {
+    font-size: 0.55rem;
+    padding: 0.15rem 0.3rem;
+    margin-right: 0.25rem;
+  }
+  
+  .version-text {
+    font-size: 0.5rem;
   }
 }
 
