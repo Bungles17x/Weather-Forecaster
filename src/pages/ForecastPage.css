@@ -1,4 +1,4 @@
-/* Enhanced Forecast Page Styles - GitHub Pages + Local Server Compatible */
+/* Enhanced Forecast Page Styles - Advanced Features */
 .forecast-page {
   min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -6,10 +6,48 @@
   color: white;
 }
 
-/* Header Section */
-.forecast-header {
-  background: rgba(0, 0, 0, 0.2);
+/* Notifications Container */
+.notifications-container {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.notification {
+  background: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 1rem;
+  min-width: 250px;
+  animation: slideInRight 0.3s ease-out;
+}
+
+.notification.success {
+  border-left: 4px solid #4CAF50;
+}
+
+.notification.error {
+  border-left: 4px solid #F44336;
+}
+
+.notification.warning {
+  border-left: 4px solid #FF9800;
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* Enhanced Header */
+.forecast-header {
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(20px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   padding: 1rem 0;
   margin-bottom: 2rem;
@@ -23,6 +61,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 2rem;
+  flex-wrap: wrap;
 }
 
 .back-link {
@@ -68,10 +107,84 @@
   margin: 0.5rem 0;
 }
 
+.header-meta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
 .last-updated {
   font-size: 0.9rem;
   opacity: 0.7;
   margin: 0;
+}
+
+.data-quality {
+  display: flex;
+  align-items: center;
+}
+
+.quality-indicator {
+  font-size: 0.8rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.quality-indicator.excellent {
+  background: rgba(76, 175, 80, 0.2);
+  border-color: rgba(76, 175, 80, 0.5);
+}
+
+.quality-indicator.cached {
+  background: rgba(255, 193, 7, 0.2);
+  border-color: rgba(255, 193, 7, 0.5);
+}
+
+.quality-indicator.fallback {
+  background: rgba(255, 152, 0, 0.2);
+  border-color: rgba(255, 152, 0, 0.5);
+}
+
+.quality-indicator.estimated {
+  background: rgba(244, 67, 54, 0.2);
+  border-color: rgba(244, 67, 54, 0.5);
+}
+
+.quality-indicator.offline {
+  background: rgba(156, 39, 176, 0.2);
+  border-color: rgba(156, 39, 176, 0.5);
+}
+
+/* Header Actions */
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.favorite-btn, .share-btn, .export-btn, .animation-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+}
+
+.favorite-btn:hover, .share-btn:hover, .export-btn:hover, .animation-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.favorite-btn.active {
+  background: rgba(244, 67, 54, 0.3);
+  border-color: rgba(244, 67, 54, 0.5);
 }
 
 /* Weather Alerts */
@@ -110,7 +223,7 @@
   opacity: 0.9;
 }
 
-/* Tabs Navigation */
+/* Enhanced Tabs */
 .forecast-tabs {
   display: flex;
   gap: 0.5rem;
@@ -167,8 +280,8 @@
   padding: 0 2rem;
 }
 
-/* Loading and Error States */
-.forecast-loading, .forecast-error {
+/* Enhanced Loading */
+.forecast-loading {
   text-align: center;
   padding: 4rem 2rem;
   max-width: 600px;
@@ -190,16 +303,36 @@
   100% { transform: rotate(360deg); }
 }
 
-.forecast-loading h2, .forecast-error h2 {
-  font-size: 2rem;
-  margin-bottom: 1rem;
-  color: white;
+.loading-progress {
+  margin-top: 2rem;
 }
 
-.forecast-loading p, .forecast-error p {
-  font-size: 1.1rem;
-  opacity: 0.9;
-  margin-bottom: 2rem;
+.progress-bar {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  animation: progress 2s ease-in-out infinite;
+}
+
+@keyframes progress {
+  0% { width: 0%; }
+  50% { width: 70%; }
+  100% { width: 100%; }
+}
+
+/* Enhanced Error State */
+.forecast-error {
+  text-align: center;
+  padding: 4rem 2rem;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 .error-icon {
@@ -207,7 +340,15 @@
   margin-bottom: 1rem;
 }
 
-.retry-btn, .back-btn {
+.error-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 2rem;
+}
+
+.retry-btn, .offline-btn, .back-btn {
   display: inline-block;
   padding: 0.75rem 1.5rem;
   background: linear-gradient(135deg, #667eea, #764ba2);
@@ -218,15 +359,26 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
-  margin: 0 0.5rem;
 }
 
-.retry-btn:hover, .back-btn:hover {
+.retry-btn:hover, .offline-btn:hover, .back-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
-/* Today's Forecast */
+.offline-btn {
+  background: linear-gradient(135deg, #9C27B0, #673AB7);
+}
+
+.offline-notice {
+  margin-top: 2rem;
+  padding: 1rem;
+  background: rgba(156, 39, 176, 0.2);
+  border: 1px solid rgba(156, 39, 176, 0.5);
+  border-radius: 8px;
+}
+
+/* Enhanced Today's Forecast */
 .today-forecast {
   display: grid;
   gap: 2rem;
@@ -234,7 +386,7 @@
 
 .current-conditions {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: 2fr 1fr;
   gap: 2rem;
 }
 
@@ -276,6 +428,13 @@
   opacity: 0.8;
 }
 
+.feels-like {
+  font-size: 1rem;
+  opacity: 0.7;
+  display: block;
+  margin-top: 0.5rem;
+}
+
 .current-condition {
   font-size: 1.3rem;
   margin-bottom: 2rem;
@@ -309,7 +468,46 @@
   color: #4FC3F7;
 }
 
-.today-details {
+/* Sun/Moon Card */
+.sun-moon-card {
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 2rem;
+  text-align: center;
+}
+
+.sun-info {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.sun-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sun-icon {
+  font-size: 2rem;
+}
+
+.sun-label {
+  font-size: 0.9rem;
+  opacity: 0.8;
+  font-weight: 500;
+}
+
+.sun-time {
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+/* Air Quality Card */
+.air-quality-card {
   background: rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -317,59 +515,104 @@
   padding: 2rem;
 }
 
-.today-details h3 {
-  font-size: 1.5rem;
-  margin-bottom: 1.5rem;
+.air-quality-card h3 {
   text-align: center;
+  margin-bottom: 1.5rem;
   color: white;
 }
 
-.period-forecast {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
+.aqi-display {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  margin-bottom: 2rem;
 }
 
-.period-card {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 1.5rem;
-  text-align: center;
-  transition: all 0.3s ease;
+.aqi-value {
+  font-size: 3rem;
+  font-weight: bold;
+  padding: 1rem;
+  border-radius: 50%;
+  min-width: 100px;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
 }
 
-.period-card:hover {
-  transform: translateY(-3px);
-  background: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+.aqi-value.good {
+  background: rgba(76, 175, 80, 0.3);
+  border: 2px solid #4CAF50;
 }
 
-.period-time {
+.aqi-value.moderate {
+  background: rgba(255, 193, 7, 0.3);
+  border: 2px solid #FFC107;
+}
+
+.aqi-value.unhealthy_sensitive {
+  background: rgba(255, 152, 0, 0.3);
+  border: 2px solid #FF9800;
+}
+
+.aqi-value.unhealthy {
+  background: rgba(244, 67, 54, 0.3);
+  border: 2px solid #F44336;
+}
+
+.aqi-value.very_unhealthy {
+  background: rgba(156, 39, 176, 0.3);
+  border: 2px solid #9C27B0;
+}
+
+.aqi-value.hazardous {
+  background: rgba(139, 69, 19, 0.3);
+  border: 2px solid #8B4513;
+}
+
+.aqi-info {
+  flex: 1;
+}
+
+.aqi-level {
+  font-size: 1.2rem;
   font-weight: bold;
   margin-bottom: 0.5rem;
-  color: #4FC3F7;
 }
 
-.period-temp {
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin-bottom: 0.5rem;
-}
-
-.period-condition {
-  margin-bottom: 1rem;
+.aqi-description {
   opacity: 0.9;
-}
-
-.period-details {
-  font-size: 0.9rem;
-  opacity: 0.8;
   line-height: 1.4;
 }
 
-/* Section Headers */
-.hourly-forecast-section, .ten-day-forecast-section, .charts-section {
+.pollutants {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.pollutant {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+}
+
+.pollutant-name {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.pollutant-value {
+  font-weight: bold;
+  color: #4FC3F7;
+}
+
+/* Enhanced Section Headers */
+.hourly-forecast-section, .ten-day-forecast-section, .charts-section, .air-quality-section, .analysis-section {
   background: rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -397,7 +640,13 @@
   margin: 0;
 }
 
-.expand-btn {
+.header-controls {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.expand-btn, .refresh-btn {
   padding: 0.5rem 1rem;
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -408,27 +657,35 @@
   font-size: 0.9rem;
 }
 
-.expand-btn:hover {
+.expand-btn:hover, .refresh-btn:hover {
   background: rgba(255, 255, 255, 0.2);
 }
 
-/* Charts Section */
+/* Enhanced Charts Section */
 .chart-controls {
   margin-bottom: 2rem;
 }
 
-.metric-selector {
+.control-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.metric-selector, .time-range-selector, .chart-type-selector {
   display: flex;
   align-items: center;
   gap: 1rem;
 }
 
-.metric-selector label {
+.metric-selector label, .time-range-selector label, .chart-type-selector label {
   font-weight: 500;
   color: white;
+  min-width: 80px;
 }
 
-.metric-selector select {
+.metric-selector select, .time-range-selector select, .chart-type-selector select {
   padding: 0.5rem 1rem;
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -436,11 +693,34 @@
   border-radius: 6px;
   cursor: pointer;
   font-size: 1rem;
+  flex: 1;
 }
 
-.metric-selector select option {
+.metric-selector select option, .time-range-selector select option, .chart-type-selector select option {
   background: #333;
   color: white;
+}
+
+.chart-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.comparison-btn, .download-btn {
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.comparison-btn:hover, .download-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .chart-container {
@@ -462,7 +742,244 @@
   position: relative;
 }
 
-/* Alerts Section */
+/* Air Quality Section */
+.air-quality-details {
+  display: grid;
+  gap: 2rem;
+}
+
+.aqi-main {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+}
+
+.aqi-circle {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  border: 3px solid;
+}
+
+.aqi-circle.good {
+  background: rgba(76, 175, 80, 0.3);
+  border-color: #4CAF50;
+}
+
+.aqi-circle.moderate {
+  background: rgba(255, 193, 7, 0.3);
+  border-color: #FFC107;
+}
+
+.aqi-circle.unhealthy_sensitive {
+  background: rgba(255, 152, 0, 0.3);
+  border-color: #FF9800;
+}
+
+.aqi-circle.unhealthy {
+  background: rgba(244, 67, 54, 0.3);
+  border-color: #F44336;
+}
+
+.aqi-circle.very_unhealthy {
+  background: rgba(156, 39, 176, 0.3);
+  border-color: #9C27B0;
+}
+
+.aqi-circle.hazardous {
+  background: rgba(139, 69, 19, 0.3);
+  border-color: #8B4513;
+}
+
+.aqi-number {
+  font-size: 2rem;
+}
+
+.aqi-label {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.aqi-info h3 {
+  margin: 0 0 0.5rem 0;
+  color: white;
+}
+
+.health-recommendations p {
+  margin: 0.5rem 0;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  border-left: 3px solid #4CAF50;
+}
+
+.pollutants-grid {
+  margin-top: 2rem;
+}
+
+.pollutants-grid h3 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: white;
+}
+
+.pollutant-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.pollutant-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.pollutant-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.pollutant-name {
+  font-weight: 500;
+}
+
+.pollutant-value {
+  font-weight: bold;
+  color: #4FC3F7;
+}
+
+.pollutant-bar {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.pollutant-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4FC3F7, #2196F3);
+  transition: width 0.5s ease;
+}
+
+/* UV Index Section */
+.uv-index-section {
+  margin-top: 2rem;
+}
+
+.uv-index-section h3 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: white;
+}
+
+.uv-display {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+}
+
+.uv-circle {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  border: 3px solid;
+}
+
+.uv-circle.low {
+  background: rgba(76, 175, 80, 0.3);
+  border-color: #4CAF50;
+}
+
+.uv-circle.moderate {
+  background: rgba(255, 193, 7, 0.3);
+  border-color: #FFC107;
+}
+
+.uv-circle.high {
+  background: rgba(255, 152, 0, 0.3);
+  border-color: #FF9800;
+}
+
+.uv-circle.very_high {
+  background: rgba(244, 67, 54, 0.3);
+  border-color: #F44336;
+}
+
+.uv-circle.extreme {
+  background: rgba(156, 39, 176, 0.3);
+  border-color: #9C27B0;
+}
+
+.uv-number {
+  font-size: 1.5rem;
+}
+
+.uv-label {
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.uv-info h4 {
+  margin: 0 0 0.5rem 0;
+  color: white;
+}
+
+.uv-recommendations p {
+  margin: 0.5rem 0;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  border-left: 3px solid #4CAF50;
+}
+
+/* Analysis Section */
+.analysis-section {
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 2rem;
+}
+
+.analysis-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.analysis-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.analysis-card h3 {
+  margin: 0 0 1rem 0;
+  color: white;
+}
+
+/* Enhanced Alerts Section */
 .alerts-section {
   max-width: 1400px;
   margin: 2rem auto;
@@ -514,6 +1031,27 @@
 .alert-description {
   opacity: 0.9;
   line-height: 1.5;
+  margin-bottom: 1rem;
+}
+
+.alert-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.alert-dismiss, .alert-details {
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.alert-dismiss:hover, .alert-details:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
 
 /* Responsive Design */
@@ -545,6 +1083,10 @@
     padding: 0 1rem;
   }
   
+  .current-conditions {
+    grid-template-columns: 1fr;
+  }
+  
   .current-temp .temp-value {
     font-size: 3rem;
   }
@@ -566,9 +1108,36 @@
     height: 300px;
   }
   
+  .control-group {
+    grid-template-columns: 1fr;
+  }
+  
+  .chart-actions {
+    justify-content: center;
+  }
+  
+  .aqi-main {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .uv-display {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .analysis-grid {
+    grid-template-columns: 1fr;
+  }
+  
   .alert-header {
     flex-direction: column;
     text-align: center;
+  }
+  
+  .notifications-container {
+    right: 10px;
+    left: 10px;
   }
 }
 
@@ -601,6 +1170,11 @@
   .chart-wrapper {
     height: 250px;
   }
+  
+  .header-actions {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
 }
 
 /* Animation Classes */
@@ -631,7 +1205,8 @@
   
   .forecast-header,
   .forecast-tabs,
-  .section-header button {
+  .header-actions,
+  .notifications-container {
     display: none;
   }
   
