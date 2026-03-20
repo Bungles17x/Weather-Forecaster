@@ -228,7 +228,7 @@ const ForecastPage = () => {
       
       // UV index data
       dataPromises.push(
-        fetch(`https://api.openuv.io/v1/uv?lat=${lat}&lon=${lng}&apikey=demo`, {
+        fetch(`https://api.openuv.io/v1/uv?lat=${lat}&lon=${lon}&apikey=demo`, {
           signal: abortControllerRef.current.signal
         })
       )
