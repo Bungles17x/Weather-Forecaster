@@ -12,7 +12,7 @@ const TenDayForecast = ({ data }) => {
   const daysProcessed = new Set()
 
   data.forEach(item => {
-    const date = new Date(item.dt * 1000)
+    const date = new Date(item.dt * 1000 || item.startTime)
     const dayKey = date.toDateString()
     
     if (!daysProcessed.has(dayKey)) {
@@ -20,22 +20,31 @@ const TenDayForecast = ({ data }) => {
       
       // Find all items for this day
       const dayItems = data.filter(d => 
-        new Date(d.dt * 1000).toDateString() === dayKey
+        new Date(d.dt * 1000 || d.startTime).toDateString() === dayKey
       )
       
-      const temps = dayItems.map(d => d.main.temp)
+      // Handle both old API format (main.temp) and new format (temperature)
+      const temps = dayItems.map(d => d.main?.temp || d.temperature || 70)
       const high = Math.max(...temps)
       const low = Math.min(...temps)
       
       // Calculate average humidity and wind for the day
-      const humidities = dayItems.map(d => d.main.humidity)
+      const humidities = dayItems.map(d => d.main?.humidity || d.relativeHumidity?.value || 50)
       const avgHumidity = Math.round(humidities.reduce((a, b) => a + b, 0) / humidities.length)
       
-      const windSpeeds = dayItems.map(d => d.wind?.speed || 0)
+      const windSpeeds = dayItems.map(d => {
+        const speed = d.wind?.speed || (typeof d.windSpeed === 'string' ? parseInt(d.windSpeed) : d.windSpeed) || 0
+        return speed
+      })
       const avgWindSpeed = Math.round(windSpeeds.reduce((a, b) => a + b, 0) / windSpeeds.length)
       
       // Get the most common weather condition for the day
-      const conditions = dayItems.map(d => d.weather[0]?.main || 'Clear')
+      const conditions = dayItems.map(d => {
+        if (d.weather && d.weather[0]) {
+          return d.weather[0].main
+        }
+        return d.shortForecast || 'Clear'
+      })
       const conditionCounts = conditions.reduce((acc, cond) => {
         acc[cond] = (acc[cond] || 0) + 1
         return acc
@@ -45,7 +54,12 @@ const TenDayForecast = ({ data }) => {
       )
       
       // Get weather description
-      const descriptions = dayItems.map(d => d.weather[0]?.description || '')
+      const descriptions = dayItems.map(d => {
+        if (d.weather && d.weather[0]) {
+          return d.weather[0].description
+        }
+        return d.detailedForecast || 'Weather conditions'
+      })
       const mainDescription = descriptions[0] || ''
       
       dailyData.push({
@@ -54,7 +68,7 @@ const TenDayForecast = ({ data }) => {
         low,
         condition: mainCondition,
         description: mainDescription,
-        pop: Math.max(...dayItems.map(d => d.pop || 0)),
+        pop: Math.max(...dayItems.map(d => d.pop || d.probabilityOfPrecipitation?.value || 0)),
         humidity: avgHumidity,
         windSpeed: avgWindSpeed,
         dayItems

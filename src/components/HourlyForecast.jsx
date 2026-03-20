@@ -66,9 +66,10 @@ const HourlyForecast = ({ data }) => {
 
   const getWeatherAlerts = (hour) => {
     const alerts = []
-    const temp = hour.main?.temp || 0
-    const windSpeed = hour.wind?.speed || 0
-    const pop = hour.pop || 0
+    // Handle both old API format (main.temp) and new format (temperature)
+    const temp = hour.main?.temp || hour.temperature || 0
+    const windSpeed = hour.wind?.speed || (typeof hour.windSpeed === 'string' ? parseInt(hour.windSpeed) : hour.windSpeed) || 0
+    const pop = hour.pop || hour.probabilityOfPrecipitation?.value || 0
     const visibility = hour.visibility || 10000
     const humidity = hour.main?.humidity || 50
     
@@ -449,26 +450,28 @@ const HourlyForecast = ({ data }) => {
           <div className={`hourly-scroll ${expandedView ? 'expanded' : ''}`}>
             <div className="hourly-items">
               {hourlyData.map((hour, index) => {
-                const hourType = getHourType(hour.dt)
+                const hourType = getHourType(hour.startTime)
                 const isSelected = selectedHour === index
-                const temp = hour.main?.temp || 0
-                const pop = hour.pop || 0
-                const windSpeed = hour.wind?.speed || 0
-                const windDir = getWindDirection(hour.wind?.deg)
+                // Handle both old API format (main.temp) and new format (temperature)
+                const temp = hour.main?.temp || hour.temperature || 0
+                const pop = hour.pop || hour.probabilityOfPrecipitation?.value || 0
+                const windSpeed = hour.wind?.speed || (typeof hour.windSpeed === 'string' ? parseInt(hour.windSpeed) : hour.windSpeed) || 0
+                const windDir = hour.wind?.deg || hour.windDirection || 'N'
+                const humidity = hour.main?.humidity || hour.relativeHumidity?.value || 50
                 
                 return (
                   <div 
                     key={index} 
-                    className={`hourly-item ${hourType} ${isSelected ? 'selected' : ''} ${isNow(hour.dt) ? 'now' : ''}`}
+                    className={`hourly-item ${hourType} ${isSelected ? 'selected' : ''} ${isNow(hour.startTime) ? 'now' : ''}`}
                     onClick={() => handleHourClick(index)}
                   >
-                    {isNow(hour.dt) && (
+                    {isNow(hour.startTime) && (
                       <div className="now-badge">NOW</div>
                     )}
                     
                     <div className="hourly-time">
-                      <div className="hour">{formatHour(hour.dt)}</div>
-                      <div className="day">{formatDay(hour.dt)}</div>
+                      <div className="hour">{formatHour(hour.startTime)}</div>
+                      <div className="day">{formatDay(hour.startTime)}</div>
                     </div>
                     
                     <div className="hourly-icon">
@@ -481,15 +484,15 @@ const HourlyForecast = ({ data }) => {
                       <div className="temp">{Math.round(temp)}°</div>
                       {expandedView && (
                         <div className="temp-range">
-                          {Math.round(hour.main?.temp_min || temp)}° / {Math.round(hour.main?.temp_max || temp)}°
+                          {Math.round(hour.main?.temp_min || temp - 5)}° / {Math.round(hour.main?.temp_max || temp + 5)}°
                         </div>
                       )}
                     </div>
                     
                     <div className="hourly-condition">
-                      <div className="condition">{hour.weather && hour.weather[0] ? hour.weather[0].main : 'N/A'}</div>
-                      {expandedView && hour.weather && hour.weather[0] && (
-                        <div className="description">{hour.weather[0].description}</div>
+                      <div className="condition">{hour.weather && hour.weather[0] ? hour.weather[0].main : hour.shortForecast || 'N/A'}</div>
+                      {expandedView && (
+                        <div className="description">{hour.weather && hour.weather[0] ? hour.weather[0].description : hour.detailedForecast || 'Weather conditions'}</div>
                       )}
                     </div>
                     
