@@ -209,28 +209,21 @@ const ForecastPage = () => {
         setDataQuality('fallback')
       }
       
-      // OpenWeatherMap real data
+      // Open-Meteo free weather API (no key required) - PRIORITY #1
       try {
-        const owmKey = getAPIKey('openweathermap')
         dataPromises.push(
-          fetch(`${API_CONFIG.openweathermap.baseUrl}/forecast?lat=${lat}&lon=${lon}&units=imperial&appid=${owmKey}`, {
+          fetch(`${API_CONFIG.openmeteo.baseUrl}/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,relativehumidity_2m,precipitation_probability,windspeed_10m,winddirection_10m,pressure_msl,visibility,uv_index&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max&timezone=auto`, {
             signal: abortControllerRef.current.signal
           }).catch(err => {
-            console.warn('⚠️ OpenWeatherMap forecast API failed:', err)
-            return null
-          }),
-          fetch(`${API_CONFIG.openweathermap.baseUrl}/weather?lat=${lat}&lon=${lon}&units=imperial&appid=${owmKey}`, {
-            signal: abortControllerRef.current.signal
-          }).catch(err => {
-            console.warn('⚠️ OpenWeatherMap weather API failed:', err)
+            console.warn('⚠️ Open-Meteo API failed:', err)
             return null
           })
         )
-      } catch (owmError) {
-        console.warn('⚠️ OpenWeatherMap API unavailable:', owmError)
+      } catch (openMeteoError) {
+        console.warn('⚠️ Open-Meteo API unavailable:', openMeteoError)
       }
       
-      // WeatherAPI as alternative real data source
+      // WeatherAPI as alternative real data source (only if key provided)
       try {
         const weatherApiKey = getAPIKey('weatherapi')
         if (weatherApiKey && weatherApiKey !== 'demo') {
@@ -247,39 +240,54 @@ const ForecastPage = () => {
         console.warn('⚠️ WeatherAPI unavailable:', weatherApiError)
       }
       
-      // Open-Meteo free weather API (no key required)
+      // OpenWeatherMap real data (only if real key provided)
       try {
+        const owmKey = getAPIKey('openweathermap')
+        if (owmKey && owmKey !== 'demo') {
+          dataPromises.push(
+            fetch(`${API_CONFIG.openweathermap.baseUrl}/forecast?lat=${lat}&lon=${lon}&units=imperial&appid=${owmKey}`, {
+              signal: abortControllerRef.current.signal
+            }).catch(err => {
+              console.warn('⚠️ OpenWeatherMap forecast API failed:', err)
+              return null
+            }),
+            fetch(`${API_CONFIG.openweathermap.baseUrl}/weather?lat=${lat}&lon=${lon}&units=imperial&appid=${owmKey}`, {
+              signal: abortControllerRef.current.signal
+            }).catch(err => {
+              console.warn('⚠️ OpenWeatherMap weather API failed:', err)
+              return null
+            })
+          )
+        }
+      } catch (owmError) {
+        console.warn('⚠️ OpenWeatherMap API unavailable:', owmError)
+      }
+      
+      // Air quality data (only if real key provided)
+      const aqiKey = getAPIKey('aqi') || 'demo'
+      if (aqiKey !== 'demo') {
         dataPromises.push(
-          fetch(`${API_CONFIG.openmeteo.baseUrl}/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,relativehumidity_2m,precipitation_probability,windspeed_10m,winddirection_10m,pressure_msl,visibility,uv_index&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max&timezone=auto`, {
+          fetch(`https://api.waqi.info/feed/geo:${lat};${lon}/?token=${aqiKey}`, {
             signal: abortControllerRef.current.signal
           }).catch(err => {
-            console.warn('⚠️ Open-Meteo API failed:', err)
+            console.warn('⚠️ Air quality API failed:', err)
             return null
           })
         )
-      } catch (openMeteoError) {
-        console.warn('⚠️ Open-Meteo API unavailable:', openMeteoError)
       }
       
-      // Air quality data
-      dataPromises.push(
-        fetch(`https://api.waqi.info/feed/geo:${lat};${lon}/?token=demo`, {
-          signal: abortControllerRef.current.signal
-        }).catch(err => {
-          console.warn('⚠️ Air quality API failed:', err)
-          return null // Return null to indicate failure
-        })
-      )
-      
-      // UV index data
-      dataPromises.push(
-        fetch(`https://api.openuv.io/v1/uv?lat=${lat}&lon=${lon}&apikey=demo`, {
-          signal: abortControllerRef.current.signal
-        }).catch(err => {
-          console.warn('⚠️ UV index API failed:', err)
-          return null // Return null to indicate failure
-        })
-      )
+      // UV index data (only if real key provided)
+      const uvKey = getAPIKey('uv') || 'demo'
+      if (uvKey !== 'demo') {
+        dataPromises.push(
+          fetch(`https://api.openuv.io/v1/uv?lat=${lat}&lon=${lon}&apikey=${uvKey}`, {
+            signal: abortControllerRef.current.signal
+          }).catch(err => {
+            console.warn('⚠️ UV index API failed:', err)
+            return null
+          })
+        )
+      }
       
       // Execute all data requests
       const results = await Promise.allSettled(dataPromises)
@@ -690,6 +698,14 @@ const API_CONFIG = {
     key: 'demo', // Replace with your real WeatherAPI key
     baseUrl: 'https://api.weatherapi.com/v1'
   },
+  aqi: {
+    key: 'demo', // Replace with your real AQI API key
+    baseUrl: 'https://api.waqi.info'
+  },
+  uv: {
+    key: 'demo', // Replace with your real UV API key
+    baseUrl: 'https://api.openuv.io'
+  },
   // Fallback to free weather API
   openmeteo: {
     baseUrl: 'https://api.open-meteo.com/v1'
@@ -705,7 +721,9 @@ const getAPIKey = (provider) => {
   
   // Check environment variables
   const envKey = provider === 'openweathermap' ? import.meta.env.VITE_OPENWEATHER_API_KEY :
-                 provider === 'weatherapi' ? import.meta.env.VITE_WEATHERAPI_KEY : null
+                 provider === 'weatherapi' ? import.meta.env.VITE_WEATHERAPI_KEY :
+                 provider === 'aqi' ? import.meta.env.VITE_AQI_API_KEY :
+                 provider === 'uv' ? import.meta.env.VITE_UV_API_KEY : null
   
   return envKey || key
 }
