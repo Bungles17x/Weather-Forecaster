@@ -1,16 +1,77 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/weather-icon.svg" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <link rel="icon" type="image/svg+xml" href="/Weather-Forecaster/weather-icon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Weather Forecaster</title>
-    <meta name="description" content="Professional weather app with forecasts and radar" />
-    <script type="module" crossorigin src="/Weather-Forecaster/index.js"></script>
-    <link rel="stylesheet" crossorigin href="/Weather-Forecaster/index.css">
+    <meta http-equiv="Content-Security-Policy" content="default-src *; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline' 'unsafe-eval' https://fonts.googleapis.com; font-src * data: https://fonts.gstatic.com https://fonts.googleapis.com; img-src * data: blob:; connect-src *;">
+    <title>Weather Forecaster - Professional Weather App</title>
+    <meta name="description" content="Professional weather app with real-time forecasts, interactive radar, and weather alerts. Get accurate weather information from NOAA and trusted sources." />
+    <meta name="keywords" content="weather, forecast, radar, alerts, NOAA, professional weather app" />
+    <meta name="author" content="Weather Forecaster" />
+    <meta property="og:title" content="Weather Forecaster - Professional Weather App" />
+    <meta property="og:description" content="Professional weather app with real-time forecasts, interactive radar, and weather alerts." />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/Weather-Forecaster/weather-icon.svg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Weather Forecaster - Professional Weather App" />
+    <meta name="twitter:description" content="Professional weather app with real-time forecasts, interactive radar, and weather alerts." />
+    <meta name="twitter:image" content="/Weather-Forecaster/weather-icon.svg" />
+    <script type="module" crossorigin src="/Weather-Forecaster/index.js?v=28&t=1710879240000"></script>
+    <link rel="stylesheet" crossorigin href="/Weather-Forecaster/index.css?v=28&t=1710879240000">
+    <style>
+      .loading-screen {position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#1e3c72 0%,#2a5298 100%);display:flex;justify-content:center;align-items:center;z-index:9999;color:white;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+      .loading-content {text-align:center;padding:2rem}
+      .loading-icon {font-size:4rem;margin-bottom:1rem;animation:spin 2s linear infinite}
+      .loading-text {font-size:1.2rem;margin-bottom:0.5rem;opacity:0.9}
+      .loading-subtitle {font-size:0.9rem;opacity:0.7}
+      @keyframes spin {from{transform:rotate(0deg)} to{transform:rotate(360deg)}}
+      .app-loaded .loading-screen {opacity:0;visibility:hidden;transition:opacity 0.5s ease,visibility 0.5s ease}
+      .error-fallback {position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);display:flex;justify-content:center;align-items:center;z-index:9999;color:white;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+      .error-content {text-align:center;padding:2rem;background:rgba(0,0,0,0.3);border-radius:15px;backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);max-width:500px;margin:1rem}
+      .error-title {font-size:1.5rem;margin-bottom:1rem;color:#ff6b6b}
+      .error-message {margin-bottom:1.5rem;opacity:0.9}
+      .error-button {background:#4fc3f7;color:white;border:none;padding:0.75rem 1.5rem;border-radius:8px;font-size:1rem;cursor:pointer;font-weight:bold;transition:all 0.3s ease;margin:0.5rem}
+      .error-button:hover {background:#29b6f6;transform:translateY(-2px)}
+    </style>
   </head>
   <body>
+    <div class="loading-screen" id="loading-screen">
+      <div class="loading-content">
+        <div class="loading-icon">🌤️</div>
+        <div class="loading-text">Weather Forecaster</div>
+        <div class="loading-subtitle">Loading professional weather data...</div>
+      </div>
+    </div>
+    <div class="error-fallback" id="error-fallback" style="display:none">
+      <div class="error-content">
+        <div class="error-title">🚨 Weather App Error</div>
+        <div class="error-message">The weather app failed to load. This might be due to a network issue or browser compatibility problem.</div>
+        <button class="error-button" onclick="window.location.reload()">🔄 Try Again</button>
+        <button class="error-button" onclick="clearCachesAndReload()">🧹 Clear Cache & Reload</button>
+      </div>
+    </div>
     <div id="root"></div>
+    <script>
+      (function() {
+        let loadingScreen=document.getElementById('loading-screen');
+        let errorFallback=document.getElementById('error-fallback');
+        let root=document.getElementById('root');
+        let loadTimeout,errorTimeout;
+        window.clearCachesAndReload=async function(){try{console.log('🧹 Force clearing all caches...');if('serviceWorker'in navigator){const registrations=await navigator.serviceWorker.getRegistrations();for(const registration of registrations){await registration.unregister();console.log('Unregistered service worker:',registration.scope);}}if('caches'in window){const cacheNames=await caches.keys();for(const cacheName of cacheNames){await caches.delete(cacheName);console.log('Deleted cache:',cacheName);}}localStorage.clear();sessionStorage.clear();console.log('✅ All caches cleared, reloading...');window.location.reload(!0)}catch(error){console.error('❌ Error clearing caches:',error);alert('Error clearing caches: '+error.message)}};
+        function hideLoadingScreen(){if(loadingScreen){document.body.classList.add('app-loaded');setTimeout(()=>{if(loadingScreen){loadingScreen.style.display='none'}},500)}}
+        function showErrorFallback(){if(loadingScreen){loadingScreen.style.display='none'}if(errorFallback){errorFallback.style.display='flex'}}
+        function checkAppLoaded(){if(root&&root.children.length>0){hideLoadingScreen();clearTimeout(loadTimeout);clearTimeout(errorTimeout)}}
+        const observer=new MutationObserver(function(mutations){mutations.forEach(function(mutation){if(mutation.type==='childList'&&mutation.target===root){checkAppLoaded()}})});
+        if(root){observer.observe(root,{childList:!0,subtree:!0})}
+        loadTimeout=setTimeout(()=>{console.warn('App loading timeout - showing error fallback');showErrorFallback()},15000);
+        errorTimeout=setTimeout(()=>{checkAppLoaded()},1000);
+        window.addEventListener('error',function(e){console.error('Global error:',e.error);if(e.message&&e.message.includes('vite/client')){console.log('🔍 Detected Vite client error, clearing caches...');clearCachesAndReload()}else{showErrorFallback()}});
+        window.addEventListener('unhandledrejection',function(e){console.error('Unhandled promise rejection:',e.reason);showErrorFallback()});
+        if('performance'in window){window.addEventListener('load',function(){const perfData=performance.getEntriesByType('navigation')[0];console.log('Page Performance:',{loadTime:perfData.loadEventEnd-perfData.loadEventStart,domContentLoaded:perfData.domContentLoadedEventEnd-perfData.domContentLoadedEventStart,timestamp:new Date().toISOString()})})}})();
+    </script>
   </body>
 </html>
