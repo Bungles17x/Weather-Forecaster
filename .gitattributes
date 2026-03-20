@@ -1,0 +1,20 @@
+# Ensure proper MIME types for GitHub Pages
+*.js text
+*.jsx text
+*.css text
+*.html text
+*.json text
+*.svg text
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+
+# Force correct line endings
+*.js text eol=lf
+*.jsx text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.json text eol=lf
+*.svg text eol=lf
