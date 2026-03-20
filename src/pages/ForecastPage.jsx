@@ -209,30 +209,56 @@ const ForecastPage = () => {
         setDataQuality('fallback')
       }
       
-      // OpenWeatherMap fallback data
+      // OpenWeatherMap real data
       try {
+        const owmKey = getAPIKey('openweathermap')
         dataPromises.push(
-          fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=imperial&appid=demo`, {
+          fetch(`${API_CONFIG.openweathermap.baseUrl}/forecast?lat=${lat}&lon=${lon}&units=imperial&appid=${owmKey}`, {
             signal: abortControllerRef.current.signal
           }).catch(err => {
             console.warn('⚠️ OpenWeatherMap forecast API failed:', err)
-            return null // Return null to indicate failure
+            return null
           }),
-          fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=imperial&appid=demo`, {
+          fetch(`${API_CONFIG.openweathermap.baseUrl}/weather?lat=${lat}&lon=${lon}&units=imperial&appid=${owmKey}`, {
             signal: abortControllerRef.current.signal
           }).catch(err => {
             console.warn('⚠️ OpenWeatherMap weather API failed:', err)
-            return null // Return null to indicate failure
+            return null
           })
         )
       } catch (owmError) {
-        console.warn('⚠️ OpenWeatherMap API unavailable, using mock data:', owmError)
-        // Add mock data as fallback immediately
-        const mockWeatherData = generateMockWeatherData(lat, lon)
-        processedHourlyData = mockWeatherData.hourlyData
-        processedForecastData = mockWeatherData.forecastData
-        processedCurrentWeather = mockWeatherData.currentWeather
-        setDataQuality('estimated')
+        console.warn('⚠️ OpenWeatherMap API unavailable:', owmError)
+      }
+      
+      // WeatherAPI as alternative real data source
+      try {
+        const weatherApiKey = getAPIKey('weatherapi')
+        if (weatherApiKey && weatherApiKey !== 'demo') {
+          dataPromises.push(
+            fetch(`${API_CONFIG.weatherapi.baseUrl}/forecast.json?key=${weatherApiKey}&q=${lat},${lon}&days=10&aqi=yes&alerts=yes`, {
+              signal: abortControllerRef.current.signal
+            }).catch(err => {
+              console.warn('⚠️ WeatherAPI failed:', err)
+              return null
+            })
+          )
+        }
+      } catch (weatherApiError) {
+        console.warn('⚠️ WeatherAPI unavailable:', weatherApiError)
+      }
+      
+      // Open-Meteo free weather API (no key required)
+      try {
+        dataPromises.push(
+          fetch(`${API_CONFIG.openmeteo.baseUrl}/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,relativehumidity_2m,precipitation_probability,windspeed_10m,winddirection_10m,pressure_msl,visibility,uv_index&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max&timezone=auto`, {
+            signal: abortControllerRef.current.signal
+          }).catch(err => {
+            console.warn('⚠️ Open-Meteo API failed:', err)
+            return null
+          })
+        )
+      } catch (openMeteoError) {
+        console.warn('⚠️ Open-Meteo API unavailable:', openMeteoError)
       }
       
       // Air quality data
@@ -276,9 +302,157 @@ const ForecastPage = () => {
         }
       })
       
-      // If we already have mock data from OpenWeatherMap failure, use it
+      // Process Open-Meteo free weather data (no API key required)
+      const openMeteoResult = results.find(r => 
+        r.status === 'fulfilled' && r.value && r.value.ok && r.value.url?.includes('open-meteo')
+      )
+      
+      if (openMeteoResult) {
+        try {
+          const meteoData = await openMeteoResult.value.json()
+          console.log('🌍 Open-Meteo real weather data:', meteoData)
+          
+          // Process hourly data from Open-Meteo
+          if (meteoData.hourly) {
+            processedHourlyData = meteoData.hourly.time.map((time, index) => ({
+              startTime: new Date(time).getTime(),
+              temperature: Math.round(meteoData.hourly.temperature_2m[index] * 9/5 + 32), // Convert C to F
+              temperatureUnit: 'F',
+              shortForecast: meteoData.hourly.precipitation_probability[index] > 50 ? 'Rain' : 'Clear',
+              detailedForecast: `Temperature: ${Math.round(meteoData.hourly.temperature_2m[index] * 9/5 + 32)}°F, Precipitation: ${meteoData.hourly.precipitation_probability[index]}%`,
+              windSpeed: `${Math.round(meteoData.hourly.windspeed_10m[index] * 0.621371)} mph`, // Convert m/s to mph
+              windDirection: getWindDirection(meteoData.hourly.winddirection_10m[index]),
+              relativeHumidity: { value: Math.round(meteoData.hourly.relativehumidity_2m[index]) },
+              probabilityOfPrecipitation: { value: Math.round(meteoData.hourly.precipitation_probability[index]) },
+              pressure: meteoData.hourly.pressure_msl[index],
+              visibility: meteoData.hourly.visibility?.[index] || null,
+              uvIndex: meteoData.hourly.uv_index?.[index] || null,
+              clouds: null, // Not provided by Open-Meteo
+              feelsLike: Math.round(meteoData.hourly.temperature_2m[index] * 9/5 + 32)
+            }))
+          }
+          
+          // Process daily forecast from Open-Meteo
+          if (meteoData.daily) {
+            processedForecastData = meteoData.daily.time.map((time, index) => ({
+              name: new Date(time).toLocaleDateString([], { weekday: 'long' }),
+              startTime: new Date(time).getTime(),
+              temperature: Math.round(meteoData.daily.temperature_2m_max[index] * 9/5 + 32), // High temp
+              temperatureUnit: 'F',
+              shortForecast: meteoData.daily.precipitation_sum[index] > 0 ? 'Rain' : 'Clear',
+              detailedForecast: `High: ${Math.round(meteoData.daily.temperature_2m_max[index] * 9/5 + 32)}°F, Low: ${Math.round(meteoData.daily.temperature_2m_min[index] * 9/5 + 32)}°F. Precipitation: ${meteoData.daily.precipitation_sum[index]}mm`,
+              windSpeed: `${Math.round(meteoData.daily.windspeed_10m_max[index] * 0.621371)} mph`,
+              windDirection: 'Variable',
+              relativeHumidity: 65, // Average humidity
+              precipitationChance: Math.round(meteoData.daily.precipitation_sum[index] > 0 ? 80 : 20)
+            }))
+          }
+          
+          // Generate current weather from latest hourly data
+          if (processedHourlyData.length > 0) {
+            const current = processedHourlyData[0]
+            processedCurrentWeather = {
+              temperature: current.temperature,
+              humidity: current.relativeHumidity.value,
+              windSpeed: parseInt(current.windSpeed),
+              windDirection: current.windDirection,
+              pressure: current.pressure,
+              visibility: current.visibility,
+              conditions: current.shortForecast,
+              feelsLike: current.feelsLike,
+              dewPoint: current.temperature - 10,
+              cloudCover: 50,
+              uvIndex: current.uvIndex,
+              timestamp: new Date().toISOString()
+            }
+          }
+          
+          setDataQuality('excellent')
+          console.log('✅ Real weather data loaded from Open-Meteo')
+        } catch (error) {
+          console.warn('⚠️ Failed to process Open-Meteo data:', error)
+        }
+      }
+      
+      // Process WeatherAPI data (if key provided)
+      const weatherApiResult = results.find(r => 
+        r.status === 'fulfilled' && r.value && r.value.ok && r.value.url?.includes('weatherapi')
+      )
+      
+      if (weatherApiResult) {
+        try {
+          const weatherData = await weatherApiResult.value.json()
+          console.log('🌍 WeatherAPI real weather data:', weatherData)
+          
+          // Process WeatherAPI forecast data
+          if (weatherData.forecast) {
+            processedForecastData = weatherData.forecast.forecastday.map(day => ({
+              name: new Date(day.date).toLocaleDateString([], { weekday: 'long' }),
+              startTime: new Date(day.date).getTime(),
+              temperature: day.day.maxtemp_f,
+              temperatureUnit: 'F',
+              shortForecast: day.day.condition.text,
+              detailedForecast: day.day.condition.text,
+              windSpeed: `${day.day.maxwind_mph} mph`,
+              windDirection: day.day.wind_dir,
+              relativeHumidity: day.day.avghumidity,
+              precipitationChance: day.day.daily_chance_of_rain
+            }))
+          }
+          
+          // Process WeatherAPI current weather
+          if (weatherData.current) {
+            processedCurrentWeather = {
+              temperature: Math.round(weatherData.current.temp_f),
+              humidity: weatherData.current.humidity,
+              windSpeed: weatherData.current.wind_mph,
+              windDirection: weatherData.current.wind_dir,
+              pressure: weatherData.current.pressure_mb,
+              visibility: weatherData.current.vis_miles,
+              conditions: weatherData.current.condition.text,
+              feelsLike: Math.round(weatherData.current.feelslike_f),
+              dewPoint: Math.round(weatherData.current.dewpoint_f),
+              cloudCover: weatherData.current.cloud,
+              uvIndex: weatherData.current.uv,
+              timestamp: new Date().toISOString()
+            }
+          }
+          
+          // Process WeatherAPI hourly data
+          if (weatherData.forecast) {
+            processedHourlyData = []
+            weatherData.forecast.forecastday.forEach(day => {
+              day.hour.forEach(hour => {
+                processedHourlyData.push({
+                  startTime: new Date(hour.time).getTime(),
+                  temperature: Math.round(hour.temp_f),
+                  temperatureUnit: 'F',
+                  shortForecast: hour.condition.text,
+                  detailedForecast: hour.condition.text,
+                  windSpeed: `${hour.wind_mph} mph`,
+                  windDirection: hour.wind_dir,
+                  relativeHumidity: { value: hour.humidity },
+                  probabilityOfPrecipitation: { value: hour.chance_of_rain },
+                  pressure: hour.pressure_mb,
+                  visibility: hour.vis_miles,
+                  uvIndex: hour.uv,
+                  clouds: hour.cloud,
+                  feelsLike: Math.round(hour.feelslike_f)
+                })
+              })
+            })
+          }
+          
+          setDataQuality('excellent')
+          console.log('✅ Real weather data loaded from WeatherAPI')
+        } catch (error) {
+          console.warn('⚠️ Failed to process WeatherAPI data:', error)
+        }
+      }
+      
+      // If we already have real data from Open-Meteo or WeatherAPI, use it
       if (processedHourlyData.length > 0 && processedCurrentWeather) {
-        console.log('📦 Using mock data from OpenWeatherMap failure')
+        console.log('📦 Using real weather data from APIs')
         hasValidData = true
       } else {
         // Process OpenWeatherMap data as primary fallback
@@ -505,7 +679,36 @@ const ForecastPage = () => {
     }
   }, [globalLocation, coordinates, setGlobalLocation, cachedData])
 
-  // Helper functions
+  // Real API configuration for actual weather data
+const API_CONFIG = {
+  // You can add your real API keys here
+  openweathermap: {
+    key: 'demo', // Replace with your real OpenWeatherMap API key
+    baseUrl: 'https://api.openweathermap.org/data/2.5'
+  },
+  weatherapi: {
+    key: 'demo', // Replace with your real WeatherAPI key
+    baseUrl: 'https://api.weatherapi.com/v1'
+  },
+  // Fallback to free weather API
+  openmeteo: {
+    baseUrl: 'https://api.open-meteo.com/v1'
+  }
+}
+
+// Get real API key or use fallback
+const getAPIKey = (provider) => {
+  const key = API_CONFIG[provider]?.key
+  if (key && key !== 'demo') {
+    return key
+  }
+  
+  // Check environment variables
+  const envKey = provider === 'openweathermap' ? import.meta.env.VITE_OPENWEATHER_API_KEY :
+                 provider === 'weatherapi' ? import.meta.env.VITE_WEATHERAPI_KEY : null
+  
+  return envKey || key
+}
   const getWindDirection = (degrees) => {
     if (!degrees) return 'N'
     const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']
