@@ -210,14 +210,23 @@ const ForecastPage = () => {
       }
       
       // OpenWeatherMap fallback data
-      dataPromises.push(
-        fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=imperial&appid=demo`, {
-          signal: abortControllerRef.current.signal
-        }),
-        fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=imperial&appid=demo`, {
-          signal: abortControllerRef.current.signal
-        })
-      )
+      try {
+        dataPromises.push(
+          fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=imperial&appid=demo`, {
+            signal: abortControllerRef.current.signal
+          }),
+          fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=imperial&appid=demo`, {
+            signal: abortControllerRef.current.signal
+          })
+        )
+      } catch (owmError) {
+        console.warn('⚠️ OpenWeatherMap API unavailable, using mock data:', owmError)
+        // Add mock data as fallback
+        const mockWeatherData = generateMockWeatherData(lat, lon)
+        processedHourlyData = mockWeatherData.hourlyData
+        processedForecastData = mockWeatherData.forecastData
+        processedCurrentWeather = mockWeatherData.currentWeather
+      }
       
       // Air quality data
       dataPromises.push(
@@ -243,126 +252,167 @@ const ForecastPage = () => {
       let processedAlerts = []
       let processedAirQuality = null
       let processedUVIndex = null
+      let hasValidData = false
       
       results.forEach((result, index) => {
         if (result.status === 'fulfilled' && result.value.ok) {
           // Process based on the type of request
-          // This would need to be expanded based on actual API responses
+          hasValidData = true
+        } else if (result.status === 'rejected' || (result.status === 'fulfilled' && !result.value.ok)) {
+          console.warn('⚠️ API request failed:', result.reason || result.value?.status)
         }
       })
       
       // Process OpenWeatherMap data as primary fallback
       const owmForecastResult = results.find(r => 
-        r.status === 'fulfilled' && r.value.url?.includes('forecast')
+        r.status === 'fulfilled' && r.value.ok && r.value.url?.includes('forecast')
       )
       
       if (owmForecastResult) {
-        const forecastData = await owmForecastResult.value.json()
-        
-        // Process hourly data
-        processedHourlyData = forecastData.list.map(item => ({
-          startTime: item.dt * 1000,
-          temperature: Math.round(item.main.temp),
-          temperatureUnit: 'F',
-          shortForecast: item.weather[0].main,
-          detailedForecast: item.weather[0].description,
-          windSpeed: `${Math.round(item.wind.speed)} mph`,
-          windDirection: getWindDirection(item.wind.deg),
-          relativeHumidity: { value: item.main.humidity },
-          probabilityOfPrecipitation: { value: (item.pop || 0) * 100 },
-          pressure: item.main.pressure,
-          visibility: item.visibility ? Math.round(item.visibility / 1609.34) : null,
-          uvIndex: item.uvi || null,
-          clouds: item.clouds.all,
-          feelsLike: Math.round(item.main.feels_like)
-        }))
-        
-        // Create daily forecast from hourly data
-        const dailyData = []
-        const daysProcessed = new Set()
-        
-        processedHourlyData.forEach(item => {
-          const date = new Date(item.startTime)
-          const dayKey = date.toDateString()
+        try {
+          const forecastData = await owmForecastResult.value.json()
           
-          if (!daysProcessed.has(dayKey) && dailyData.length < 10) {
-            daysProcessed.add(dayKey)
+          // Process hourly data
+          processedHourlyData = forecastData.list.map(item => ({
+            startTime: item.dt * 1000,
+            temperature: Math.round(item.main.temp),
+            temperatureUnit: 'F',
+            shortForecast: item.weather[0].main,
+            detailedForecast: item.weather[0].description,
+            windSpeed: `${Math.round(item.wind.speed)} mph`,
+            windDirection: getWindDirection(item.wind.deg),
+            relativeHumidity: { value: item.main.humidity },
+            probabilityOfPrecipitation: { value: (item.pop || 0) * 100 },
+            pressure: item.main.pressure,
+            visibility: item.visibility ? Math.round(item.visibility / 1609.34) : null,
+            uvIndex: item.uvi || null,
+            clouds: item.clouds.all,
+            feelsLike: Math.round(item.main.feels_like)
+          }))
+          
+          // Create daily forecast from hourly data
+          const dailyData = []
+          const daysProcessed = new Set()
+          
+          processedHourlyData.forEach(item => {
+            const date = new Date(item.startTime)
+            const dayKey = date.toDateString()
             
-            const dayItems = processedHourlyData.filter(d => 
-              new Date(d.startTime).toDateString() === dayKey
-            )
-            
-            const temps = dayItems.map(d => d.temperature)
-            const high = Math.max(...temps)
-            const low = Math.min(...temps)
-            
-            dailyData.push({
-              name: date.toLocaleDateString([], { weekday: 'long' }),
-              startTime: item.startTime,
-              temperature: high,
-              temperatureUnit: 'F',
-              shortForecast: item.shortForecast,
-              detailedForecast: `High: ${high}°F, Low: ${low}°F. ${item.detailedForecast}`,
-              windSpeed: item.windSpeed,
-              windDirection: item.windDirection,
-              relativeHumidity: dayItems[0].relativeHumidity.value,
-              precipitationChance: Math.max(...dayItems.map(d => d.probabilityOfPrecipitation.value))
-            })
-          }
-        })
-        
-        processedForecastData = dailyData
+            if (!daysProcessed.has(dayKey) && dailyData.length < 10) {
+              daysProcessed.add(dayKey)
+              
+              const dayItems = processedHourlyData.filter(d => 
+                new Date(d.startTime).toDateString() === dayKey
+              )
+              
+              const temps = dayItems.map(d => d.temperature)
+              const high = Math.max(...temps)
+              const low = Math.min(...temps)
+              
+              dailyData.push({
+                name: date.toLocaleDateString([], { weekday: 'long' }),
+                startTime: item.startTime,
+                temperature: high,
+                temperatureUnit: 'F',
+                shortForecast: item.shortForecast,
+                detailedForecast: `High: ${high}°F, Low: ${low}°F. ${item.detailedForecast}`,
+                windSpeed: item.windSpeed,
+                windDirection: item.windDirection,
+                relativeHumidity: dayItems[0].relativeHumidity.value,
+                precipitationChance: Math.max(...dayItems.map(d => d.probabilityOfPrecipitation.value))
+              })
+            }
+          })
+          
+          processedForecastData = dailyData
+        } catch (error) {
+          console.warn('⚠️ Failed to process OpenWeatherMap data:', error)
+        }
       }
       
       // Process current weather
       const owmCurrentResult = results.find(r => 
-        r.status === 'fulfilled' && r.value.url?.includes('weather')
+        r.status === 'fulfilled' && r.value.ok && r.value.url?.includes('weather')
       )
       
       if (owmCurrentResult) {
-        const currentData = await owmCurrentResult.value.json()
-        processedCurrentWeather = {
-          temperature: Math.round(currentData.main.temp),
-          humidity: currentData.main.humidity,
-          windSpeed: Math.round(currentData.wind.speed),
-          windDirection: getWindDirection(currentData.wind.deg),
-          pressure: Math.round(currentData.main.pressure * 0.02953),
-          visibility: currentData.visibility ? Math.round(currentData.visibility / 1609.34) : null,
-          conditions: currentData.weather[0].description,
-          feelsLike: Math.round(currentData.main.feels_like),
-          dewPoint: Math.round(currentData.main.dew_point * 9/5 + 32),
-          cloudCover: currentData.clouds.all,
-          uvIndex: currentData.uvi || null,
-          sunrise: currentData.sys.sunrise,
-          sunset: currentData.sys.sunset,
-          timestamp: new Date().toISOString()
+        try {
+          const currentData = await owmCurrentResult.value.json()
+          processedCurrentWeather = {
+            temperature: Math.round(currentData.main.temp),
+            humidity: currentData.main.humidity,
+            windSpeed: Math.round(currentData.wind.speed),
+            windDirection: getWindDirection(currentData.wind.deg),
+            pressure: Math.round(currentData.main.pressure * 0.02953),
+            visibility: currentData.visibility ? Math.round(currentData.visibility / 1609.34) : null,
+            conditions: currentData.weather[0].description,
+            feelsLike: Math.round(currentData.main.feels_like),
+            dewPoint: Math.round(currentData.main.dew_point * 9/5 + 32),
+            cloudCover: currentData.clouds.all,
+            uvIndex: currentData.uvi || null,
+            sunrise: currentData.sys.sunrise,
+            sunset: currentData.sys.sunset,
+            timestamp: new Date().toISOString()
+          }
+          
+          setSunriseSunset({
+            sunrise: currentData.sys.sunrise,
+            sunset: currentData.sys.sunset
+          })
+        } catch (error) {
+          console.warn('⚠️ Failed to process current weather:', error)
         }
-        
-        setSunriseSunset({
-          sunrise: currentData.sys.sunrise,
-          sunset: currentData.sys.sunset
-        })
       }
       
       // Process air quality
       const airQualityResult = results.find(r => 
-        r.status === 'fulfilled' && r.value.url?.includes('waqi')
+        r.status === 'fulfilled' && r.value.ok && r.value.url?.includes('waqi')
       )
       
       if (airQualityResult) {
-        const aqiData = await airQualityResult.value.json()
-        if (aqiData.status === 'ok') {
-          processedAirQuality = {
-            aqi: aqiData.data.aqi,
-            level: getAQILevel(aqiData.data.aqi),
-            description: getAQIDescription(aqiData.data.aqi),
-            pm25: aqiData.data.iaqi.pm25?.v,
-            pm10: aqiData.data.iaqi.pm10?.v,
-            o3: aqiData.data.iaqi.o3?.v,
-            no2: aqiData.data.iaqi.no2?.v,
-            so2: aqiData.data.iaqi.so2?.v,
-            co: aqiData.data.iaqi.co?.v
+        try {
+          const aqiData = await airQualityResult.value.json()
+          if (aqiData.status === 'ok') {
+            processedAirQuality = {
+              aqi: aqiData.data.aqi,
+              level: getAQILevel(aqiData.data.aqi),
+              description: getAQIDescription(aqiData.data.aqi),
+              pm25: aqiData.data.iaqi.pm25?.v,
+              pm10: aqiData.data.iaqi.pm10?.v,
+              o3: aqiData.data.iaqi.o3?.v,
+              no2: aqiData.data.iaqi.no2?.v,
+              so2: aqiData.data.iaqi.so2?.v,
+              co: aqiData.data.iaqi.co?.v
+            }
           }
+        } catch (error) {
+          console.warn('⚠️ Failed to process air quality data:', error)
+        }
+      }
+      
+      // If no valid data from APIs, use mock data
+      if (!hasValidData || (!processedHourlyData.length && !processedCurrentWeather)) {
+        console.log('📦 Using mock weather data as fallback')
+        const mockWeatherData = generateMockWeatherData(lat, lon)
+        processedHourlyData = mockWeatherData.hourlyData
+        processedForecastData = mockWeatherData.forecastData
+        processedCurrentWeather = mockWeatherData.currentWeather
+        setDataQuality('estimated')
+      } else if (!processedCurrentWeather && processedHourlyData.length > 0) {
+        // Generate current weather from hourly data
+        processedCurrentWeather = {
+          temperature: processedHourlyData[0].temperature,
+          humidity: processedHourlyData[0].relativeHumidity.value,
+          windSpeed: parseInt(processedHourlyData[0].windSpeed),
+          windDirection: processedHourlyData[0].windDirection,
+          pressure: Math.round((processedHourlyData[0].pressure || 30) * 0.02953),
+          visibility: processedHourlyData[0].visibility,
+          conditions: processedHourlyData[0].shortForecast,
+          feelsLike: processedHourlyData[0].feelsLike,
+          dewPoint: processedHourlyData[0].temperature - 10,
+          cloudCover: processedHourlyData[0].clouds,
+          uvIndex: processedHourlyData[0].uvIndex,
+          timestamp: new Date().toISOString()
         }
       }
       
@@ -468,6 +518,89 @@ const ForecastPage = () => {
     if (uv <= 7) return { level: 'high', color: '#FF9800', description: 'High' }
     if (uv <= 10) return { level: 'very_high', color: '#F44336', description: 'Very High' }
     return { level: 'extreme', color: '#9C27B0', description: 'Extreme' }
+  }
+
+  // Generate mock weather data for fallback
+  const generateMockWeatherData = (lat, lon) => {
+    const now = Date.now()
+    const hourlyData = []
+    const forecastData = []
+    
+    // Generate 48 hours of mock data
+    for (let i = 0; i < 48; i++) {
+      const hourTime = now + (i * 60 * 60 * 1000)
+      const baseTemp = 65 + Math.sin(i / 12 * Math.PI) * 15
+      const temp = Math.round(baseTemp + Math.random() * 10 - 5)
+      
+      hourlyData.push({
+        startTime: hourTime,
+        temperature: temp,
+        temperatureUnit: 'F',
+        shortForecast: ['Clear', 'Partly Cloudy', 'Cloudy', 'Light Rain'][Math.floor(Math.random() * 4)],
+        detailedForecast: 'Simulated weather conditions',
+        windSpeed: `${Math.round(5 + Math.random() * 15)} mph`,
+        windDirection: getWindDirection(Math.random() * 360),
+        relativeHumidity: { value: Math.round(40 + Math.random() * 40) },
+        probabilityOfPrecipitation: { value: Math.round(Math.random() * 100) },
+        pressure: 29.5 + Math.random() * 2,
+        visibility: Math.round(5 + Math.random() * 10),
+        uvIndex: Math.round(Math.random() * 11),
+        clouds: Math.round(Math.random() * 100),
+        feelsLike: temp + Math.round(Math.random() * 5 - 2)
+      })
+    }
+    
+    // Generate 10-day forecast
+    for (let i = 0; i < 10; i++) {
+      const dayTime = now + (i * 24 * 60 * 60 * 1000)
+      const dayHourly = hourlyData.filter(h => {
+        const hDate = new Date(h.startTime)
+        const dayDate = new Date(dayTime)
+        return hDate.toDateString() === dayDate.toDateString()
+      })
+      
+      if (dayHourly.length > 0) {
+        const temps = dayHourly.map(h => h.temperature)
+        const high = Math.max(...temps)
+        const low = Math.min(...temps)
+        
+        forecastData.push({
+          name: new Date(dayTime).toLocaleDateString([], { weekday: 'long' }),
+          startTime: dayTime,
+          temperature: high,
+          temperatureUnit: 'F',
+          shortForecast: dayHourly[Math.floor(dayHourly.length / 2)].shortForecast,
+          detailedForecast: `High: ${high}°F, Low: ${low}°F. Simulated forecast`,
+          windSpeed: dayHourly[Math.floor(dayHourly.length / 2)].windSpeed,
+          windDirection: dayHourly[Math.floor(dayHourly.length / 2)].windDirection,
+          relativeHumidity: dayHourly[Math.floor(dayHourly.length / 2)].relativeHumidity.value,
+          precipitationChance: Math.max(...dayHourly.map(h => h.probabilityOfPrecipitation.value))
+        })
+      }
+    }
+    
+    const currentTemp = hourlyData[0]?.temperature || 72
+    
+    return {
+      hourlyData,
+      forecastData,
+      currentWeather: {
+        temperature: currentTemp,
+        humidity: hourlyData[0]?.relativeHumidity.value || 50,
+        windSpeed: parseInt(hourlyData[0]?.windSpeed) || 10,
+        windDirection: hourlyData[0]?.windDirection || 'N',
+        pressure: Math.round((hourlyData[0]?.pressure || 30) * 0.02953),
+        visibility: hourlyData[0]?.visibility || 10,
+        conditions: hourlyData[0]?.shortForecast || 'Clear',
+        feelsLike: hourlyData[0]?.feelsLike || currentTemp,
+        dewPoint: currentTemp - 10,
+        cloudCover: hourlyData[0]?.clouds || 25,
+        uvIndex: hourlyData[0]?.uvIndex || 5,
+        sunrise: now - 6 * 60 * 60 * 1000,
+        sunset: now + 6 * 60 * 60 * 1000,
+        timestamp: new Date().toISOString()
+      }
+    }
   }
 
   // Enhanced chart data with multiple metrics and time ranges
