@@ -1919,7 +1919,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
       map: map,
       title: data.name,
       icon: {
-        url: getWeatherIcon(data.weather[0].icon),
+        url: getWeatherIcon(data.weather?.[0]?.icon || '01d'),
         scaledSize: new window.google.maps.Size(50, 50),
         origin: new window.google.maps.Point(0, 0),
         anchor: new window.google.maps.Point(25, 25)
@@ -1932,10 +1932,10 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
       content: `
         <div class="weather-info-window">
           <h3>${data.name}</h3>
-          <p><strong>${data.weather[0].description}</strong></p>
-          <p>Temperature: ${Math.round(data.main.temp)}°F</p>
-          <p>Humidity: ${data.main.humidity}%</p>
-          <p>Wind: ${data.wind.speed} mph</p>
+          <p><strong>${data.weather?.[0]?.description || data.shortForecast || 'Weather conditions'}</strong></p>
+          <p>Temperature: ${Math.round(data.main?.temp || data.temperature || 70)}°F</p>
+          <p>Humidity: ${data.main?.humidity || data.relativeHumidity?.value || 50}%</p>
+          <p>Wind: ${data.wind?.speed || (typeof data.windSpeed === 'string' ? parseInt(data.windSpeed) : data.windSpeed) || 0} mph</p>
         </div>
       `
     })
@@ -1990,7 +1990,7 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
     const currentMarker = window.L.marker([data.coord.lat, data.coord.lon], {
       title: data.name,
       icon: window.L.divIcon({
-        html: `<div style="background: #007bff; color: white; padding: 5px; border-radius: 50%; font-weight: bold;">${getWeatherIcon(data.weather[0].icon)}</div>`,
+        html: `<div style="background: #007bff; color: white; padding: 5px; border-radius: 50%; font-weight: bold;">${getWeatherIcon(data.weather?.[0]?.icon || '01d')}</div>`,
         className: 'weather-marker',
         iconSize: [50, 50]
       })
@@ -2000,10 +2000,10 @@ const WeatherMapRadar = ({ weatherData, coordinates, onLocationChange }) => {
     const popupContent = `
       <div class="weather-info-window">
         <h3>${data.name}</h3>
-        <p><strong>${data.weather[0].description}</strong></p>
-        <p>Temperature: ${Math.round(data.main.temp)}°F</p>
-        <p>Humidity: ${data.main.humidity}%</p>
-        <p>Wind: ${data.wind.speed} mph</p>
+        <p><strong>${data.weather?.[0]?.description || data.shortForecast || 'Weather conditions'}</strong></p>
+        <p>Temperature: ${Math.round(data.main?.temp || data.temperature || 70)}°F</p>
+        <p>Humidity: ${data.main?.humidity || data.relativeHumidity?.value || 50}%</p>
+        <p>Wind: ${data.wind?.speed || (typeof data.windSpeed === 'string' ? parseInt(data.windSpeed) : data.windSpeed) || 0} mph</p>
       </div>
     `
     
