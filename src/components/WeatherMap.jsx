@@ -121,6 +121,7 @@ export default function WeatherMap() {
   const [alertScanKey, setAlertScanKey] = useState(0)
   const [lastRadarRefresh, setLastRadarRefresh] = useState(null)
   const [refreshingRadar, setRefreshingRadar] = useState(false)
+  const [mobileSheet, setMobileSheet] = useState(null)
   const alerts = weather?.alerts ?? EMPTY_ALERTS
   // Polygons come from the nationwide active-alert feed so every warning, watch,
   // and advisory with geometry renders — not only alerts covering this point.
@@ -355,7 +356,7 @@ export default function WeatherMap() {
     } else mapRef.current?.setView([38.9072, -77.0369], 5)
   }
 
-  const useManualSite = event => {
+  const handleManualSite = event => {
     event.preventDefault()
     const candidate = (siteInput.trim() || radarStation).toUpperCase()
     if (!/^[A-Z0-9]{4}$/.test(candidate)) {
@@ -398,7 +399,7 @@ export default function WeatherMap() {
     <div className="wf-radar-secondary-bar">
       <label className="wf-checkbox"><input type="checkbox" checked={showAlerts} onChange={event => setShowAlerts(event.target.checked)}/> Show NWS alert polygons ({polygonAlerts.filter(item => item.geometry).length} nationwide)</label>
       <button type="button" className="wf-secondary-action" onClick={zoomAlerts}>Zoom to alerts</button>
-      <form className="wf-site-form" onSubmit={useManualSite}><label htmlFor="wf-radar-site">Radar site ID</label><input id="wf-radar-site" value={siteInput} onChange={event => setSiteInput(event.target.value.toUpperCase().slice(0, 4))} placeholder={radarStation || 'e.g. KCCX'} maxLength={4} aria-label="Radar site ID"/><button type="submit">Load local products</button></form>
+      <form className="wf-site-form" onSubmit={handleManualSite}><label htmlFor="wf-radar-site">Radar site ID</label><input id="wf-radar-site" value={siteInput} onChange={event => setSiteInput(event.target.value.toUpperCase().slice(0, 4))} placeholder={radarStation || 'e.g. KCCX'} maxLength={4} aria-label="Radar site ID"/><button type="submit">Load local products</button></form>
       <span className="wf-site-status">{localProductsLoading ? `Checking ${radarStation}…` : radarStation ? `Site ${radarStation}` : 'National mosaic mode'}{siteCatalog.state === 'error' ? ' · local catalog unavailable' : ''}</span>
       <Link to="/" className="wf-secondary-action wf-exit-map"><WeatherDeskIcon name="back" size={13} /> Done</Link>
     </div>
@@ -416,5 +417,71 @@ export default function WeatherMap() {
     </div>
     <footer className="wf-status"><span>{status}</span><span role="status" aria-live="polite">{mapError || (weather?.errors?.alerts ? `Alert data issue: ${weather.errors.alerts}` : lastRadarRefresh ? `Last refresh request: ${lastRadarRefresh.toLocaleTimeString()}` : 'Radar imagery is served by official NWS / NOAA GIS services.')}</span></footer>
     <div className="wf-note"><b>Radar interpretation:</b> BREF and CREF show reflectivity; base radial velocity shows motion toward or away from an individual radar. National mosaic products and single-site products are different datasets. A velocity couplet can have multiple causes and does not by itself confirm a tornado. Geographic basemap tiles are provided by the listed map providers; radar and warning data are NWS / NOAA.</div>
+
+    {/* Mobile control dock — Weather Channel-style bottom bar (CSS-hidden on desktop). */}
+    <div className="wf-mobile-dock" role="toolbar" aria-label="Radar controls">
+      <button type="button" className={`wf-dock-btn ${mobileSheet === 'layers' ? 'is-active' : ''}`} onClick={() => setMobileSheet(mobileSheet === 'layers' ? null : 'layers')} aria-expanded={mobileSheet === 'layers'}>
+        <WeatherDeskIcon name="layers" size={22} /><span>Layers</span>
+      </button>
+      <button type="button" className="wf-dock-btn" onClick={locate}>
+        <WeatherDeskIcon name="location" size={22} /><span>Locate</span>
+      </button>
+      <button type="button" className="wf-dock-btn" onClick={refreshRadar} disabled={refreshingRadar}>
+        <WeatherDeskIcon name={refreshingRadar ? 'clock' : 'refresh'} size={22} /><span>{refreshingRadar ? 'Loading' : 'Refresh'}</span>
+      </button>
+      <button type="button" className={`wf-dock-btn ${showAlerts ? 'is-active' : ''}`} onClick={() => setShowAlerts(value => !value)} aria-pressed={showAlerts}>
+        <WeatherDeskIcon name="alerts" size={22} /><span>Alerts</span>
+      </button>
+      <Link to="/" className="wf-dock-btn wf-dock-done">
+        <WeatherDeskIcon name="back" size={22} /><span>Done</span>
+      </Link>
+    </div>
+
+    {mobileSheet === 'layers' && (
+      <div className="wf-mobile-sheet-wrap" role="presentation" onClick={() => setMobileSheet(null)}>
+        <div className="wf-mobile-sheet" role="dialog" aria-modal="true" aria-label="Radar layers" onClick={event => event.stopPropagation()}>
+          <div className="wf-mobile-sheet-grip" aria-hidden="true" />
+          <strong className="wf-mobile-sheet-title">Radar layers</strong>
+
+          <label className="wf-sheet-field">RADAR PRODUCT
+            <select aria-label="Radar product" value={productId} onChange={event => { chooseProduct(event.target.value); setMobileSheet(null) }}>
+              <optgroup label="National NWS / NOAA mosaics">
+                {Object.entries(NATIONAL_RADAR_PRODUCTS).map(([id, product]) => <option key={id} value={id}>{product.label}</option>)}
+              </optgroup>
+              <optgroup label={radarStation ? `Local radar · ${radarStation}` : 'Local radar · choose a site below'}>
+                {Object.entries(SITE_RADAR_PRODUCTS).map(([id, product]) => {
+                  const ready = availableSiteProducts.includes(id)
+                  return <option key={id} value={id} disabled={!ready}>{product.label}{siteCatalog.state === 'loading' ? ' · checking…' : ready ? '' : ' · unavailable'}</option>
+                })}
+              </optgroup>
+            </select>
+          </label>
+
+          <div className="wf-sheet-field">
+            <span className="wf-sheet-label">BACKGROUND</span>
+            <div className="wf-sheet-segmented" role="group" aria-label="Background map">
+              {Object.entries(BASEMAPS).map(([key, item]) => (
+                <button key={key} type="button" className={base === key ? 'selected' : ''} onClick={() => { baseTouched.current = true; setBase(key) }}>{item.label}</button>
+              ))}
+            </div>
+          </div>
+
+          <label className="wf-sheet-field">OPACITY <span>{opacity}%</span>
+            <input aria-label="Radar overlay opacity" type="range" min="10" max="100" value={opacity} onChange={event => setOpacity(Number(event.target.value))}/>
+          </label>
+
+          <label className="wf-sheet-check"><input type="checkbox" checked={showAlerts} onChange={event => setShowAlerts(event.target.checked)}/> Show NWS alert polygons ({polygonAlerts.filter(item => item.geometry).length} nationwide)</label>
+          <div className="wf-sheet-actions">
+            <button type="button" className="wf-secondary-action" onClick={() => { zoomAlerts(); setMobileSheet(null) }}>Zoom to alerts</button>
+            <form className="wf-site-form" onSubmit={event => { handleManualSite(event); setMobileSheet(null) }}>
+              <input value={siteInput} onChange={event => setSiteInput(event.target.value.toUpperCase().slice(0, 4))} placeholder={radarStation || 'Site ID'} maxLength={4} aria-label="Radar site ID"/>
+              <button type="submit">Load local</button>
+            </form>
+          </div>
+          <p className="wf-sheet-status">{localProductsLoading ? `Checking ${radarStation}…` : radarStation ? `Site ${radarStation}` : 'National mosaic mode'}{siteCatalog.state === 'error' ? ' · local catalog unavailable' : ''}</p>
+          <p className="wf-sheet-product"><strong>{activeProductLabel}</strong><br/><small>{selectedDescription}</small></p>
+        </div>
+      </div>
+    )}
   </div>
 }

@@ -7,3 +7,252 @@
 @media(max-width:980px){.wf-map-area{grid-template-columns:minmax(0,1fr) 240px}.wf-product-select{min-width:180px}.wf-brand{min-width:100px}}
 @media(max-width:760px){.wf-map-shell{min-height:0;border-radius:10px}.wf-toolbar{align-items:flex-start;gap:8px}.wf-brand{width:100%;margin-bottom:3px}.wf-product-select{flex:1 1 100%;min-width:0}.wf-product-select select{width:100%}.wf-map-area{grid-template-columns:1fr;min-height:0}.wf-side-panel{max-height:none;border-left:0;border-top:1px solid var(--line)}.wf-leaflet-map{height:58vh;min-height:340px;max-height:560px}.wf-control-group{width:100%}.wf-control-group button{flex:1}.wf-basemap-group{width:auto}.wf-basemap-group button{flex:0 1 auto}.wf-opacity{flex:1 1 160px}.wf-opacity input{flex:1}.wf-locate{margin-left:0;flex:1}.wf-official-link{flex:1;justify-content:center}.wf-radar-secondary-bar{align-items:flex-start;flex-direction:column;gap:9px}.wf-site-form{width:100%;flex-wrap:wrap}.wf-site-form input{flex:0 0 70px}.wf-site-status{width:100%}.wf-status{flex-direction:column;gap:4px}.wf-metric strong{font-size:14px}}
 @media(prefers-reduced-motion:reduce){.wf-control-group button,.wf-locate,.wf-site-form button{transition:none}}
+
+/* ── Mobile dock (Weather Channel-style) ────────────────────────────────── */
+.wf-mobile-dock { display: none; }
+.wf-mobile-sheet-wrap { display: none; }
+
+@media (max-width: 860px) {
+  /* Desktop toolbars collapse into the dock + layers sheet. */
+  .map-page.map-immersive .wf-toolbar,
+  .map-page.map-immersive .wf-radar-secondary-bar {
+    display: none;
+  }
+
+  .wf-mobile-dock {
+    display: flex;
+    order: 2;
+    gap: 6px;
+    justify-content: center;
+    padding: 8px 10px calc(10px + env(safe-area-inset-bottom, 0px));
+    background: transparent;
+  }
+
+  .wf-dock-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-width: 64px;
+    min-height: 58px;
+    padding: 8px 10px;
+    border: 1px solid rgba(15, 30, 50, .1);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, .82);
+    -webkit-backdrop-filter: blur(16px) saturate(1.6);
+    backdrop-filter: blur(16px) saturate(1.6);
+    color: #33465e;
+    font: inherit;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .03em;
+    text-decoration: none;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(15, 30, 50, .14);
+    -webkit-tap-highlight-color: transparent;
+    transition: transform .12s ease, background .18s ease, box-shadow .18s ease;
+  }
+
+  .wf-dock-btn:active { transform: scale(.93); }
+
+  .wf-dock-btn.is-active {
+    background: #0ea5e9;
+    border-color: #0284c7;
+    color: #fff;
+    box-shadow: 0 6px 18px rgba(14, 165, 233, .4);
+  }
+
+  .wf-dock-btn:disabled { opacity: .55; }
+
+  .wf-mobile-sheet-wrap {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    z-index: 1400;
+    align-items: flex-end;
+    background: rgba(10, 20, 35, .45);
+    -webkit-backdrop-filter: blur(3px);
+    backdrop-filter: blur(3px);
+    animation: wfSheetFade .18s ease;
+  }
+
+  .wf-mobile-sheet {
+    width: 100%;
+    max-height: 78dvh;
+    overflow-y: auto;
+    padding: 10px 16px calc(18px + env(safe-area-inset-bottom, 0px));
+    border-radius: 24px 24px 0 0;
+    background: #f6f9fd;
+    color: #14233a;
+    border-top: 1px solid rgba(15, 30, 50, .12);
+    box-shadow: 0 -12px 40px rgba(10, 25, 45, .35);
+    animation: wfSheetSlide .22s cubic-bezier(.2, .9, .3, 1);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .wf-mobile-sheet-grip {
+    width: 44px;
+    height: 5px;
+    margin: 0 auto 12px;
+    border-radius: 5px;
+    background: rgba(15, 30, 50, .18);
+  }
+
+  .wf-mobile-sheet-title {
+    display: block;
+    margin-bottom: 14px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: #5a6b82;
+  }
+
+  .wf-sheet-field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    margin-bottom: 14px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .12em;
+    color: #5a6b82;
+  }
+
+  .wf-sheet-field select {
+    width: 100%;
+    min-height: 46px;
+    padding: 10px 12px;
+    border-radius: 13px;
+    border: 1px solid rgba(15, 30, 50, .16);
+    background: #fff;
+    color: #14233a;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .wf-sheet-field input[type='range'] {
+    width: 100%;
+    accent-color: #0ea5e9;
+  }
+
+  .wf-sheet-segmented {
+    display: flex;
+    gap: 6px;
+  }
+
+  .wf-sheet-segmented button {
+    flex: 1;
+    min-height: 42px;
+    border-radius: 12px;
+    border: 1px solid rgba(15, 30, 50, .14);
+    background: #fff;
+    color: #33465e;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .wf-sheet-segmented button.selected {
+    background: #0ea5e9;
+    border-color: #0284c7;
+    color: #fff;
+  }
+
+  .wf-sheet-check {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 14px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #33465e;
+  }
+
+  .wf-sheet-check input { width: 18px; height: 18px; accent-color: #0ea5e9; }
+
+  .wf-sheet-actions {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+
+  .wf-sheet-actions .wf-site-form { flex: 1; display: flex; gap: 6px; }
+  .wf-sheet-actions .wf-site-form input {
+    flex: 1;
+    min-height: 42px;
+    padding: 8px 10px;
+    border-radius: 11px;
+    border: 1px solid rgba(15, 30, 50, .16);
+    background: #fff;
+    color: #14233a;
+    font-size: 14px;
+    text-transform: uppercase;
+  }
+  .wf-sheet-actions .wf-site-form button {
+    min-height: 42px;
+    padding: 8px 12px;
+    border-radius: 11px;
+    border: 1px solid rgba(15, 30, 50, .14);
+    background: #fff;
+    color: #0ea5e9;
+    font-weight: 700;
+    font-size: 11px;
+    cursor: pointer;
+  }
+
+  .wf-sheet-actions .wf-secondary-action {
+    align-self: center;
+    min-height: 42px;
+  }
+
+  .wf-sheet-status,
+  .wf-sheet-product {
+    margin: 0 0 8px;
+    font-size: 11px;
+    color: #5a6b82;
+    line-height: 1.5;
+  }
+
+  .wf-sheet-product strong { color: #14233a; }
+
+  /* Map status line stays slim above the dock. */
+  .map-page.map-immersive .wf-status {
+    order: 1;
+    max-height: 44px;
+    overflow: hidden;
+  }
+}
+
+@keyframes wfSheetFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes wfSheetSlide {
+  from { transform: translateY(48px); opacity: .5; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wf-mobile-sheet-wrap,
+  .wf-mobile-sheet { animation: none; }
+  .wf-dock-btn { transition: none; }
+}
+
+/* Radar chrome is always light — NEXRAD imagery reads best on bright surfaces
+   and the dark theme packs made panels/toolbars hard to scan. */
+.wf-map-shell {
+  --panel: #ffffff;
+  --panel-2: #f2f6fb;
+  --panel-3: #e6edf5;
+  --bg: #eef2f7;
+  --text: #14233a;
+  --muted: #5a6b82;
+  --line: rgba(15, 30, 50, .14);
+  --line-soft: rgba(15, 30, 50, .08);
+  background: var(--bg);
+  color: var(--text);
+}
