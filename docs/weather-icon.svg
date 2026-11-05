@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="WeatherDesk radar cloud and lightning logo">
+  <defs>
+    <linearGradient id="neonStroke" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#00f0ff"/>
+      <stop offset=".52" stop-color="#168bff"/>
+      <stop offset="1" stop-color="#bf53ff"/>
+    </linearGradient>
+    <linearGradient id="bolt" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#a8ffff"/>
+      <stop offset=".6" stop-color="#00e5ff"/>
+      <stop offset="1" stop-color="#168bff"/>
+    </linearGradient>
+    <radialGradient id="bgGlow">
+      <stop offset="0" stop-color="#113e73" stop-opacity=".78"/>
+      <stop offset="1" stop-color="#061126" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="glowCyan" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glowPurple" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="118" fill="#061126"/>
+  <circle cx="256" cy="272" r="216" fill="url(#bgGlow)"/>
+  <g fill="none" stroke="url(#neonStroke)" stroke-linecap="round" filter="url(#glowCyan)">
+    <circle cx="250" cy="302" r="133" stroke-width="8" opacity=".96"/>
+    <circle cx="250" cy="302" r="94" stroke-width="5" opacity=".82"/>
+    <circle cx="250" cy="302" r="54" stroke-width="4" opacity=".65"/>
+    <path d="M250 143V437M91 302H409" stroke-width="4" opacity=".45"/>
+    <path d="M138 190C138 145 177 121 214 134C241 79 318 81 344 139C401 141 425 191 402 232" stroke-width="15"/>
+  </g>
+  <path d="M138 190C138 145 177 121 214 134C241 79 318 81 344 139C401 141 425 191 402 232" fill="#07162a" stroke="url(#neonStroke)" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M272 175 216 285h48l-26 95 103-143h-60l23-62z" fill="url(#bolt)" filter="url(#glowPurple)"/>
+  <path d="M250 168 250 205" stroke="#baffff" stroke-width="5" stroke-linecap="round" opacity=".9"/>
+</svg>

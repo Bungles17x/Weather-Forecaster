@@ -1,354 +1,64 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { getPointAlerts, resolveLocation } from '../services/weatherData'
 
-// Create Alert Context
 const AlertContext = createContext()
+export const useAlerts = () => {
+  const context = useContext(AlertContext)
+  if (!context) throw new Error('useAlerts must be used within an AlertProvider')
+  return context
+}
 
-// Alert Provider Component
-export const AlertProvider = ({ children }) => {
+export function AlertProvider({ children }) {
   const [alerts, setAlerts] = useState([])
   const [notifications, setNotifications] = useState([])
   const [permission, setPermission] = useState('default')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
-  // Check notification permission on mount
   useEffect(() => {
-    if ('Notification' in window) {
-      setPermission(Notification.permission)
-    }
+    if ('Notification' in window) setPermission(Notification.permission)
   }, [])
 
-  // Request notification permission
   const requestNotificationPermission = useCallback(async () => {
-    console.log('🔔 Starting notification permission request...')
-    
-    if (!('Notification' in window)) {
-      console.error('❌ Notifications not supported in this browser')
-      setError('This browser does not support notifications')
-      return false
-    }
-
+    if (!('Notification' in window)) { setError('Notifications are not supported by this browser.'); return false }
     try {
-      console.log('🔔 Requesting notification permission...')
       const result = await Notification.requestPermission()
-      console.log('🔔 Permission result:', result)
       setPermission(result)
-      
-      if (result === 'granted') {
-        console.log('✅ Notification permission granted')
-        // Test with a simple notification
-        try {
-          const testNotif = new Notification('Weather App', {
-            body: 'Notifications are now enabled!',
-            icon: '🌤️'
-          })
-          setTimeout(() => testNotif.close(), 3000)
-        } catch (testError) {
-          console.error('❌ Test notification failed:', testError)
-        }
-        return true
-      } else if (result === 'denied') {
-        console.log('❌ Notification permission denied')
-        setError('Notification permission was denied. Please enable notifications in your browser settings.')
-        return false
-      } else {
-        console.log('⏳ Notification permission deferred')
-        return false
-      }
-    } catch (error) {
-      console.error('❌ Error requesting notification permission:', error)
-      setError('Failed to request notification permission')
+      if (result !== 'granted') setError(result === 'denied' ? 'Notification permission was denied in browser settings.' : null)
+      return result === 'granted'
+    } catch {
+      setError('Could not request notification permission.')
       return false
     }
   }, [])
 
-  // Show notification
   const showNotification = useCallback((title, options = {}) => {
-    if (permission !== 'granted') {
-      console.log('🔔 Cannot show notification - permission not granted')
-      return false
-    }
-
+    if (permission !== 'granted' || !('Notification' in window)) return false
     try {
-      console.log('🔔 Showing notification:', title)
-      
-      const notification = new Notification(title, {
-        tag: 'weather-alert',
-        renotify: true,
-        requireInteraction: options.urgent || false,
-        ...options
-      })
-
-      // Auto-close non-urgent notifications
-      if (!options.urgent) {
-        setTimeout(() => {
-          notification.close()
-        }, 5000)
-      }
-
-      // Handle notification click
-      notification.onclick = () => {
-        console.log('🔔 Notification clicked:', title)
-        notification.close()
-        if (options.onClick) {
-          options.onClick()
-        } else {
-          // Focus on the window and navigate to alerts page
-          window.focus()
-          // Navigate to alerts page (HashRouter compatible)
-          if (window.location.pathname !== '/' && !window.location.hash.includes('/alerts')) {
-            window.location.href = '/#/alerts'
-          } else if (!window.location.hash.includes('/alerts')) {
-            window.location.href = '/#/alerts'
-          }
-        }
-      }
-
-      // Add to notifications list
-      setNotifications(prev => [
-        {
-          id: Date.now(),
-          title,
-          body: options.body,
-          timestamp: new Date(),
-          urgent: options.urgent || false,
-          read: false
-        },
-        ...prev.slice(0, 49) // Keep only last 50 notifications
-      ])
-
+      const notification = new Notification(title, { body: options.body || '', tag: 'weatherdesk-nws-alert', renotify: false, icon: `${import.meta.env.BASE_URL}icons/weather-192.png` })
+      notification.onclick = () => { window.focus(); window.location.hash = '/alerts'; notification.close() }
+      setNotifications(previous => [{ id: Date.now(), title, body: options.body || '', timestamp: new Date(), urgent: Boolean(options.urgent), read: false }, ...previous].slice(0, 50))
       return true
-    } catch (error) {
-      console.error('❌ Error showing notification:', error)
-      setError('Failed to show notification')
+    } catch {
+      setError('Could not display a browser notification.')
       return false
     }
   }, [permission])
 
-  // Fetch weather alerts from NWS
-  const fetchWeatherAlerts = useCallback(async (location) => {
-    if (!location) return
-
+  const fetchWeatherAlerts = useCallback(async (location, coordinates) => {
     setLoading(true)
     setError(null)
-
     try {
-      console.log('🚨 Fetching weather alerts for:', location)
-
-      // First geocode the location to get coordinates
-      const geocodeResponse = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}&limit=1`
-      )
-      const geocodeData = await geocodeResponse.json()
-
-      if (!geocodeData || geocodeData.length === 0) {
-        throw new Error('Location not found')
-      }
-
-      const { lat, lon } = geocodeData[0]
-      console.log('📍 Alert coordinates:', { lat, lon })
-
-      // Get NWS grid point
-      const pointsResponse = await fetch(`https://api.weather.gov/points/${lat},${lon}`)
-      if (!pointsResponse.ok) {
-        throw new Error('Weather data not available for this location')
-      }
-
-      const pointsData = await pointsResponse.json()
-      const county = pointsData.properties.county
-      console.log('📍 County info:', county)
-
-      // Get alerts for the coordinates
-      const alertsResponse = await fetch(`https://api.weather.gov/alerts/active?point=${lat},${lon}`)
-      if (!alertsResponse.ok) {
-        throw new Error('Failed to fetch weather alerts')
-      }
-
-      const alertsData = await alertsResponse.json()
-      const activeAlerts = alertsData.features || []
-
-      console.log(`🚨 Found ${activeAlerts.length} active weather alerts`)
-
-      // Process alerts
-      const processedAlerts = activeAlerts.map(alert => {
-        const properties = alert.properties
-        return {
-          id: alert.id,
-          title: properties.headline || properties.event || 'Weather Alert',
-          description: properties.description || '',
-          instruction: properties.instruction || '',
-          severity: properties.severity || 'Unknown',
-          urgency: properties.urgency || 'Unknown',
-          areas: properties.areas || [],
-          category: properties.category || 'Unknown',
-          certainty: properties.certainty || 'Unknown',
-          event: properties.event || 'Unknown',
-          note: properties.note || '',
-          effective: properties.effective ? new Date(properties.effective) : null,
-          expires: properties.expires ? new Date(properties.expires) : null,
-          sent: properties.sent ? new Date(properties.sent) : new Date(),
-          geometry: alert.geometry,
-          source: properties.senderName || 'National Weather Service'
-        }
-      })
-
-      setAlerts(processedAlerts)
-
-      // Show notifications for new alerts
-      processedAlerts.forEach(alert => {
-        const isUrgent = alert.urgency === 'Immediate' || alert.urgency === 'Expected'
-        const isSevere = alert.severity === 'Extreme' || alert.severity === 'Severe'
-
-        if (isUrgent || isSevere) {
-          showNotification(alert.title, {
-            body: `${alert.event} - ${alert.areas.join(', ')}`,
-            urgent: true,
-            icon: getAlertIcon(alert.severity),
-            tag: `alert-${alert.id}`,
-            onClick: () => {
-              // Navigate to alerts page when notification is clicked (HashRouter compatible)
-              console.log('🔔 Alert notification clicked - navigating to alerts page')
-              if (!window.location.hash.includes('/alerts')) {
-                window.location.href = '/#/alerts'
-              }
-            }
-          })
-        }
-      })
-
-      return processedAlerts
-
-    } catch (error) {
-      console.error('❌ Error fetching weather alerts:', error)
-      setError(error.message || 'Failed to fetch weather alerts')
+      const coords = coordinates || await resolveLocation(location || 'Washington, District of Columbia')
+      const data = await getPointAlerts(coords)
+      setAlerts(data)
+      return data
+    } catch (fetchError) {
+      setError(fetchError.message || 'Weather.gov alert data is unavailable.')
       return []
-    } finally {
-      setLoading(false)
-    }
-  }, [showNotification])
-
-  // Get alert icon based on severity
-  const getAlertIcon = (severity) => {
-    switch (severity) {
-      case 'Extreme':
-        return '🚨'
-      case 'Severe':
-        return '⚠️'
-      case 'Moderate':
-        return '⚡'
-      case 'Minor':
-        return '📢'
-      default:
-        return '🌤️'
-    }
-  }
-
-  // Mark notification as read
-  const markNotificationAsRead = useCallback((notificationId) => {
-    setNotifications(prev => 
-      prev.map(notification => 
-        notification.id === notificationId 
-          ? { ...notification, read: true }
-          : notification
-      )
-    )
+    } finally { setLoading(false) }
   }, [])
 
-  // Clear all notifications
-  const clearNotifications = useCallback(() => {
-    setNotifications([])
-  }, [])
-
-  // Clear specific notification
-  const clearNotification = useCallback((notificationId) => {
-    setNotifications(prev => 
-      prev.filter(notification => notification.id !== notificationId)
-    )
-  }, [])
-
-  // Test notification
-  const testNotification = useCallback(() => {
-    console.log('🧪 Test notification requested, permission:', permission)
-    
-    if (permission === 'granted') {
-      console.log('🧪 Showing test notification...')
-      const success = showNotification('Weather Alert Test', {
-        body: 'This is a test weather alert notification',
-        urgent: false,
-        icon: '🌤️',
-        onClick: () => {
-          // Navigate to alerts page when test notification is clicked (HashRouter compatible)
-          console.log('🔔 Test notification clicked - navigating to alerts page')
-          if (!window.location.hash.includes('/alerts')) {
-            window.location.href = '/#/alerts'
-          }
-        }
-      })
-      
-      if (success) {
-        console.log('✅ Test notification sent successfully')
-      } else {
-        console.error('❌ Failed to send test notification')
-      }
-    } else {
-      console.log('🧪 Permission not granted, requesting first...')
-      requestNotificationPermission().then(granted => {
-        if (granted) {
-          console.log('🧪 Permission granted, sending test notification...')
-          const success = showNotification('Weather Alert Test', {
-            body: 'This is a test weather alert notification',
-            urgent: false,
-            icon: '🌤️',
-            onClick: () => {
-              // Navigate to alerts page when test notification is clicked (HashRouter compatible)
-              console.log('🔔 Test notification clicked - navigating to alerts page')
-              if (!window.location.hash.includes('/alerts')) {
-                window.location.href = '/#/alerts'
-              }
-            }
-          })
-          
-          if (success) {
-            console.log('✅ Test notification sent successfully after permission grant')
-          } else {
-            console.error('❌ Failed to send test notification after permission grant')
-          }
-        } else {
-          console.error('❌ Permission denied for test notification')
-        }
-      })
-    }
-  }, [permission, requestNotificationPermission, showNotification])
-
-  const value = {
-    alerts,
-    notifications,
-    permission,
-    loading,
-    error,
-    requestNotificationPermission,
-    showNotification,
-    fetchWeatherAlerts,
-    markNotificationAsRead,
-    clearNotifications,
-    clearNotification,
-    testNotification
-  }
-
-  return (
-    <AlertContext.Provider value={value}>
-      {children}
-    </AlertContext.Provider>
-  )
+  const value = { alerts, notifications, permission, loading, error, requestNotificationPermission, showNotification, fetchWeatherAlerts, markNotificationRead: id => setNotifications(previous => previous.map(item => item.id === id ? { ...item, read: true } : item)) }
+  return <AlertContext.Provider value={value}>{children}</AlertContext.Provider>
 }
-
-// Custom hook to use alert context
-export const useAlerts = () => {
-  const context = useContext(AlertContext)
-  if (!context) {
-    throw new Error('useAlerts must be used within an AlertProvider')
-  }
-  return context
-}
-
-export default AlertContext

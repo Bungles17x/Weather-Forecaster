@@ -1,0 +1,147 @@
+import React, { useEffect, useState } from 'react'
+import './RuntimeErrorMonitor.css'
+
+/** Shows a visible recovery screen for ALL runtime exceptions and console errors. */
+export default function RuntimeErrorMonitor() {
+  const [runtimeError, setRuntimeError] = useState(null)
+  const [errorHistory, setErrorHistory] = useState([])
+
+  useEffect(() => {
+    const originalConsoleError = console.error
+    const originalConsoleWarn = console.warn
+    const originalConsoleLog = console.log
+    let lastSignature = ''
+    let lastAt = 0
+
+    const report = (title, detail, severity = 'error') => {
+      const message = [title, detail].filter(Boolean).join('\n')
+      // Avoid repeatedly replacing the same error when React logs it more than once.
+      const now = Date.now()
+      if (message === lastSignature && now - lastAt < 1500) return
+      lastSignature = message
+      lastAt = now
+
+      const errorEntry = {
+        title,
+        detail: String(detail || title).slice(0, 15000),
+        time: new Date().toLocaleTimeString(),
+        severity,
+        timestamp: now
+      }
+
+      setRuntimeError(errorEntry)
+      setErrorHistory(prev => [errorEntry, ...prev].slice(0, 50))
+    }
+
+    // Intercept ALL console methods
+    console.error = (...args) => {
+      originalConsoleError.apply(console, args)
+      const detail = args.map(value => {
+        if (value instanceof Error) return `${value.name}: ${value.message}${value.stack ? `\n${value.stack}` : ''}`
+        if (typeof value === 'string') return value
+        try { return JSON.stringify(value) } catch { return String(value) }
+      }).join(' ')
+      report('Console Error Detected', detail || 'The application wrote an error to the console.', 'error')
+    }
+
+    console.warn = (...args) => {
+      originalConsoleWarn.apply(console, args)
+      const detail = args.map(value => {
+        if (value instanceof Error) return `${value.name}: ${value.message}`
+        if (typeof value === 'string') return value
+        try { return JSON.stringify(value) } catch { return String(value) }
+      }).join(' ')
+      // Only show warnings if they're critical (you can adjust this threshold)
+      if (detail.toLowerCase().includes('error') || detail.toLowerCase().includes('fail')) {
+        report('Console Warning Detected', detail || 'The application wrote a warning to the console.', 'warning')
+      }
+    }
+
+    // Optional: Log all console messages for debugging (commented out by default)
+    // console.log = (...args) => {
+    //   originalConsoleLog.apply(console, args)
+    //   const detail = args.map(value => {
+    //     if (typeof value === 'string') return value
+    //     try { return JSON.stringify(value) } catch { return String(value) }
+    //   }).join(' ')
+    //   // Only log critical logs
+    //   if (detail.toLowerCase().includes('error') || detail.toLowerCase().includes('exception')) {
+    //     report('Console Log Detected', detail, 'info')
+    //   }
+    // }
+
+    const handleError = event => {
+      report('Uncaught Runtime Error', event.error?.stack || event.message || 'Unknown JavaScript error', 'error')
+    }
+
+    const handleRejection = event => {
+      const reason = event.reason
+      report('Unhandled Promise Rejection', reason instanceof Error ? `${reason.name}: ${reason.message}\n${reason.stack || ''}` : String(reason ?? 'Unknown rejection'), 'error')
+    }
+
+    window.addEventListener('error', handleError)
+    window.addEventListener('unhandledrejection', handleRejection)
+
+    return () => {
+      console.error = originalConsoleError
+      console.warn = originalConsoleWarn
+      console.log = originalConsoleLog
+      window.removeEventListener('error', handleError)
+      window.removeEventListener('unhandledrejection', handleRejection)
+    }
+  }, [])
+
+  if (!runtimeError) return null
+
+  const severityColors = {
+    error: '#ff5c68',
+    warning: '#ffd166',
+    info: '#67b7ff'
+  }
+
+  return (
+    <div className="runtime-error-overlay" role="alertdialog" aria-modal="true" aria-labelledby="runtime-error-title">
+      <section className="runtime-error-panel">
+        <div className="runtime-error-mark" style={{ borderColor: severityColors[runtimeError.severity], color: severityColors[runtimeError.severity] }} aria-hidden="true">!</div>
+        <p className="runtime-error-eyebrow">WEATHERDESK · RUNTIME MONITOR</p>
+        <h1 id="runtime-error-title">Something went wrong</h1>
+        <p className="runtime-error-summary">WeatherDesk detected a {runtimeError.severity.toUpperCase()}. Reload the app to try recovering. If it keeps happening, the details below can help identify the cause.</p>
+        <div className="runtime-error-meta">
+          <span className="runtime-error-severity" style={{ color: severityColors[runtimeError.severity] }}>
+            {runtimeError.severity.toUpperCase()}
+          </span>
+          <span>Detected at {runtimeError.time}</span>
+        </div>
+        <pre className="runtime-error-details">{runtimeError.title}{'\n\n'}{runtimeError.detail}</pre>
+
+        {errorHistory.length > 1 && (
+          <details className="runtime-error-history">
+            <summary>Error History ({errorHistory.length} errors)</summary>
+            <div className="runtime-error-history-list">
+              {errorHistory.slice(1).map((err, idx) => (
+                <div key={idx} className="runtime-error-history-item">
+                  <span className="history-time">{err.time}</span>
+                  <span className="history-severity" style={{ color: severityColors[err.severity] }}>{err.severity}</span>
+                  <span className="history-title">{err.title}</span>
+                </div>
+              ))}
+            </div>
+          </details>
+        )}
+
+        <div className="runtime-error-actions">
+          <button type="button" className="runtime-error-primary" onClick={() => window.location.reload()}>
+            Reload WeatherDesk
+          </button>
+          <button type="button" className="runtime-error-secondary" onClick={() => setRuntimeError(null)}>
+            Dismiss Error Screen
+          </button>
+          <button type="button" className="runtime-error-tertiary" onClick={() => setErrorHistory([])}>
+            Clear History
+          </button>
+        </div>
+        <p className="runtime-error-footnote">This diagnostic screen does not replace official weather alerts or emergency instructions.</p>
+      </section>
+    </div>
+  )
+}

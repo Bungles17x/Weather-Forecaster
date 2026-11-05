@@ -1,0 +1,169 @@
+.skeleton-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+@keyframes skeletonPulse {
+  0%, 100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.skeleton-box,
+.skeleton-card,
+.skeleton-item,
+.skeleton-line,
+.skeleton-title,
+.skeleton-subtitle,
+.skeleton-value,
+.skeleton-label,
+.skeleton-weather-icon,
+.skeleton-weather-temp,
+.skeleton-weather-desc,
+.skeleton-metric-icon,
+.skeleton-metric-value,
+.skeleton-metric-label {
+  background: linear-gradient(90deg, var(--color-surface-elevated) 25%, var(--color-border) 50%, var(--color-surface-elevated) 75%);
+  background-size: 200% 100%;
+  animation: skeletonPulse 1.5s ease-in-out infinite;
+  border-radius: 4px;
+}
+
+.skeleton-card {
+  padding: 1.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+}
+
+.skeleton-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.skeleton-title {
+  width: 60%;
+  height: 20px;
+}
+
+.skeleton-subtitle {
+  width: 40%;
+  height: 14px;
+}
+
+.skeleton-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.skeleton-value {
+  width: 50%;
+  height: 32px;
+}
+
+.skeleton-label {
+  width: 70%;
+  height: 14px;
+}
+
+.skeleton-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.skeleton-item {
+  height: 48px;
+  width: 100%;
+}
+
+.skeleton-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.skeleton-line {
+  height: 14px;
+  width: 100%;
+}
+
+.skeleton-line.short {
+  width: 60%;
+}
+
+.skeleton-weather {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 2rem;
+}
+
+.skeleton-weather-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+}
+
+.skeleton-weather-temp {
+  width: 120px;
+  height: 48px;
+}
+
+.skeleton-weather-desc {
+  width: 80%;
+  height: 16px;
+}
+
+.skeleton-metric {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
+.skeleton-metric-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.skeleton-metric-value {
+  width: 80px;
+  height: 24px;
+}
+
+.skeleton-metric-label {
+  width: 60%;
+  height: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-box,
+  .skeleton-card,
+  .skeleton-item,
+  .skeleton-line,
+  .skeleton-title,
+  .skeleton-subtitle,
+  .skeleton-value,
+  .skeleton-label,
+  .skeleton-weather-icon,
+  .skeleton-weather-temp,
+  .skeleton-weather-desc,
+  .skeleton-metric-icon,
+  .skeleton-metric-value,
+  .skeleton-metric-label {
+    animation: none;
+    opacity: 0.5;
+  }
+}

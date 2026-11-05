@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import './HourlyForecast.css'
-import { SmallWeatherIcon } from './WeatherIcons'
+import { SmallWeatherIcon, WeatherDeskIcon } from './WeatherIcons'
 
 const HourlyForecast = ({ data }) => {
   const [selectedHour, setSelectedHour] = useState(null)
@@ -31,13 +31,6 @@ const HourlyForecast = ({ data }) => {
     const hour = new Date(timestamp * 1000)
     return hour.getHours() === now.getHours() && 
            hour.getDate() === now.getDate()
-  }
-
-  const getWindDirection = (degrees) => {
-    if (!degrees) return 'N'
-    const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']
-    const index = Math.round(degrees / 45) % 8
-    return directions[index]
   }
 
   const getPrecipitationColor = (pop) => {
@@ -79,7 +72,7 @@ const HourlyForecast = ({ data }) => {
     if (temp >= 105) {
       alerts.push({
         type: 'excessive-heat-warning',
-        icon: '🔥',
+        icon: 'fire',
         title: 'Excessive Heat Warning',
         message: `Dangerously hot conditions. Heat index values up to ${Math.round(temp)}°F expected. Heat stroke likely.`,
         severity: 'extreme'
@@ -87,7 +80,7 @@ const HourlyForecast = ({ data }) => {
     } else if (temp >= 100) {
       alerts.push({
         type: 'excessive-heat-watch',
-        icon: '⚠️',
+        icon: 'warning',
         title: 'Excessive Heat Watch',
         message: `Excessive heat possible. Heat index values may reach ${Math.round(temp)}°F. Monitor conditions.`,
         severity: 'high'
@@ -95,7 +88,7 @@ const HourlyForecast = ({ data }) => {
     } else if (temp >= 95) {
       alerts.push({
         type: 'heat-advisory',
-        icon: '🌡️',
+        icon: 'temperature',
         title: 'Heat Advisory',
         message: `Hot conditions expected. Heat index values up to ${Math.round(temp)}°F. Heat illnesses possible.`,
         severity: 'moderate'
@@ -103,7 +96,7 @@ const HourlyForecast = ({ data }) => {
     } else if (temp >= 90) {
       alerts.push({
         type: 'heat-advisory',
-        icon: '☀️',
+        icon: 'sun',
         title: 'Heat Advisory',
         message: `Warm to hot conditions. Heat index up to ${Math.round(temp)}°F. Use caution outdoors.`,
         severity: 'low'
@@ -114,7 +107,7 @@ const HourlyForecast = ({ data }) => {
     if (temp <= -20) {
       alerts.push({
         type: 'extreme-cold-warning',
-        icon: '❄️',
+        icon: 'snow',
         title: 'Extreme Cold Warning',
         message: `Dangerously cold wind chills. Wind chill values down to ${Math.round(temp)}°F expected. Frostbite possible in minutes.`,
         severity: 'extreme'
@@ -122,7 +115,7 @@ const HourlyForecast = ({ data }) => {
     } else if (temp <= -10) {
       alerts.push({
         type: 'extreme-cold-watch',
-        icon: '🥶',
+        icon: 'ice',
         title: 'Extreme Cold Watch',
         message: `Extreme cold possible. Wind chill values may reach ${Math.round(temp)}°F. Prepare for dangerous cold.`,
         severity: 'high'
@@ -130,7 +123,7 @@ const HourlyForecast = ({ data }) => {
     } else if (temp <= 0) {
       alerts.push({
         type: 'wind-chill-advisory',
-        icon: '🌡️',
+        icon: 'temperature',
         title: 'Wind Chill Advisory',
         message: `Cold wind chills expected. Values down to ${Math.round(temp)}°F. Limit outdoor exposure.`,
         severity: 'moderate'
@@ -138,7 +131,7 @@ const HourlyForecast = ({ data }) => {
     } else if (temp <= 32) {
       alerts.push({
         type: 'freeze-warning',
-        icon: '🧊',
+        icon: 'ice',
         title: 'Freeze Warning',
         message: `Sub-freezing temperatures expected. Low of ${Math.round(temp)}°F. Protect sensitive vegetation and pipes.`,
         severity: 'low'
@@ -149,7 +142,7 @@ const HourlyForecast = ({ data }) => {
     if (windSpeed >= 74) { // Hurricane force
       alerts.push({
         type: 'hurricane-force-wind-warning',
-        icon: '🌀',
+        icon: 'hurricane',
         title: 'Hurricane Force Wind Warning',
         message: `Dangerous hurricane force winds. Gusts to ${Math.round(windSpeed)} mph. Widespread damage expected.`,
         severity: 'extreme'
@@ -157,7 +150,7 @@ const HourlyForecast = ({ data }) => {
     } else if (windSpeed >= 58) { // Severe thunderstorm winds
       alerts.push({
         type: 'severe-thunderstorm-warning',
-        icon: '⛈️',
+        icon: 'thunderstorm',
         title: 'Severe Thunderstorm Warning',
         message: `Severe thunderstorms with damaging winds. Gusts to ${Math.round(windSpeed)} mph. Seek shelter immediately.`,
         severity: 'extreme'
@@ -165,7 +158,7 @@ const HourlyForecast = ({ data }) => {
     } else if (windSpeed >= 48) {
       alerts.push({
         type: 'high-wind-watch',
-        icon: '💨',
+        icon: 'wind',
         title: 'High Wind Watch',
         message: `High winds possible. Gusts may reach ${Math.round(windSpeed)} mph. Secure outdoor items.`,
         severity: 'high'
@@ -173,7 +166,7 @@ const HourlyForecast = ({ data }) => {
     } else if (windSpeed >= 40) {
       alerts.push({
         type: 'high-wind-warning',
-        icon: '🌬️',
+        icon: 'wind',
         title: 'High Wind Warning',
         message: `Hazardous high winds expected. Gusts to ${Math.round(windSpeed)} mph. Property damage possible.`,
         severity: 'moderate'
@@ -181,7 +174,7 @@ const HourlyForecast = ({ data }) => {
     } else if (windSpeed >= 25) {
       alerts.push({
         type: 'wind-advisory',
-        icon: '�',
+        icon: 'wind',
         title: 'Wind Advisory',
         message: `Breezy to windy conditions. Gusts to ${Math.round(windSpeed)} mph. Difficult driving conditions.`,
         severity: 'low'
@@ -192,7 +185,7 @@ const HourlyForecast = ({ data }) => {
     if (pop >= 90) {
       alerts.push({
         type: 'flash-flood-warning',
-        icon: '🌊',
+        icon: 'flood',
         title: 'Flash Flood Warning',
         message: `Dangerous flash flooding possible. ${Math.round(pop)}% chance of heavy rain. Move to higher ground immediately.`,
         severity: 'extreme'
@@ -200,7 +193,7 @@ const HourlyForecast = ({ data }) => {
     } else if (pop >= 80) {
       alerts.push({
         type: 'flood-warning',
-        icon: '🌧️',
+        icon: 'rain',
         title: 'Flood Warning',
         message: `Flooding expected. ${Math.round(pop)}% chance of heavy rainfall. Prepare for flooding immediately.`,
         severity: 'high'
@@ -208,7 +201,7 @@ const HourlyForecast = ({ data }) => {
     } else if (pop >= 70) {
       alerts.push({
         type: 'flood-watch',
-        icon: '⚠️',
+        icon: 'warning',
         title: 'Flood Watch',
         message: `Flooding possible. ${Math.round(pop)}% chance of heavy rain. Monitor conditions closely and be prepared.`,
         severity: 'moderate'
@@ -216,7 +209,7 @@ const HourlyForecast = ({ data }) => {
     } else if (pop >= 60) {
       alerts.push({
         type: 'hydrologic-advisory',
-        icon: '💧',
+        icon: 'humidity',
         title: 'Hydrologic Advisory',
         message: `Elevated flood risk. ${Math.round(pop)}% chance of precipitation. Stay informed about conditions.`,
         severity: 'low'
@@ -227,7 +220,7 @@ const HourlyForecast = ({ data }) => {
     if (visibility && visibility !== null && visibility !== undefined && !isNaN(visibility) && visibility <= 500) {
       alerts.push({
         type: 'dense-fog-advisory',
-        icon: '🌫️',
+        icon: 'fog',
         title: 'Dense Fog Advisory',
         message: `Visibility reduced to ${(visibility/1000).toFixed(1)} miles or less. Extreme driving hazard. Avoid travel if possible.`,
         severity: 'high'
@@ -235,7 +228,7 @@ const HourlyForecast = ({ data }) => {
     } else if (visibility && visibility !== null && visibility !== undefined && !isNaN(visibility) && visibility <= 1000) {
       alerts.push({
         type: 'fog-advisory',
-        icon: '👁️',
+        icon: 'visibility',
         title: 'Fog Advisory',
         message: `Visibility reduced to ${(visibility/1000).toFixed(1)} miles. Use extreme caution when traveling.`,
         severity: 'moderate'
@@ -243,7 +236,7 @@ const HourlyForecast = ({ data }) => {
     } else if (visibility && visibility !== null && visibility !== undefined && !isNaN(visibility) && visibility <= 3000) {
       alerts.push({
         type: 'visibility-advisory',
-        icon: '🌫️',
+        icon: 'fog',
         title: 'Visibility Advisory',
         message: `Reduced visibility to ${(visibility/1000).toFixed(1)} miles. Hazardous driving conditions.`,
         severity: 'low'
@@ -258,7 +251,7 @@ const HourlyForecast = ({ data }) => {
         if (temp <= 20 && pop >= 80) {
           alerts.push({
             type: 'winter-storm-warning',
-            icon: '🌨️',
+            icon: 'snow',
             title: 'Winter Storm Warning',
             message: `Heavy snow expected. Significant impacts to travel. ${Math.round(pop)}% chance of precipitation. Avoid travel.`,
             severity: 'extreme'
@@ -266,7 +259,7 @@ const HourlyForecast = ({ data }) => {
         } else if (temp <= 25 && pop >= 70) {
           alerts.push({
             type: 'winter-storm-watch',
-            icon: '⚠️',
+            icon: 'warning',
             title: 'Winter Storm Watch',
             message: `Winter storm conditions possible. ${Math.round(pop)}% chance of heavy snow. Monitor forecasts and prepare.`,
             severity: 'high'
@@ -274,7 +267,7 @@ const HourlyForecast = ({ data }) => {
         } else if (temp <= 32 && pop >= 60) {
           alerts.push({
             type: 'winter-weather-advisory',
-            icon: '❄️',
+            icon: 'snow',
             title: 'Winter Weather Advisory',
             message: `Snow expected. Travel impacts possible. ${Math.round(pop)}% chance of precipitation. Use caution traveling.`,
             severity: 'moderate'
@@ -282,7 +275,7 @@ const HourlyForecast = ({ data }) => {
         } else if (pop >= 40) {
           alerts.push({
             type: 'winter-weather-advisory',
-            icon: '🌨️',
+            icon: 'snow',
             title: 'Winter Weather Advisory',
             message: `Light snow possible. Minor travel impacts. ${Math.round(pop)}% chance of precipitation.`,
             severity: 'low'
@@ -294,7 +287,7 @@ const HourlyForecast = ({ data }) => {
         if (windSpeed >= 58) {
           alerts.push({
             type: 'severe-thunderstorm-warning',
-            icon: '⛈️',
+            icon: 'thunderstorm',
             title: 'Severe Thunderstorm Warning',
             message: `Severe thunderstorms with destructive winds and large hail. Seek shelter now. ${Math.round(pop)}% chance.`,
             severity: 'extreme'
@@ -302,7 +295,7 @@ const HourlyForecast = ({ data }) => {
         } else if (windSpeed >= 40) {
           alerts.push({
             type: 'severe-thunderstorm-watch',
-            icon: '⚡',
+            icon: 'thunderstorm',
             title: 'Severe Thunderstorm Watch',
             message: `Severe thunderstorms possible. Monitor conditions and be ready to act. ${Math.round(pop)}% chance.`,
             severity: 'high'
@@ -310,7 +303,7 @@ const HourlyForecast = ({ data }) => {
         } else if (pop >= 50) {
           alerts.push({
             type: 'thunderstorm-advisory',
-            icon: '🌩️',
+            icon: 'thunderstorm',
             title: 'Thunderstorm Advisory',
             message: `Thunderstorms expected. ${Math.round(pop)}% chance of precipitation. Move indoors during storms.`,
             severity: 'moderate'
@@ -321,7 +314,7 @@ const HourlyForecast = ({ data }) => {
       if (condition === 'freezing rain' || (temp <= 32 && pop >= 70)) {
         alerts.push({
           type: 'freezing-rain-advisory',
-          icon: '🧊',
+          icon: 'ice',
           title: 'Freezing Rain Advisory',
           message: `Freezing rain possible. ${Math.round(pop)}% chance. Extremely hazardous travel conditions. Avoid travel.`,
           severity: 'high'
@@ -331,7 +324,7 @@ const HourlyForecast = ({ data }) => {
       if (condition === 'sleet' || (temp <= 32 && pop >= 60)) {
         alerts.push({
           type: 'winter-weather-advisory',
-          icon: '🌨️',
+          icon: 'snow',
           title: 'Winter Weather Advisory',
           message: `Sleet expected. ${Math.round(pop)}% chance. Hazardous travel conditions. Use extreme caution.`,
           severity: 'moderate'
@@ -343,7 +336,7 @@ const HourlyForecast = ({ data }) => {
     if (humidity <= 15 && temp >= 95) {
       alerts.push({
         type: 'red-flag-warning',
-        icon: '🔥',
+        icon: 'fire',
         title: 'Red Flag Warning',
         message: `Critical fire weather conditions. Low humidity and high temperatures. Extreme fire danger. No outdoor burning.`,
         severity: 'extreme'
@@ -351,7 +344,7 @@ const HourlyForecast = ({ data }) => {
     } else if (humidity <= 20 && temp >= 90) {
       alerts.push({
         type: 'fire-weather-watch',
-        icon: '⚠️',
+        icon: 'warning',
         title: 'Fire Weather Watch',
         message: `Elevated fire danger. Low humidity and warm temperatures. Be fire aware and prepared.`,
         severity: 'high'
@@ -359,7 +352,7 @@ const HourlyForecast = ({ data }) => {
     } else if (humidity <= 25 && temp >= 85) {
       alerts.push({
         type: 'fire-weather-advisory',
-        icon: '🔥',
+        icon: 'fire',
         title: 'Fire Weather Advisory',
         message: `Increased fire danger. ${humidity}% humidity with ${Math.round(temp)}°F. Use caution with fire.`,
         severity: 'moderate'
@@ -370,7 +363,7 @@ const HourlyForecast = ({ data }) => {
     if (humidity >= 90 && temp >= 75) {
       alerts.push({
         type: 'heat-advisory',
-        icon: '🌡️',
+        icon: 'temperature',
         title: 'Heat Advisory',
         message: `High heat and humidity. Heat index values up to ${Math.round(temp)}°F. Heat stress likely. Stay hydrated.`,
         severity: 'moderate'
@@ -380,7 +373,7 @@ const HourlyForecast = ({ data }) => {
     if (humidity >= 95 && temp >= 80) {
       alerts.push({
         type: 'special-weather-advisory',
-        icon: '💧',
+        icon: 'humidity',
         title: 'Special Weather Advisory',
         message: `Extreme humidity with high heat. ${humidity}% humidity and ${Math.round(temp)}°F. Dangerous heat stress.`,
         severity: 'high'
@@ -391,7 +384,7 @@ const HourlyForecast = ({ data }) => {
     if (windSpeed >= 35 && pop >= 70) {
       alerts.push({
         type: 'coastal-flood-advisory',
-        icon: '🌊',
+        icon: 'flood',
         title: 'Coastal Flood Advisory',
         message: `Coastal flooding possible with strong winds and heavy rain. ${Math.round(pop)}% chance of precipitation.`,
         severity: 'moderate'
@@ -402,7 +395,7 @@ const HourlyForecast = ({ data }) => {
     if (humidity <= 30 && temp >= 85) {
       alerts.push({
         type: 'air-quality-advisory',
-        icon: '💨',
+        icon: 'wind',
         title: 'Air Quality Advisory',
         message: `Poor air quality possible due to weather conditions. Limit outdoor exertion if sensitive.`,
         severity: 'low'
@@ -457,7 +450,6 @@ const HourlyForecast = ({ data }) => {
                 const pop = hour.pop || hour.probabilityOfPrecipitation?.value || 0
                 const windSpeed = hour.wind?.speed || (typeof hour.windSpeed === 'string' ? parseInt(hour.windSpeed) : hour.windSpeed) || 0
                 const windDir = hour.wind?.deg || hour.windDirection || 'N'
-                const humidity = hour.main?.humidity || hour.relativeHumidity?.value || 50
                 
                 return (
                   <div 
@@ -497,7 +489,7 @@ const HourlyForecast = ({ data }) => {
                     </div>
                     
                     <div className="hourly-precipitation" style={{ color: getPrecipitationColor(pop) }}>
-                      <div className="precip-icon">💧</div>
+                      <div className="precip-icon"><WeatherDeskIcon name="humidity" size={16} /></div>
                       <div className="precip-value">{pop > 0 ? `${Math.round(pop * 100)}%` : '--'}</div>
                     </div>
                     
@@ -549,13 +541,13 @@ const HourlyForecast = ({ data }) => {
             <div className="weather-alert-popup" onClick={(e) => e.stopPropagation()}>
               <div className="alert-popup-header">
                 <h3>Weather Alerts for {alertPopup.time}</h3>
-                <button className="alert-popup-close" onClick={closeAlertPopup}>✕</button>
+                <button className="alert-popup-close" onClick={closeAlertPopup} aria-label="Close alert"><WeatherDeskIcon name="close" size={18} /></button>
               </div>
               
               <div className="alert-popup-content">
                 {alertPopup.alerts.map((alert, index) => (
                   <div key={index} className={`alert-item alert-${alert.severity}`}>
-                    <div className="alert-icon-large">{alert.icon}</div>
+                    <div className={`alert-icon-large alert-icon-${alert.severity}`}><WeatherDeskIcon name={alert.icon} size={27} /></div>
                     <div className="alert-content">
                       <h4 className="alert-title">{alert.title}</h4>
                       <p className="alert-message">{alert.message}</p>
@@ -568,7 +560,7 @@ const HourlyForecast = ({ data }) => {
                 
                 {alertPopup.alerts.length === 0 && (
                   <div className="no-alerts">
-                    <div className="no-alerts-icon">✅</div>
+                    <div className="no-alerts-icon"><WeatherDeskIcon name="check" size={23} /></div>
                     <h4>No Weather Alerts</h4>
                     <p>Conditions are normal for this time period.</p>
                   </div>

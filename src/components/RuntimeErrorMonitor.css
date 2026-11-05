@@ -1,0 +1,329 @@
+.runtime-error-overlay {
+  position: fixed;
+  z-index: 2147483000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: auto;
+  padding: clamp(14px, 3vw, 32px);
+  background: rgba(3, 10, 21, .96);
+  color: #eef7ff;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.runtime-error-panel {
+  width: min(100%, 860px);
+  max-height: 100%;
+  overflow: auto;
+  padding: clamp(22px, 4vw, 48px);
+  border: 2px solid rgba(255, 105, 125, .5);
+  border-radius: 24px;
+  background: linear-gradient(145deg, #142438, #091421 72%);
+  box-shadow: 0 32px 100px rgba(0, 0, 0, .6), 0 0 60px rgba(255, 85, 110, .12);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  animation: errorPanelSlide 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes errorPanelSlide {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.runtime-error-mark {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border: 2px solid rgba(255, 105, 125, .6);
+  border-radius: 16px;
+  background: rgba(255, 105, 125, .15);
+  color: #ff8293;
+  font-size: 32px;
+  font-weight: 800;
+  animation: errorPulse 2s ease-in-out infinite;
+}
+
+@keyframes errorPulse {
+  0%, 100% {
+    box-shadow: 0 0 30px rgba(255, 105, 125, .3);
+  }
+  50% {
+    box-shadow: 0 0 50px rgba(255, 105, 125, .5);
+  }
+}
+
+.runtime-error-eyebrow {
+  margin: 24px 0 10px;
+  color: #6eeaff;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.runtime-error-panel h1 {
+  margin: 0 0 16px;
+  color: #fff;
+  font-size: clamp(28px, 4vw, 42px);
+  letter-spacing: -.04em;
+  font-weight: 800;
+}
+
+.runtime-error-summary {
+  max-width: 64ch;
+  color: #bdcddd;
+  font-size: 15px;
+  line-height: 1.7;
+  margin-bottom: 20px;
+}
+
+.runtime-error-meta {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin: 20px 0 12px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, .05);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, .1);
+}
+
+.runtime-error-severity {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  padding: 4px 12px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, .1);
+}
+
+.runtime-error-details {
+  max-height: 36vh;
+  overflow: auto;
+  margin: 0 0 20px;
+  padding: 18px;
+  border: 1px solid #294158;
+  border-radius: 14px;
+  background: #050d17;
+  color: #ffc5cc;
+  font: 13px/1.7 ui-monospace, SFMono-Regular, Consolas, monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, .3);
+}
+
+.runtime-error-history {
+  margin-bottom: 20px;
+}
+
+.runtime-error-history summary {
+  cursor: pointer;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, .05);
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 10px;
+  color: #bdcddd;
+  font-size: 13px;
+  font-weight: 600;
+  list-style: none;
+  transition: all 0.2s ease;
+}
+
+.runtime-error-history summary:hover {
+  background: rgba(255, 255, 255, .08);
+}
+
+.runtime-error-history summary::-webkit-details-marker {
+  display: none;
+}
+
+.runtime-error-history-list {
+  margin-top: 12px;
+  max-height: 200px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.runtime-error-history-item {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  gap: 12px;
+  padding: 10px 14px;
+  background: rgba(0, 0, 0, .3);
+  border-radius: 8px;
+  font-size: 12px;
+  align-items: center;
+}
+
+.history-time {
+  color: #90a9c2;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+.history-severity {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, .05);
+}
+
+.history-title {
+  color: #bdcddd;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.runtime-error-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.runtime-error-actions button {
+  min-height: 46px;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 750;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.runtime-error-primary {
+  border: 2px solid #15c5e2;
+  background: linear-gradient(135deg, #08a9c5, #0d8fa6);
+  color: #03131b;
+  box-shadow: 0 4px 16px rgba(21, 197, 226, .3);
+}
+
+.runtime-error-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(21, 197, 226, .4);
+}
+
+.runtime-error-secondary {
+  border: 2px solid #38516a;
+  background: #14283b;
+  color: #e6f3ff;
+}
+
+.runtime-error-secondary:hover {
+  background: #1a3249;
+  border-color: #4a6380;
+  transform: translateY(-2px);
+}
+
+.runtime-error-tertiary {
+  border: 2px solid rgba(255, 255, 255, .1);
+  background: transparent;
+  color: #8da4bc;
+}
+
+.runtime-error-tertiary:hover {
+  background: rgba(255, 255, 255, .05);
+  border-color: rgba(255, 255, 255, .2);
+}
+
+.runtime-error-actions button:focus-visible {
+  outline: 3px solid #75edff;
+  outline-offset: 3px;
+}
+
+.runtime-error-actions button:active {
+  transform: translateY(0);
+}
+
+.runtime-error-footnote {
+  margin: 24px 0 0;
+  color: #8da4bc;
+  font-size: 12px;
+  line-height: 1.6;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, .1);
+}
+
+@media (max-width: 600px) {
+  .runtime-error-panel {
+    padding: 24px 20px;
+  }
+
+  .runtime-error-actions {
+    flex-direction: column;
+  }
+
+  .runtime-error-actions button {
+    width: 100%;
+  }
+
+  .runtime-error-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .runtime-error-history-item {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}
+
+.runtime-error-dock {
+  position: fixed;
+  z-index: 40;
+  right: 16px;
+  bottom: 16px;
+  max-width: min(420px, calc(100vw - 24px));
+}
+.runtime-error-dock-toggle {
+  min-height: 36px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 92, 104, .45);
+  background: #1a2433;
+  color: #ffc5cc;
+  font: 12px/1 Inter, system-ui, sans-serif;
+  font-weight: 700;
+  cursor: pointer;
+}
+.runtime-error-dock-panel {
+  margin-top: 8px;
+  padding: 10px;
+  border-radius: 14px;
+  border: 1px solid #294158;
+  background: #07111f;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .runtime-error-overlay {
+    scroll-behavior: auto;
+  }
+
+  .runtime-error-panel,
+  .runtime-error-mark {
+    animation: none !important;
+  }
+
+  .runtime-error-actions button:hover {
+    transform: none;
+  }
+}

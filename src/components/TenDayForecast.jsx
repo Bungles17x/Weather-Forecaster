@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import './TenDayForecast.css'
-import { SmallWeatherIcon } from './WeatherIcons'
+import { SmallWeatherIcon, WeatherDeskIcon } from './WeatherIcons'
 
 const TenDayForecast = ({ data }) => {
   const [selectedDay, setSelectedDay] = useState(null)
@@ -149,15 +149,15 @@ const TenDayForecast = ({ data }) => {
                 
                 <div className="forecast-details">
                   <div className="forecast-rain">
-                    💧 {Math.round(day.pop * 100)}%
+                    <WeatherDeskIcon name="precipitation" size={14} /> {Math.round(day.pop * 100)}%
                   </div>
                   
                   <div className="forecast-humidity">
-                    🌫️ {day.humidity}%
+                    <WeatherDeskIcon name="humidity" size={14} /> {day.humidity}%
                   </div>
                   
                   <div className="forecast-wind">
-                    💨 {day.windSpeed} mph
+                    <WeatherDeskIcon name="wind" size={14} /> {day.windSpeed} mph
                   </div>
                 </div>
                 

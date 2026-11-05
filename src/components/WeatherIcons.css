@@ -1,0 +1,68 @@
+:root {
+  --wd-cyan: #00e5ff;
+  --wd-blue: #258fff;
+  --wd-purple: #a966ff;
+  --wd-magenta: #ff4dcb;
+  --wd-yellow: #ffd166;
+}
+
+.wd-icon {
+  display: inline-block;
+  flex: 0 0 auto;
+  max-width: none;
+  color: var(--wd-cyan);
+  vertical-align: middle;
+  overflow: visible;
+  filter: drop-shadow(0 0 3px rgb(0 229 255 / 28%));
+  transition: color 180ms ease, filter 180ms ease, transform 180ms ease;
+}
+.wd-icon--brand { filter: drop-shadow(0 0 4px rgb(0 229 255 / 48%)) drop-shadow(0 0 8px rgb(93 80 255 / 20%)); }
+.wd-icon--alert { color: var(--wd-magenta); filter: drop-shadow(0 0 4px rgb(255 77 203 / 35%)); }
+.wd-icon--purple { color: var(--wd-purple); filter: drop-shadow(0 0 4px rgb(169 102 255 / 38%)); }
+.wd-icon--blue { color: var(--wd-blue); }
+.wd-icon--muted { color: #86a2c0; filter: none; }
+.wd-icon--success { color: #39e9bf; filter: drop-shadow(0 0 4px rgb(57 233 191 / 25%)); }
+.wd-icon--brand .wd-cyan-fill { fill: var(--wd-cyan); }
+.wd-icon[data-icon="alerts"], .wd-icon[data-icon="warning"] { color: var(--wd-magenta); }
+.wd-icon[data-icon="sun"], .wd-icon[data-icon="forecast"], .wd-icon[data-icon="uv"] { color: var(--wd-yellow); }
+.wd-icon[data-icon="hurricane"], .wd-icon[data-icon="tornado"], .wd-icon[data-icon="thunderstorm"] { color: var(--wd-purple); }
+.wd-icon[data-icon="radar"], .wd-icon[data-icon="satellite"], .wd-icon[data-icon="layers"] { color: var(--wd-cyan); }
+.wd-icon[data-icon="wind"], .wd-icon[data-icon="pressure"] { color: #72dfff; }
+.wd-icon[data-icon="check"] { color: #39e9bf; }
+.wd-cyan-stroke { stroke: var(--wd-cyan); }
+.wd-blue-stroke { stroke: var(--wd-blue); }
+.wd-purple-stroke { stroke: var(--wd-purple); }
+.wd-magenta-stroke { stroke: var(--wd-magenta); }
+.wd-yellow-stroke { stroke: var(--wd-yellow); }
+.wd-muted-stroke { stroke: #4e8cbe; }
+.wd-cyan-fill { fill: var(--wd-cyan); stroke: none; }
+.wd-purple-fill { fill: var(--wd-purple); stroke: none; }
+.wd-magenta-fill { fill: var(--wd-magenta); stroke: none; }
+
+.main-navigation a > .wd-icon { width: 18px; height: 18px; color: #7796b5; }
+.main-navigation a:hover > .wd-icon,
+.main-navigation a.active > .wd-icon { color: var(--wd-cyan); filter: drop-shadow(0 0 5px rgb(0 229 255 / 48%)); }
+.icon-button .wd-icon { color: currentColor; }
+.weather-symbol .wd-icon { width: clamp(52px, 7vw, 86px); height: clamp(52px, 7vw, 86px); }
+.hour-chip .wd-icon { width: 31px; height: 31px; }
+.hourly-card .wd-icon { width: 37px; height: 37px; }
+.extended-row .wd-icon { width: 40px; height: 40px; }
+.metric-symbol .wd-icon { width: 21px; height: 21px; }
+.module-icon .wd-icon { width: 24px; height: 24px; }
+.observation-symbol .wd-icon { width: 21px; height: 21px; }
+.settings-section-icon .wd-icon, .location-settings-symbol .wd-icon,
+.station-emblem .wd-icon, .analysis-hero-icon .wd-icon { width: 24px; height: 24px; }
+.alert-ribbon-icon .wd-icon, .alert-safety-icon .wd-icon { width: 22px; height: 22px; }
+.calm-icon .wd-icon, .settings-check .wd-icon { width: 18px; height: 18px; }
+.secondary-action .wd-icon { width: 15px; height: 15px; }
+.info-panel-icon .wd-icon { width: 19px; height: 19px; }
+.location-search > .wd-icon, .search-field > .wd-icon { width: 18px; height: 18px; color: #7c9dbb; }
+.wd-weather-icon { filter: drop-shadow(0 0 4px rgb(0 229 255 / 38%)) drop-shadow(0 0 9px rgb(37 143 255 / 19%)); }
+.wd-weather-sun { color: var(--wd-yellow); filter: drop-shadow(0 0 5px rgb(255 209 102 / 48%)); }
+.wd-weather-thunderstorm, .wd-weather-tornado, .wd-weather-hurricane { color: var(--wd-purple); filter: drop-shadow(0 0 5px rgb(169 102 255 / 44%)); }
+.wd-weather-rain, .wd-weather-heavyRain, .wd-weather-snow, .wd-weather-ice, .wd-weather-fog { color: var(--wd-cyan); }
+@media (prefers-reduced-motion: reduce) { .wd-icon { transition: none; } }
+
+.alert-icon-extreme .wd-icon, .alert-icon-high .wd-icon { color: var(--wd-magenta); filter: drop-shadow(0 0 6px rgb(255 77 203 / 40%)); }
+.alert-icon-moderate .wd-icon { color: var(--wd-yellow); filter: drop-shadow(0 0 6px rgb(255 209 102 / 36%)); }
+.alert-icon-low .wd-icon { color: var(--wd-blue); }

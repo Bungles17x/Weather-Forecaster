@@ -1,134 +1,103 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
+import { resolveLocation } from '../services/weatherData'
 
-// Create Location Context
 const LocationContext = createContext()
+const DEFAULT_LOCATION = 'Washington, District of Columbia'
+const DEFAULT_COORDINATES = { lat: 38.9072, lon: -77.0369 }
 
-// Location Provider Component
 export const LocationProvider = ({ children }) => {
-  const [location, setLocation] = useState('New York, NY')
-  const [coordinates, setCoordinates] = useState(null)
+  const [location, setLocationState] = useState(DEFAULT_LOCATION)
+  const [coordinates, setCoordinatesState] = useState(DEFAULT_COORDINATES)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [ready, setReady] = useState(false)
 
-  // Load saved location on mount
   useEffect(() => {
-    const savedLocation = localStorage.getItem('weatherLocation') || 'New York, NY'
-    const savedCoordinates = localStorage.getItem('weatherCoordinates')
-    
-    setLocation(savedLocation)
-    if (savedCoordinates) {
-      try {
-        setCoordinates(JSON.parse(savedCoordinates))
-      } catch (e) {
-        console.log('Could not parse saved coordinates')
+    try {
+      const savedLocation = localStorage.getItem('weatherLocation')
+      const savedCoordinates = localStorage.getItem('weatherCoordinates')
+      if (savedLocation) setLocationState(savedLocation)
+      if (savedCoordinates) {
+        const parsed = JSON.parse(savedCoordinates)
+        if (Number.isFinite(Number(parsed.lat)) && Number.isFinite(Number(parsed.lon))) {
+          setCoordinatesState({ lat: Number(parsed.lat), lon: Number(parsed.lon) })
+        }
       }
+    } catch (storageError) {
+      console.warn('Saved location could not be restored.', storageError)
+    } finally {
+      setReady(true)
     }
   }, [])
 
-  // Handle location change with geocoding
-  const handleLocationChange = async (newLocation) => {
-    if (!newLocation || newLocation.trim() === '') return
-    
+  const persistLocation = (name, coords) => {
+    setLocationState(name)
+    setCoordinatesState(coords)
+    try {
+      localStorage.setItem('weatherLocation', name)
+      localStorage.setItem('weatherCoordinates', JSON.stringify(coords))
+      const history = JSON.parse(localStorage.getItem('weatherLocationHistory') || '[]')
+      localStorage.setItem('weatherLocationHistory', JSON.stringify([name, ...history.filter(item => item !== name)].slice(0, 10)))
+    } catch (storageError) {
+      // The app remains usable if private browsing blocks local storage.
+      console.info('Location preferences were not saved on this device.')
+    }
+  }
+
+  const handleLocationChange = async newLocation => {
+    if (!newLocation || !newLocation.trim()) return
     setLoading(true)
     setError(null)
-    
     try {
-      console.log('🌍 LocationContext: Geocoding location:', newLocation)
-      
-      // Geocode the location to get coordinates
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(newLocation)}&limit=1`
-      )
-      const data = await response.json()
-      
-      if (!data || data.length === 0) {
-        throw new Error('Location not found')
-      }
-      
-      const { lat, lon, display_name } = data[0]
-      const coords = { lat: parseFloat(lat), lon: parseFloat(lon) }
-      
-      // Update state
-      setLocation(newLocation)
-      setCoordinates(coords)
-      
-      // Save to localStorage
-      localStorage.setItem('weatherLocation', newLocation)
-      localStorage.setItem('weatherCoordinates', JSON.stringify(coords))
-      localStorage.setItem('weatherLocationHistory', JSON.stringify([
-        newLocation,
-        ...JSON.parse(localStorage.getItem('weatherLocationHistory') || '[]')
-          .filter(loc => loc !== newLocation)
-          .slice(0, 9)
-      ]))
-      
-      console.log('✅ LocationContext: Location updated:', { location: newLocation, coordinates: coords })
-      
-    } catch (error) {
-      console.error('❌ LocationContext: Error geocoding location:', error)
-      setError(error.message || 'Failed to find location')
+      const result = await resolveLocation(newLocation.trim())
+      persistLocation(result.name, { lat: result.lat, lon: result.lon })
+    } catch (lookupError) {
+      setError(lookupError.message || 'Could not resolve that location.')
     } finally {
       setLoading(false)
     }
   }
 
-  // Handle coordinates change (from GPS location)
   const handleCoordinatesChange = async (coords, locationName) => {
-    setLoading(true)
+    const lat = Number(coords?.lat)
+    const lon = Number(coords?.lon)
+    if (!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) {
+      setError('The provided coordinates are invalid.')
+      return
+    }
     setError(null)
-    
+    setLoading(true)
     try {
-      const locationString = locationName || `${coords.lat.toFixed(4)}, ${coords.lon.toFixed(4)}`
-      
-      setLocation(locationString)
-      setCoordinates(coords)
-      
-      // Save to localStorage
-      localStorage.setItem('weatherLocation', locationString)
-      localStorage.setItem('weatherCoordinates', JSON.stringify(coords))
-      
-      console.log('✅ LocationContext: Coordinates updated:', { location: locationString, coordinates: coords })
-      
-    } catch (error) {
-      console.error('❌ LocationContext: Error updating coordinates:', error)
-      setError(error.message || 'Failed to update location')
+      let name = locationName
+      if (!name) {
+        try {
+          const point = await fetch(`https://api.weather.gov/points/${lat.toFixed(4)},${lon.toFixed(4)}`, { headers: { Accept: 'application/geo+json' } })
+          if (point.ok) {
+            const payload = await point.json()
+            const relative = payload.properties?.relativeLocation?.properties
+            name = relative?.city && relative?.state ? `${relative.city}, ${relative.state}` : `${lat.toFixed(3)}, ${lon.toFixed(3)}`
+          }
+        } catch { /* Keep coordinate label below. */ }
+      }
+      persistLocation(name || `${lat.toFixed(3)}, ${lon.toFixed(3)}`, { lat, lon })
     } finally {
       setLoading(false)
     }
   }
 
-  // Get location history
   const getLocationHistory = () => {
-    try {
-      return JSON.parse(localStorage.getItem('weatherLocationHistory') || '[]')
-    } catch (e) {
-      return []
-    }
+    try { return JSON.parse(localStorage.getItem('weatherLocationHistory') || '[]') }
+    catch { return [] }
   }
 
-  const value = {
-    location,
-    coordinates,
-    loading,
-    error,
-    setLocation: handleLocationChange,
-    setCoordinates: handleCoordinatesChange,
-    getLocationHistory
-  }
-
-  return (
-    <LocationContext.Provider value={value}>
-      {children}
-    </LocationContext.Provider>
-  )
+  return <LocationContext.Provider value={{ location, coordinates, loading, error, ready, setLocation: handleLocationChange, setCoordinates: handleCoordinatesChange, getLocationHistory }}>
+    {children}
+  </LocationContext.Provider>
 }
 
-// Custom hook to use location context
 export const useLocation = () => {
   const context = useContext(LocationContext)
-  if (!context) {
-    throw new Error('useLocation must be used within a LocationProvider')
-  }
+  if (!context) throw new Error('useLocation must be used within a LocationProvider')
   return context
 }
 

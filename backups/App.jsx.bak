@@ -1,0 +1,30 @@
+import React from 'react'
+import { Routes, Route, Navigate } from 'react-router-dom'
+import HomePage from './pages/HomePage'
+import MapPage from './pages/MapPage'
+import ForecastPage from './pages/ForecastPage'
+import SettingsPage from './pages/SettingsPage'
+import AlertsPage from './pages/AlertsPage'
+import AnalysisPage from './pages/AnalysisPage'
+import ObservationsPage from './pages/ObservationsPage'
+import ConnectivityStatus from './components/ConnectivityStatus'
+import AssistantPage from './pages/AssistantPage'
+
+export default function App() {
+  return (
+    <>
+      <ConnectivityStatus />
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/map" element={<MapPage />} />
+        <Route path="/forecast" element={<ForecastPage />} />
+        <Route path="/alerts" element={<AlertsPage />} />
+        <Route path="/analysis" element={<AnalysisPage />} />
+        <Route path="/assistant" element={<AssistantPage />} />
+        <Route path="/observations" element={<ObservationsPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </>
+  )
+}

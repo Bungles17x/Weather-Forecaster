@@ -1,7 +1,7 @@
 {
   "name": "weather-forecaster-app",
   "private": true,
-  "version": "0.0.0",
+  "version": "2.1.1",
   "type": "module",
   "homepage": "https://Bungles17x.github.io/Weather-Forecaster",
   "scripts": {
@@ -10,20 +10,22 @@
     "build:dev": "vite build --mode development && node scripts/clean-vite.js",
     "build:prod": "vite build --mode production && node scripts/clean-vite.js",
     "preview": "vite preview --host --port 4173",
-    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
-    "lint:fix": "eslint . --ext js,jsx --fix",
+    "lint": "eslint src server tests --ext js,jsx,mjs --report-unused-disable-directives --max-warnings 0",
+    "lint:fix": "eslint src server tests --ext js,jsx,mjs --fix",
     "start": "npm run dev",
     "serve": "npm run preview",
     "clean": "rimraf docs",
     "predeploy": "npm run build:prod",
     "deploy": "gh-pages -d docs --repo https://github.com/Bungles17x/Weather-Forecaster.git",
-    "deploy:local": "npm run build:prod && npm run preview"
+    "deploy:local": "npm run build:prod && npm run preview",
+    "test": "node --test",
+    "test:watch": "node --test --watch",
+    "start:ai": "node server/ai-server.mjs",
+    "verify": "npm test && npm run lint && npm run build"
   },
   "dependencies": {
-    "chart.js": "^4.5.1",
     "leaflet": "^1.9.4",
     "react": "^18.2.0",
-    "react-chartjs-2": "^5.3.1",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.22.3"
   },

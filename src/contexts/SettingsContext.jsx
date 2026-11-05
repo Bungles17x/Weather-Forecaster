@@ -13,9 +13,13 @@ export const useSettings = () => {
 export const SettingsProvider = ({ children }) => {
   const [settings, setSettings] = useState({
     units: 'imperial',
-    theme: 'dark',
+    theme: 'neon-storm',
+    accentColor: '#6ee7f9',
+    fontScale: 'normal',
+    density: 'comfortable',
+    motion: true,
     notifications: true,
-    autoRefresh: false,
+    autoRefresh: true,
     refreshInterval: 10,
     location: 'auto',
     language: 'en'
@@ -49,27 +53,35 @@ export const SettingsProvider = ({ children }) => {
     }
   }, [settings, loading])
 
-  // Apply theme to document
+  // Apply theme packs as root classes so theme changes remain a token-only swap.
   useEffect(() => {
     const root = document.documentElement
-    if (settings.theme === 'dark') {
-      root.classList.add('dark-theme')
-      root.classList.remove('light-theme')
-    } else if (settings.theme === 'light') {
-      root.classList.add('light-theme')
-      root.classList.remove('dark-theme')
-    } else {
-      // Auto theme - based on system preference
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-      if (prefersDark) {
-        root.classList.add('dark-theme')
-        root.classList.remove('light-theme')
-      } else {
-        root.classList.add('light-theme')
-        root.classList.remove('dark-theme')
-      }
+    const media = window.matchMedia('(prefers-color-scheme: dark)')
+    const themeClasses = ['dark-theme', 'light-theme', 'theme-neon-storm', 'theme-aurora', 'theme-sunset', 'theme-midnight-oled', 'theme-paper', 'theme-high-contrast']
+    const applyTheme = () => {
+      const hour = new Date().getHours()
+      let theme = settings.theme || 'neon-storm'
+      if (theme === 'auto') theme = media.matches ? 'neon-storm' : 'paper'
+      if (theme === 'auto-sky') theme = hour >= 6 && hour < 17 ? 'aurora' : hour >= 17 && hour < 20 ? 'sunset' : 'midnight-oled'
+      root.classList.remove(...themeClasses)
+      root.classList.add(`theme-${theme}`)
+      root.classList.toggle('dark-theme', !['paper'].includes(theme))
+      root.classList.toggle('light-theme', theme === 'paper')
+      root.dataset.density = settings.density || 'comfortable'
+      root.dataset.fontScale = settings.fontScale || 'normal'
+      root.dataset.motion = settings.motion === false ? 'off' : 'on'
+      root.style.setProperty('--accent-user', settings.accentColor || '#6ee7f9')
+      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'paper' ? '#f4f7fb' : theme === 'midnight-oled' ? '#000000' : '#07101c')
     }
-  }, [settings.theme])
+    applyTheme()
+    if (settings.theme === 'auto') media.addEventListener?.('change', applyTheme)
+    const onVisibility = () => { if (!document.hidden && settings.theme === 'auto-sky') applyTheme() }
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => {
+      media.removeEventListener?.('change', applyTheme)
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
+  }, [settings.theme, settings.accentColor, settings.fontScale, settings.density, settings.motion])
 
   const updateSetting = (key, value) => {
     setSettings(prev => ({
@@ -88,9 +100,13 @@ export const SettingsProvider = ({ children }) => {
   const resetSettings = () => {
     const defaultSettings = {
       units: 'imperial',
-      theme: 'dark',
+      theme: 'neon-storm',
+      accentColor: '#6ee7f9',
+      fontScale: 'normal',
+      density: 'comfortable',
+      motion: true,
       notifications: true,
-      autoRefresh: false,
+      autoRefresh: true,
       refreshInterval: 10,
       location: 'auto',
       language: 'en'

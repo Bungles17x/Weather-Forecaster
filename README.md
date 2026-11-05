@@ -1,240 +1,131 @@
-# 🌤️ Weather Forecaster
+# WeatherDesk 2.1.0 — Premium Weather Intelligence & Forecast Workstation
 
-A professional weather forecasting application with real-time radar, severe weather alerts, and comprehensive meteorological data visualization.
+WeatherDesk is an independent educational weather workstation built with React, Vite, Leaflet, and an installable Progressive Web App (PWA). **All meteorological data feeds in this app are from the U.S. National Weather Service / NOAA**: point forecasts, hourly forecasts, gridded forecast fields, station observations, active alerts, and radar GIS products. This is not an official NWS product and must not replace official warnings or emergency instructions.
 
-## 🚀 Features
+## Platform support
 
-### 🌡️ Weather Data
-- **Current Conditions**: Real-time temperature, humidity, wind speed, and atmospheric pressure
-- **7-Day Forecast**: Detailed hourly and daily weather predictions
-- **Weather Maps**: Interactive maps with multiple weather layers
-- **Severe Weather Alerts**: Real-time NWS alerts with interactive polygons
+- **Desktop:** current Chrome, Edge, Firefox, and Safari browsers.
+- **Android:** open the HTTPS site in a supported browser and choose Install app / Add to Home Screen when offered.
+- **iPhone and iPad:** open the HTTPS site in Safari, tap Share, then Add to Home Screen.
+- One responsive codebase powers the website and PWA. Native App Store or Google Play releases require separate packaging, device testing, and review.
 
-### 🛡️ Advanced Radar System
-- **IEM NEXRAD**: Official Iowa State Environmental Mesonet radar (Primary)
-- **Smart Fallbacks**: 3-tier reliability system
-  - IEM NEXRAD (Primary)
-  - RainViewer (Backup)
-  - Ventusky (Final)
-- **Real-time Status**: Automatic source switching for uninterrupted coverage
-- **Optimized Performance**: Fast loading with minimal lag
-- **Clean Interface**: No UI clutter for maximum map visibility
+## Main modules
 
-### 🗺️ Interactive Maps
-- **Full-Screen Display**: Maximum map visibility with clean interface
-- **OpenStreetMap**: CartoDB Positron tiles optimized for mobile & PC
-- **Weather Overlays**: IEM NEXRAD radar with severe weather polygons
-- **Alert Polygons**: 448+ NWS severe weather warnings with interactive popups
-- **Location Tracking**: Pulsing location marker with GPS updates
-- **Scrolling Enabled**: Users can navigate through all app sections
+- **Overview:** nearest available station report, current conditions, point-based active alerts, next forecast periods, and shortcuts.
+- **Forecast:** NWS forecast periods and hourly forecast periods, with official descriptions and precipitation chances when available.
+- **Radar & alerts:** interactive map; official NWS/NOAA national base reflectivity, composite reflectivity, precipitation-type, and echo-top WMS products; per-site base radial velocity, super-resolution reflectivity, hydrometeor classification, and precipitation accumulation products when advertised by a local radar; NWS alert polygons as a separate overlay; adjustable opacity; refresh/redraw and map controls; and a direct link to the official NWS radar viewer. The published NWS/NOAA OpenGeo WMS services do not require a commercial radar API key. Background map tiles are geographic context from third-party map providers, not weather data.
+- **Alert center:** active point-based NWS alerts, severity filtering, search, timestamps, official instructions, and original product links.
+- **Storm environment:** available NWS forecast-grid temperature, dew point, humidity, wind, gust, and thunder probability fields. Advanced indices not exposed by the NWS point/grid API are explicitly marked unavailable rather than filled with another provider's data.
+- **Observations:** the latest available observation from a nearby station listed by the NWS API. A station may be operated by a partner rather than by NWS directly, and reports can be delayed or have missing fields.
+- **Settings:** light/dark/system themes, temperature units, automatic refresh, source transparency, and local preferences. The first-run example is Washington, DC; visitors can search for their own location.
+- **Daily briefing:** rule-based summaries of upcoming precipitation probabilities, below-freezing forecast periods, and alert-feed uncertainty. These are derived from loaded NWS data, not official warnings.
+- **WeatherDesk AI:** dedicated conversation workspace. The local helper uses loaded weather context and meteorology explanations without an API key. An optional protected Node backend adds real model responses; see [AI-ASSISTANT.md](AI-ASSISTANT.md).
 
-### 📱 Responsive Design
-- **Mobile Optimized**: Works seamlessly on all devices
-- **Modern UI**: Clean, intuitive interface with smooth animations
-- **Accessibility**: WCAG compliant with keyboard navigation
+## Data-source policy
 
-## 🛠️ Technology Stack
+### Weather data
 
-- **Frontend**: React 18 with modern hooks
-- **Mapping**: Leaflet.js with OpenStreetMap
-- **Build Tool**: Vite 5 for fast development and optimized builds
-- **Deployment**: GitHub Pages with automated deployment
+All meteorological data comes from official NWS/NOAA endpoints:
 
-## 🌐 Live Demo
+- Forecast point metadata: `https://api.weather.gov/points/{lat},{lon}`
+- Text forecast: the `forecast` link returned by the point lookup
+- Hourly forecast: the `forecastHourly` link returned by the point lookup
+- Forecast grid: the `forecastGridData` link returned by the point lookup
+- Active alerts: `https://api.weather.gov/alerts/active?point={lat},{lon}`
+- Station observations: NWS `/observationStations` list and `/stations/{stationId}/observations/latest`
+- Radar GIS products: NWS/NOAA IDP GeoServer listed on the [NWS CloudGIS page](https://www.weather.gov/gis/cloudgiswebservices)
 
-Visit the live application: [Weather Forecaster](https://Bungles17x.github.io/Weather-Forecaster/)
+The NWS API does not provide a free-text city geocoder, so Nominatim is used **only to convert user-entered U.S. place names and ZIP codes to coordinates**. No weather values come from the geocoder. If a user enters coordinates directly, that geocoder request is skipped.
 
-## 📦 Installation
+### Important product limitations
 
-### Prerequisites
-- Node.js 16+ 
-- npm or yarn
+- The NWS point forecast API does **not** provide a complete atmospheric sounding. CAPE, CIN, 0–6 km bulk shear, and storm-relative helicity therefore remain unavailable in this NWS-only version unless a compatible official NWS source is added. Surface observations cannot be used as a valid substitute.
+- National reflectivity comes from the NWS/NOAA CONUS composite radar GIS service. Base velocity is a local radar product and may be unavailable for a given radar/layer. Use the linked official NWS radar viewer to select an available station and product when needed.
+- Radar images can be delayed, absent, or limited by radar range, beam height, maintenance, and product availability. A velocity couplet does not independently confirm a tornado.
+- NWS API station observations can be delayed and may be missing or quality-controlled. The app labels these as station reports, not observations at the user's exact coordinates.
+- Empty alerts means no alerts were returned for that query at that time; it does not guarantee that no hazard exists. Confirm urgent information at [weather.gov/alerts](https://www.weather.gov/alerts).
+- Public NWS APIs use reasonable rate limits. Requests are refreshed periodically and should not be polled aggressively.
 
-### Local Development
+## Radar troubleshooting
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/Bungles17x/Weather-Forecaster.git
-   cd Weather-Forecaster
-   ```
+The default national radar mosaics are available without selecting a radar site. Local velocity and other site-specific products are looked up through each site's published WMS GetCapabilities catalog. If a browser blocks that catalog request, WeatherDesk attempts the documented site/product name directly and displays a status message if imagery still fails. Enter a four-character NEXRAD site ID in the radar toolbar to try a different site. A failed product stays clearly identified; the app does not silently present reflectivity as velocity. If a published layer remains unavailable, compare with the official [NWS radar viewer](https://radar.weather.gov/).
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+## Run locally
 
-3. **Start development server**
-   ```bash
-   npm run dev
-   ```
+Requirements: Node.js 20+ and npm.
 
-4. **Open your browser**
-   Navigate to `http://localhost:5173`
+```bash
+npm ci
+npm test
+npm run lint
+npm run dev
+```
 
-## 🚀 Deployment
+For a production build:
 
-### GitHub Pages
-The application is configured for automatic deployment to GitHub Pages with multiple methods:
-
-**Method 1: GitHub Actions (Automatic)**
-- Automatic deployment on push to main branch
-- Uses peaceiris/actions-gh-pages@v3 workflow
-- Requires repository permissions setup
-
-**Method 2: GitHub Pages Action (Alternative)**
-- Modern GitHub Pages deployment
-- Uses actions/deploy-pages@v4 workflow
-- Direct deployment to GitHub Pages
-
-**Method 3: Manual Deployment**
 ```bash
 npm run build
-npx gh-pages --dist docs --repo https://github.com/Bungles17x/Weather-Forecaster.git
+npm run preview
 ```
 
-**Method 4: Deployment Scripts**
+## Troubleshooting
+
+### Build fails with "vite: not found"
+If you see an error about vite not being found, run:
 ```bash
-# Linux/macOS
-bash deploy.sh
-
-# Windows
-.\deploy.bat
+npm install
 ```
 
-### Manual Deployment
-The build output is located in the `docs/` directory and can be deployed to any static hosting service.
-
-## 📊 API Sources
-
-### Weather Data
-- **OpenWeatherMap**: Current conditions and forecasts
-- **National Weather Service**: Alerts and radar data
-- **NOAA**: Satellite and meteorological data
-
-### Radar Sources
-- **Iowa State Environmental Mesonet**: Official NEXRAD reflectivity data
-- **RainViewer**: Real-time precipitation radar (backup)
-- **Ventusky**: Weather visualization (final backup)
-- **National Weather Service**: Severe weather alerts and polygons
-
-## 🔧 Configuration
-
-### Environment Variables
-Create a `.env` file in the root directory:
-
-```env
-VITE_OPENWEATHER_API_KEY=your_api_key_here
+### Tests fail
+Ensure all dependencies are installed:
+```bash
+npm ci
+npm test
 ```
 
-### API Keys
-- **OpenWeatherMap**: Register for free API key at [openweathermap.org](https://openweathermap.org/api)
-- **Other sources**: Used without API keys (free tier)
+### Linting errors
+Fix linting issues automatically:
+```bash
+npm run lint:fix
+```
 
-## 🎯 Usage
+### Map/radar not loading
+- Check that you have an internet connection
+- Ensure you're using HTTPS or localhost (browser security requirements)
+- Some radar layers may be temporarily unavailable from NWS
+- Try refreshing the page or selecting a different radar site
 
-### Basic Navigation
-1. **Map Interaction**: Pan, zoom, and scroll through the full-screen map
-2. **Weather Alerts**: Click on severe weather polygons for detailed information
-3. **Location Tracking**: Pulsing marker shows your current location
-4. **Radar Display**: IEM NEXRAD radar with automatic fallbacks
+Vite outputs the static site to `docs/` for GitHub Pages. Hash-based routing supports client-side navigation on static hosting without server-side rewrite rules.
 
-### Advanced Features
-- **Smart Fallbacks**: Automatic radar source switching for reliability
-- **Optimized Performance**: Fast loading with minimal UI elements
-- **Clean Interface**: Maximum map visibility without clutter
-- **Responsive Design**: Works seamlessly on mobile and desktop
-- **Real-time Data**: Live severe weather alerts and radar updates
+## GitHub Pages deployment
 
-## 🐛 Troubleshooting
+1. Push the project to your repository's `main` branch.
+2. Confirm `vite.config.js` has `base: '/Weather-Forecaster/'` for a repository named `Weather-Forecaster`. Set `VITE_BASE_PATH=/` for a custom root domain, or adjust the base path for a different repository name.
+3. Open GitHub **Settings → Pages** and choose **GitHub Actions** as the source.
+4. Push to `main` or run the workflow manually.
+5. After deployment, test the live URL on a PC, Android, and iPhone/iPad over HTTPS.
 
-### Common Issues
+## Public-release checklist
 
-1. **Radar Not Loading**
-   - Check internet connection
-   - Wait for automatic fallback to activate (IEM → RainViewer → Ventusky)
-   - Refresh the page for latest data
+- [ ] Run `npm ci`, `npm test`, `npm run lint`, and `npm run build` locally and resolve errors.
+- [ ] Verify current forecasts, hourly forecasts, grid fields, latest station observation, and point-based alerts on weather.gov/API responses.
+- [ ] Confirm radar reflectivity and the configured local velocity product return real imagery. If the local velocity layer is unsupported, use the official NWS radar viewer and adjust configuration rather than displaying a false layer.
+- [ ] Test geolocation, city/ZIP search, invalid search terms, alert feed failure, empty station responses, slow network, and offline app-shell launch.
+- [ ] Test small phones, landscape orientation, keyboard access, high contrast, reduced motion, and screen-reader labels.
+- [ ] Confirm third-party geographic basemap terms and attribution. Basemaps are not weather data.
+- [ ] Add a privacy policy/contact address if the app later adds accounts, analytics, or feedback collection. Location preferences are stored locally in the browser.
+- [ ] Keep the independence disclaimer visible and point users to official NWS warnings and local emergency authorities.
 
-2. **JavaScript Errors**
-   - Clear browser cache
-   - Ensure modern browser (Chrome, Firefox, Safari, Edge)
-   - Check console for specific error messages
+## Stack
 
-3. **Alerts Not Displaying**
-   - Some areas may not have active alerts
-   - Check NWS service status
-   - Click on polygons to view alert details
+React 18 · React Router · Vite 5 · Leaflet · NWS API (`api.weather.gov`) · NWS/NOAA CloudGIS radar services · Nominatim for location-name geocoding only · third-party geographic basemap tiles.
 
-4. **Scrolling Issues**
-   - Ensure CSS is properly loaded
-   - Check that map container is positioned correctly
-   - Refresh page if scrolling is disabled
+## Original WeatherDesk icon system
 
-### Performance Tips
-- Use modern browsers for best performance
-- Disable unused map layers for faster loading
-- Clear browser cache if experiencing issues
+The UI uses local reusable SVG icons from `src/components/WeatherIcons.jsx`, styled by `src/components/WeatherIcons.css`. The same neon radar-cloud-lightning brand mark is supplied as `public/weather-icon.svg` and the generated PWA/Apple icon PNGs in `public/icons/`. Weather symbols are selected locally from official NWS forecast wording; icon artwork is local and does not make or alter weather-data requests.
 
-## 🤝 Contributing
 
-We welcome contributions! Please follow these steps:
 
-1. **Fork the repository**
-2. **Create a feature branch**
-   ```bash
-   git checkout -b feature/amazing-feature
-   ```
-3. **Commit your changes**
-   ```bash
-   git commit -m 'Add amazing feature'
-   ```
-4. **Push to the branch**
-   ```bash
-   git push origin feature/amazing-feature
-   ```
-5. **Open a Pull Request**
+## WeatherDesk 2.0 status
 
-### Development Guidelines
-- Follow React best practices
-- Use semantic HTML5 elements
-- Ensure mobile responsiveness
-- Test on multiple browsers
-- Document new features
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- **Iowa State Environmental Mesonet** for official NEXRAD radar data
-- **National Weather Service** for severe weather alerts
-- **RainViewer** for backup radar imagery
-- **Ventusky** for weather visualization
-- **Leaflet.js** for mapping functionality
-- **OpenStreetMap** for base map tiles
-- **GitHub** for hosting and CI/CD
-
-## 📞 Support
-
-For support, please:
-- Open an issue on GitHub
-- Check the troubleshooting section
-- Review the documentation
-
----
-
-**Made with ❤️ for weather enthusiasts and emergency preparedness**
-
----
-
-## 🔗 Quick Links
-
-- [Live Demo](https://Bungles17x.github.io/Weather-Forecaster/)
-- [GitHub Repository](https://github.com/Bungles17x/Weather-Forecaster)
-- [Issues](https://github.com/Bungles17x/Weather-Forecaster/issues)
-- [Pull Requests](https://github.com/Bungles17x/Weather-Forecaster/pulls)
-
----
-
-**Last Updated**: 2026-03-17
-**Version**: 1.0.0
+WeatherDesk 2.0 introduces token-based visual themes, accessibility-oriented display controls, and groundwork for broader AI provider configuration. This release remains an independent educational app; meteorological data must come from official NWS/NOAA services. See `RELEASE-NOTES.md` for implemented scope and verification limits.

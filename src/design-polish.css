@@ -1,0 +1,355 @@
+/* WeatherDesk 2.0 — shared visual polish and resilient theme-aware surfaces. */
+:root {
+  --font-display: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-body: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --content-gutter: clamp(12px, 2.4vw, 34px);
+  --control-height: 42px;
+  --focus-ring: 0 0 0 3px color-mix(in srgb, var(--accent, var(--cyan)) 28%, transparent);
+  --panel-glass: color-mix(in srgb, var(--panel, #0d1928) 88%, transparent);
+  --transition-fast: 0.2s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.5s ease;
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.16);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.2);
+}
+
+html, body, #root { width: 100%; min-width: 320px; }
+body { font-family: var(--font-body); background-color: var(--bg); color: var(--text); }
+button, input, select, textarea { font-family: inherit; }
+button, .secondary-action, .primary-action, .setting-select, .setting-input { border-radius: 10px; }
+button:not(:disabled) { cursor: pointer; }
+button:disabled { cursor: not-allowed; }
+:where(button, a, input, select, textarea, summary):focus-visible { outline: 2px solid var(--accent, var(--cyan)); outline-offset: 3px; box-shadow: var(--focus-ring); }
+
+/* Keep surfaces coherent while preserving specialist component layouts. */
+:where(.panel-card, .metric-card, .module-card, .insight-card, .hourly-card, .extended-row,
+       .settings-section, .settings-auto-save, .assistant-context-card, .assistant-chat-panel,
+       .analysis-card, .observation-card, .forecast-hero, .brief-panel) {
+  border-radius: var(--radius-card, 16px);
+}
+:where(.panel-card, .metric-card, .settings-section, .assistant-chat-panel, .forecast-hero) {
+  min-width: 0;
+}
+:where(.panel-card, .metric-card, .module-card, .insight-card) {
+  box-shadow: var(--shadow-card, 0 12px 36px rgba(0,0,0,.16));
+}
+:where(.module-card, .insight-card, .hour-chip, .hourly-card, .extended-row, .official-alert-card) {
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+:where(.module-card, .insight-card):hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+:where(.hour-chip):hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+:where(.hourly-card):hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+:where(.extended-row):hover {
+  transform: translateX(4px);
+  background: var(--color-surface-elevated);
+}
+:where(.eyebrow, .source-pill, .data-chip, .metric-card strong, .hero-temperature-row>strong,
+       .forecast-hero-temp strong, .big-temp, .hour-chip strong, .hourly-card strong) {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+:where(.page-heading, .section-title-row, .settings-heading, .assistant-page-heading,
+       .forecast-heading, .section-head) > * { min-width: 0; }
+:where(.page-heading p, .section-title-row p, .settings-heading p, .module-copy small,
+       .insight-content small, .assistant-message-text, .forecast-hero-copy p) {
+  overflow-wrap: anywhere;
+}
+:where(input, select, textarea) { color: var(--text); }
+:where(input, select, textarea)::placeholder { color: var(--subtle); opacity: 1; }
+
+/* Theme-aware core components. These rules avoid leaving the Paper theme with dark-only cards. */
+.theme-paper body,
+html.theme-paper body { background: radial-gradient(ellipse at 12% -10%, rgba(0,110,136,.07), transparent 38%), var(--bg); }
+.theme-paper :where(.app-header, .search-field, .filter-field, .official-alert-card, .official-alert-body,
+  .alert-detail-grid>div, .public-map-container, .wf-toolbar, .wf-side-panel, .wf-map-area,
+  .wf-leaflet-map, .wf-control-group, .wf-status, .wf-note, .wf-metric, .wf-alert-row,
+  .wf-product-select select, .wf-site-form input, .hour-chip, .module-card, .insight-card,
+  .panel-card, .metric-card, .hourly-card, .extended-row, .empty-card, .empty-state,
+  .settings-section, .settings-auto-save, .setting-select, .setting-input, .assistant-context-card,
+  .assistant-chat-panel, .assistant-message, .assistant-composer, .forecast-hero, .current-card,
+  .brief-panel, .parameter, .hour-cell) {
+  background-color: var(--panel, #fff);
+  color: var(--text);
+  border-color: var(--line, #c7d2e0);
+}
+.theme-paper :where(.app-header nav a, .official-alert-main>span:last-child, .official-alert-timing small,
+  .alert-detail-grid small, .alert-text-block small, .wf-muted, .wf-disclaimer, .wf-status,
+  .settings-section p, .setting-description, .module-copy small, .insight-content small,
+  .forecast-hero-copy p, .metric-card small, .parameter small, .hour-cell span, .hour-cell small) {
+  color: var(--muted);
+}
+.theme-paper .app-header { background: rgba(255,255,255,.94); }
+.theme-paper .wf-toolbar { background: var(--panel-2); }
+.theme-paper .wf-map-area, .theme-paper .wf-leaflet-map { background: #eaf0f6; }
+.theme-paper .wf-control-group button, .theme-paper .wf-locate,
+.theme-paper .wf-official-link, .theme-paper .wf-secondary-action { background: var(--panel-2); color: var(--text); border-color: var(--line); }
+.theme-paper .official-alert-card { background: linear-gradient(120deg, #fff, #f5f8fc); }
+.theme-paper .search-field input, .theme-paper .filter-field select { color: var(--text); }
+.theme-paper .filter-field option { background: var(--panel); color: var(--text); }
+
+.theme-midnight-oled body { background: #000; }
+.theme-midnight-oled :where(.app-header, .panel-card, .metric-card, .module-card, .insight-card,
+  .settings-section, .settings-auto-save, .assistant-context-card, .assistant-chat-panel,
+  .forecast-hero, .public-map-container, .official-alert-card) { box-shadow: none; }
+.theme-high-contrast :where(.panel-card, .metric-card, .module-card, .insight-card,
+  .settings-section, .settings-auto-save, .assistant-context-card, .assistant-chat-panel,
+  .forecast-hero, .official-alert-card, .empty-card, .empty-state) { border: 2px solid var(--line); }
+
+/* Phone and tablet resilience: avoid clipped toolbars, unreadable controls, and narrow-grid overflow. */
+@media (max-width: 760px) {
+  .data-main, .forecast-content, .settings-content { padding-inline: var(--content-gutter); }
+  .page-heading, .forecast-heading, .settings-heading { gap: 12px; }
+  .heading-actions, .alert-toolbar { flex-wrap: wrap; }
+  .alert-total { margin-left: auto; }
+  .official-alert-timing { min-width: 0; }
+  .official-alert-card summary { gap: 9px; padding: 12px; }
+  .official-alert-body { padding-inline: 12px; }
+  .alert-detail-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hourly-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .extended-row { grid-template-columns: minmax(0, 1fr) auto; }
+  .extended-forecast { grid-column: 1 / -1; }
+  .extended-temp, .extended-wind, .extended-pop { justify-self: start; }
+
+  /* Enhanced mobile navigation */
+  .app-header nav {
+    gap: 0.5rem;
+  }
+
+  .app-header nav a {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+  }
+
+  /* Enhanced mobile cards */
+  .module-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Enhanced mobile hero section */
+  .hero-weather-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-weather-card {
+    padding: 1.5rem;
+  }
+}
+@media (max-width: 480px) {
+  .alert-toolbar { align-items: stretch; }
+  .filter-field { flex: 1 1 100%; }
+  .alert-detail-grid { grid-template-columns: minmax(0, 1fr); }
+  .hourly-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .official-alert-main>span:last-child { white-space: normal; }
+  .official-alert-timing { display: none; }
+  .public-map-container { border-radius: 12px; }
+  .settings-section { padding: 14px; }
+  .assistant-composer textarea { min-height: 96px; }
+
+  /* Enhanced small mobile */
+  .metric-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hourly-rail {
+    overflow-x: auto;
+    padding-bottom: 1rem;
+    gap: 0.75rem;
+  }
+
+  .hour-chip {
+    min-width: 120px;
+  }
+
+  .page-heading h1 {
+    font-size: 1.5rem;
+  }
+
+  .section-title-row h2 {
+    font-size: 1.25rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+
+/* ── Liquid glass controls (iOS-style) ─────────────────────────────────── */
+/* Frosted, specular-edged treatment applied to every button-like control. */
+html body :is(button, .secondary-action, .primary-action, .icon-button,
+  .install-app-button, .round-arrow, .wf-official-link, .wf-locate,
+  .wf-secondary-action, .radar-live-refresh, .radar-live-retry,
+  .radar-live-select):not(:disabled) {
+  background-color: rgba(148, 197, 255, .10);
+  background-image: linear-gradient(165deg, rgba(255,255,255,.24), rgba(255,255,255,.07) 45%, rgba(255,255,255,.02));
+  border: 1px solid rgba(255,255,255,.24);
+  -webkit-backdrop-filter: blur(16px) saturate(1.7);
+  backdrop-filter: blur(16px) saturate(1.7);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.40),
+    inset 0 -1px 0 rgba(4,14,24,.30),
+    0 8px 22px rgba(2,10,20,.28);
+  transition: background-color .18s ease, border-color .18s ease, box-shadow .18s ease, transform .12s ease;
+}
+
+html body :is(button, .secondary-action, .primary-action, .icon-button,
+  .install-app-button, .round-arrow, .wf-official-link, .wf-locate,
+  .wf-secondary-action, .radar-live-refresh, .radar-live-retry,
+  .radar-live-select):not(:disabled):hover {
+  background-color: rgba(178, 216, 255, .18);
+  border-color: rgba(255,255,255,.42);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.5),
+    inset 0 -1px 0 rgba(4,14,24,.30),
+    0 10px 28px rgba(2,10,20,.34);
+}
+
+html body :is(button, .secondary-action, .primary-action, .icon-button,
+  .install-app-button, .round-arrow, .wf-official-link, .wf-locate,
+  .wf-secondary-action, .radar-live-refresh, .radar-live-retry,
+  .radar-live-select):not(:disabled):active {
+  transform: scale(.96);
+  background-color: rgba(200, 228, 255, .24);
+}
+
+html body :is(button, .secondary-action, .primary-action, .icon-button,
+  .install-app-button, .round-arrow, .wf-official-link, .wf-locate,
+  .wf-secondary-action, .radar-live-refresh, .radar-live-retry,
+  .radar-live-select):disabled {
+  opacity: .5;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+
+/* Light / paper theme: glass over light surfaces needs darker specular edges. */
+html.light-theme body :is(button, .secondary-action, .primary-action, .icon-button,
+  .install-app-button, .round-arrow, .wf-official-link, .wf-locate,
+  .wf-secondary-action, .radar-live-refresh, .radar-live-retry,
+  .radar-live-select):not(:disabled),
+.theme-paper body :is(button, .secondary-action, .primary-action, .icon-button,
+  .install-app-button, .round-arrow, .wf-official-link, .wf-locate,
+  .wf-secondary-action, .radar-live-refresh, .radar-live-retry,
+  .radar-live-select):not(:disabled) {
+  background-color: rgba(255,255,255,.55);
+  background-image: linear-gradient(165deg, rgba(255,255,255,.85), rgba(255,255,255,.35) 45%, rgba(210,228,242,.25));
+  border-color: rgba(20,50,70,.20);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.9),
+    inset 0 -1px 0 rgba(20,50,70,.10),
+    0 6px 16px rgba(20,50,70,.12);
+}
+
+html.light-theme body :is(button, .secondary-action, .primary-action, .icon-button,
+  .install-app-button, .round-arrow, .wf-official-link, .wf-locate,
+  .wf-secondary-action, .radar-live-refresh, .radar-live-retry,
+  .radar-live-select):not(:disabled):hover,
+.theme-paper body :is(button, .secondary-action, .primary-action, .icon-button,
+  .install-app-button, .round-arrow, .wf-official-link, .wf-locate,
+  .wf-secondary-action, .radar-live-refresh, .radar-live-retry,
+  .radar-live-select):not(:disabled):hover {
+  background-color: rgba(255,255,255,.75);
+  border-color: rgba(0,110,136,.35);
+}
+
+/* High-contrast theme keeps solid, high-visibility controls. */
+.theme-high-contrast body :is(button, .secondary-action, .primary-action, .icon-button,
+  .install-app-button, .round-arrow, .wf-official-link, .wf-locate,
+  .wf-secondary-action, .radar-live-refresh, .radar-live-retry,
+  .radar-live-select) {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background-image: none;
+  box-shadow: none;
+}
+
+/* ── Smooth motion polish ──────────────────────────────────────────────── */
+@keyframes wdRise {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes wdFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes wdPop {
+  from { opacity: 0; transform: scale(.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Every page's sections rise in smoothly, staggered top-to-bottom. */
+  .data-main > * {
+    animation: wdRise .5s cubic-bezier(.22, .8, .3, 1) both;
+  }
+  .data-main > *:nth-child(2) { animation-delay: .05s; }
+  .data-main > *:nth-child(3) { animation-delay: .1s; }
+  .data-main > *:nth-child(4) { animation-delay: .15s; }
+  .data-main > *:nth-child(5) { animation-delay: .2s; }
+  .data-main > *:nth-child(6) { animation-delay: .25s; }
+  .data-main > *:nth-child(7) { animation-delay: .3s; }
+  .data-main > *:nth-child(n+8) { animation-delay: .35s; }
+
+  /* Cards and tiles lift gently on hover. */
+  .metric-card, .module-card, .insight-card, .hourly-card, .hour-chip,
+  .observation-card, .analysis-card, .panel-card, .official-alert-card,
+  .assistant-message, .wf-metric, .daily-briefing-card {
+    transition: transform .22s cubic-bezier(.22, .8, .3, 1), box-shadow .22s ease, border-color .22s ease;
+  }
+  .metric-card:hover, .insight-card:hover, .module-card:hover,
+  .observation-card:hover, .analysis-card:hover, .panel-card:hover {
+    transform: translateY(-3px);
+  }
+  .hour-chip:hover, .hourly-card:hover {
+    transform: translateY(-2px);
+  }
+  .official-alert-card:hover {
+    transform: translateX(3px);
+  }
+
+  /* Dynamic content fades in as it appears. */
+  .radar-live-image { animation: wdFade .45s ease both; }
+  .route-loading { animation: wdFade .25s ease both; }
+  .alert-ribbon, .calm-ribbon { animation: wdPop .4s cubic-bezier(.22, .8, .3, 1) both; }
+  .notification { animation: wdPop .32s cubic-bezier(.22, .8, .3, 1) both; }
+
+  /* Lists cascade in. */
+  .metric-grid > *, .module-grid > *, .insights-grid > *, .observation-grid > * {
+    animation: wdRise .45s cubic-bezier(.22, .8, .3, 1) both;
+  }
+  .metric-grid > *:nth-child(2), .module-grid > *:nth-child(2),
+  .insights-grid > *:nth-child(2), .observation-grid > *:nth-child(2) { animation-delay: .06s; }
+  .metric-grid > *:nth-child(3), .module-grid > *:nth-child(3),
+  .insights-grid > *:nth-child(3), .observation-grid > *:nth-child(3) { animation-delay: .12s; }
+  .metric-grid > *:nth-child(4), .module-grid > *:nth-child(4),
+  .insights-grid > *:nth-child(4), .observation-grid > *:nth-child(4) { animation-delay: .18s; }
+  .metric-grid > *:nth-child(n+5), .module-grid > *:nth-child(n+5),
+  .insights-grid > *:nth-child(n+5), .observation-grid > *:nth-child(n+5) { animation-delay: .24s; }
+
+  /* Map chrome eases in. */
+  .wf-map-shell, .wf-toolbar, .wf-radar-secondary-bar, .wf-side-panel {
+    animation: wdFade .4s ease both;
+  }
+
+  /* Interactive rows and chips get a soft press. */
+  .hour-chip:active, .module-card:active, .wf-alert-row:active,
+  .notification-action:active, .radar-live-refresh:active {
+    transform: scale(.97);
+  }
+}

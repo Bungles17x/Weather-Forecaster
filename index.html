@@ -1,13 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <script type="module" src="/@vite/client"></script>
-
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/weather-icon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Weather Forecaster</title>
-    <meta name="description" content="Professional weather app with forecasts and radar" />
+    <link rel="icon" type="image/svg+xml" href="./weather-icon.svg" />
+    <link rel="preconnect" href="https://api.weather.gov" crossorigin />
+    <link rel="preconnect" href="https://opengeo.ncep.noaa.gov" />
+    <link rel="dns-prefetch" href="https://radar.weather.gov" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="apple-touch-icon" sizes="180x180" href="./icons/weather-180.png" />
+    <meta name="theme-color" content="#07101c" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Weather Forecaster" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Weather Forecaster — Weather Intelligence & Forecast Workstation</title>
+    <meta name="description" content="Explore NWS forecasts, radar, active alerts, practical weather briefings, and the Weather Forecaster AI assistant." />
+    <meta name="application-name" content="Weather Forecaster" />
+    <meta property="og:title" content="Weather Forecaster — Weather Intelligence & Forecast Workstation" />
+    <meta property="og:description" content="NWS forecasts, station observations, radar, official alerts, and a weather-aware assistant in an independent workstation." />
+    <meta property="og:type" content="website" />
   </head>
   <body>
     <div id="root"></div>
