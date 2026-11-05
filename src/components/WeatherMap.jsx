@@ -27,10 +27,6 @@ function featureBounds(feature) {
 const safeHtml = value => String(value || 'Not provided').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]))
 
 const BASEMAPS = {
-  dark: {
-    label: 'Dark',
-    create: () => L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; OpenStreetMap contributors &copy; CARTO', maxZoom: 19 })
-  },
   street: {
     label: 'Street',
     create: () => L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors', maxZoom: 19 })
@@ -112,7 +108,7 @@ export default function WeatherMap() {
   const { location, coordinates } = useLocation()
   const { weather, refresh } = useWeather()
   const [productId, setProductId] = useState('bref')
-  const [base, setBase] = useState(() => (typeof document !== 'undefined' && document.documentElement.classList.contains('light-theme') ? 'street' : 'dark'))
+  const [base, setBase] = useState('street')
   const baseTouched = useRef(false)
   const [status, setStatus] = useState('Preparing official NWS radar products…')
   const [opacity, setOpacity] = useState(82)
@@ -155,7 +151,7 @@ export default function WeatherMap() {
       setMapError(previous => previous || 'A background map tile failed to load. Try another background; radar products are a separate service.')
     }))
     layersRef.current.bases = bases
-    bases.dark.addTo(map)
+    bases.street.addTo(map)
 
     const alertsLayer = L.geoJSON([], {
       style: feature => ({ color: severityColor(feature.properties?.severity), weight: 2.5, opacity: 0.95, fillColor: severityColor(feature.properties?.severity), fillOpacity: 0.2 }),
@@ -181,16 +177,6 @@ export default function WeatherMap() {
     }
     // Create Leaflet once; location changes are handled by a dedicated effect.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  // Follow the app theme for the default basemap until the user picks one manually.
-  useEffect(() => {
-    const observer = new MutationObserver(() => {
-      if (baseTouched.current) return
-      setBase(document.documentElement.classList.contains('light-theme') ? 'street' : 'dark')
-    })
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
-    return () => observer.disconnect()
   }, [])
 
   useEffect(() => {
