@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import lazyWithRetry from './utils/lazyWithRetry'
 import ConnectivityStatus from './components/ConnectivityStatus'
 import LoadingSkeleton from './components/LoadingSkeleton'
+import MobileNav from './components/MobileNav'
 
 import HomePage from './pages/HomePage'
 
@@ -39,6 +40,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
+      <MobileNav />
     </>
   )
 }

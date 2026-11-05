@@ -1,0 +1,190 @@
+/* Mobile bottom tab navigation — thumb-reachable primary nav for phones. */
+
+.mobile-nav {
+  display: none;
+}
+
+@media (max-width: 860px) {
+  .mobile-nav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 900;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 2px;
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
+    background: color-mix(in srgb, var(--panel, #0d1928) 78%, transparent);
+    -webkit-backdrop-filter: blur(18px) saturate(1.6);
+    backdrop-filter: blur(18px) saturate(1.6);
+    border-top: 1px solid var(--line, rgba(148, 163, 184, .18));
+    box-shadow: 0 -8px 30px rgba(2, 8, 20, .35);
+  }
+
+  .mobile-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-height: 52px;
+    padding: 6px 2px;
+    border: 0;
+    border-radius: 14px;
+    background: transparent;
+    color: var(--muted, #8fa3bd);
+    font: inherit;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .02em;
+    text-decoration: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: color .18s ease, background .18s ease, transform .12s ease;
+  }
+
+  .mobile-nav-item:active {
+    transform: scale(.94);
+  }
+
+  .mobile-nav-item.is-active,
+  .mobile-nav-item[aria-current='page'] {
+    color: var(--cyan, #38bdf8);
+    background: color-mix(in srgb, var(--cyan, #38bdf8) 12%, transparent);
+  }
+
+  .mobile-nav-item[aria-current='page']::before {
+    content: '';
+    position: absolute;
+    top: 4px;
+    width: 22px;
+    height: 3px;
+    border-radius: 3px;
+    background: var(--cyan, #38bdf8);
+  }
+
+  .mobile-nav-item {
+    position: relative;
+  }
+
+  /* Keep page content clear of the fixed bar and hide the duplicate top nav. */
+  body {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .app-header .main-navigation {
+    display: none;
+  }
+
+  .app-header {
+    position: sticky;
+    top: 0;
+    z-index: 800;
+  }
+}
+
+/* "More" bottom sheet */
+.mobile-nav-sheet-wrap {
+  position: fixed;
+  inset: 0;
+  z-index: 1300;
+  display: flex;
+  align-items: flex-end;
+  background: rgba(3, 8, 18, .55);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+  animation: mobileNavFade .18s ease;
+}
+
+.mobile-nav-sheet {
+  width: 100%;
+  padding: 10px 16px calc(20px + env(safe-area-inset-bottom, 0px));
+  border-radius: 22px 22px 0 0;
+  background: var(--panel, #0d1928);
+  border-top: 1px solid var(--line, rgba(148, 163, 184, .2));
+  box-shadow: 0 -12px 40px rgba(2, 8, 20, .5);
+  animation: mobileNavSlide .22s cubic-bezier(.2, .9, .3, 1);
+}
+
+.mobile-nav-sheet-grip {
+  width: 42px;
+  height: 5px;
+  margin: 0 auto 12px;
+  border-radius: 5px;
+  background: var(--line, rgba(148, 163, 184, .35));
+}
+
+.mobile-nav-sheet-title {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--muted, #8fa3bd);
+}
+
+.mobile-nav-sheet-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.mobile-nav-sheet-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 60px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid var(--line, rgba(148, 163, 184, .16));
+  background: color-mix(in srgb, var(--panel-2, #13233a) 60%, transparent);
+  color: var(--text, #e6eefb);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform .12s ease, border-color .18s ease;
+}
+
+.mobile-nav-sheet-item:active {
+  transform: scale(.97);
+}
+
+.mobile-nav-sheet-item[aria-current='page'] {
+  border-color: color-mix(in srgb, var(--cyan, #38bdf8) 55%, transparent);
+  color: var(--cyan, #38bdf8);
+}
+
+.mobile-nav-sheet-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex: none;
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--cyan, #38bdf8) 12%, transparent);
+  color: var(--cyan, #38bdf8);
+}
+
+@keyframes mobileNavFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes mobileNavSlide {
+  from { transform: translateY(40px); opacity: .6; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-nav-sheet-wrap,
+  .mobile-nav-sheet {
+    animation: none;
+  }
+
+  .mobile-nav-item {
+    transition: none;
+  }
+}

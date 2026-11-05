@@ -353,3 +353,40 @@ html.light-theme body :is(button, .secondary-action, .primary-action, .icon-butt
     transform: scale(.97);
   }
 }
+
+/* ── Mobile ergonomics ─────────────────────────────────────────────────── */
+/* Kill the 300ms tap delay and double-tap zoom on every interactive element. */
+html body :is(a, button, [role='button'], input, select, textarea, summary, label) {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevent iOS Safari from auto-zooming when focusing form fields. */
+@media (max-width: 860px) {
+  html body :is(input, select, textarea) {
+    font-size: 16px;
+  }
+
+  /* Never let decorative content push the page wider than the viewport. */
+  html, body {
+    overflow-x: clip;
+  }
+
+  /* Comfortable minimum tap targets for icon-only controls. */
+  html body .icon-button {
+    min-width: 40px;
+    min-height: 40px;
+  }
+
+  /* Smooth momentum scrolling everywhere. */
+  html {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}

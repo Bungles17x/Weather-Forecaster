@@ -1,5 +1,5 @@
 /* Weather Desk PWA shell cache. Weather/API responses are deliberately not cached. */
-const CACHE_NAME = 'weather-desk-shell-v9';
+const CACHE_NAME = 'weather-forecaster-shell-v10';
 const SHELL_FILES = ['./', './index.html', './manifest.webmanifest', './weather-icon.svg', './icons/weather-180.png', './icons/weather-192.png', './icons/weather-512.png', './icons/weather-maskable-512.png'];
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
