@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import './WeatherMap.css'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -413,6 +414,7 @@ export default function WeatherMap() {
       <button type="button" className="wf-secondary-action" onClick={zoomAlerts}>Zoom to alerts</button>
       <form className="wf-site-form" onSubmit={useManualSite}><label htmlFor="wf-radar-site">Radar site ID</label><input id="wf-radar-site" value={siteInput} onChange={event => setSiteInput(event.target.value.toUpperCase().slice(0, 4))} placeholder={radarStation || 'e.g. KCCX'} maxLength={4} aria-label="Radar site ID"/><button type="submit">Load local products</button></form>
       <span className="wf-site-status">{localProductsLoading ? `Checking ${radarStation}…` : radarStation ? `Site ${radarStation}` : 'National mosaic mode'}{siteCatalog.state === 'error' ? ' · local catalog unavailable' : ''}</span>
+      <Link to="/" className="wf-secondary-action wf-exit-map"><WeatherDeskIcon name="back" size={13} /> Done</Link>
     </div>
     <div className="wf-map-area">
       <div ref={mapNode} className="wf-leaflet-map" aria-label="Interactive NWS radar map"/>

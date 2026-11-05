@@ -965,3 +965,165 @@
 .public-map-heading h1{margin:5px 0;font-size:clamp(22px,3vw,32px)}.public-map-heading p{margin:0;color:var(--muted);line-height:1.5;font-size:13px}.public-map-heading a{color:var(--cyan);white-space:nowrap;font-size:13px}
 .public-map-container{flex:1;min-height:560px;padding:0;overflow:hidden}.public-map-container .wf-map-shell{min-height:560px;height:calc(100dvh - 190px)}
 @media(max-width:760px){.public-map-heading{align-items:flex-start;flex-direction:column;gap:10px;padding:15px 12px}.public-map-container{min-height:500px}.public-map-container .wf-map-shell{height:auto;min-height:600px}.public-map-container .wf-map-area{grid-template-columns:1fr;min-height:0}.public-map-container .wf-leaflet-map{height:52dvh;min-height:320px}.public-map-container .wf-side-panel{max-height:240px}}
+
+/* ── Immersive radar mode (phones/tablets ≤860px) ──────────────────────────
+   The map fills the whole viewport; header, page heading, and the global
+   bottom tab bar are hidden. Radar tools move into a bottom dock. */
+.wf-exit-map { display: none; }
+
+@media (max-width: 860px) {
+  .map-page.map-immersive {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  .map-page.map-immersive .app-header,
+  .map-page.map-immersive .page-heading {
+    display: none;
+  }
+
+  .map-page.map-immersive .data-main {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+  }
+
+  .map-page.map-immersive .public-map-container {
+    flex: 1;
+    min-height: 0;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .map-page.map-immersive .public-map-container .wf-map-shell {
+    flex: 1;
+    min-height: 0;
+    height: 100%;
+    border-radius: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Map area takes all leftover space; toolbars dock at the bottom. */
+  .map-page.map-immersive .wf-map-area {
+    order: -1;
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+
+  .map-page.map-immersive .wf-leaflet-map {
+    height: 100%;
+    min-height: 0;
+    max-height: none;
+  }
+
+  .map-page.map-immersive .wf-side-panel {
+    max-height: 168px;
+    border-left: 0;
+    border-top: 1px solid var(--line);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Compact bottom tool dock. */
+  .map-page.map-immersive .wf-toolbar {
+    order: 0;
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
+    gap: 7px;
+    max-height: 46vh;
+    overflow-y: auto;
+  }
+
+  .map-page.map-immersive .wf-brand {
+    width: 100%;
+    font-size: 10px;
+  }
+
+  .map-page.map-immersive .wf-brand small { display: none; }
+
+  .map-page.map-immersive .wf-product-select {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+
+  .map-page.map-immersive .wf-product-select select {
+    width: 100%;
+  }
+
+  .map-page.map-immersive .wf-control-group button,
+  .map-page.map-immersive .wf-locate,
+  .map-page.map-immersive .wf-official-link {
+    min-height: 38px;
+    font-size: 11px;
+  }
+
+  .map-page.map-immersive .wf-radar-secondary-bar {
+    order: 1;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    overflow-x: auto;
+    gap: 8px;
+    padding: 7px 10px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .map-page.map-immersive .wf-radar-secondary-bar::-webkit-scrollbar { display: none; }
+
+  .map-page.map-immersive .wf-radar-secondary-bar > * {
+    flex: 0 0 auto;
+  }
+
+  .map-page.map-immersive .wf-checkbox {
+    white-space: nowrap;
+    font-size: 10px;
+  }
+
+  .map-page.map-immersive .wf-site-form {
+    flex-wrap: nowrap;
+  }
+
+  .map-page.map-immersive .wf-site-form input { width: 58px; }
+
+  .map-page.map-immersive .wf-site-status {
+    display: none;
+  }
+
+  .map-page.map-immersive .wf-exit-map {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    flex: 0 0 auto;
+    color: var(--cyan);
+    text-decoration: none;
+  }
+
+  .map-page.map-immersive .wf-status {
+    order: 2;
+    padding: 6px 10px calc(6px + env(safe-area-inset-bottom, 0px));
+    font-size: 9px;
+  }
+
+  .map-page.map-immersive .wf-note {
+    display: none;
+  }
+
+  /* Leaflet attribution shrinks so it doesn't cover the bottom dock. */
+  .map-page.map-immersive .leaflet-control-attribution {
+    font-size: 8px !important;
+    max-width: 60vw;
+  }
+}

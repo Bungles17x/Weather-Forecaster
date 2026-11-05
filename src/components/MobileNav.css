@@ -69,7 +69,7 @@
   }
 
   /* Keep page content clear of the fixed bar and hide the duplicate top nav. */
-  body {
+  body.has-mobile-nav {
     padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
   }
 

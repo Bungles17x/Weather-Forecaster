@@ -21,6 +21,12 @@ export default function MobileNav() {
   const { pathname } = useLocation()
   const [moreOpen, setMoreOpen] = useState(false)
   const moreActive = secondaryItems.some(item => pathname.startsWith(item.to))
+  const isMap = pathname === '/map'
+
+  useEffect(() => {
+    document.body.classList.toggle('has-mobile-nav', !isMap)
+    return () => document.body.classList.remove('has-mobile-nav')
+  }, [isMap])
 
   useEffect(() => {
     setMoreOpen(false)
@@ -37,6 +43,8 @@ export default function MobileNav() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [])
+
+  if (isMap) return null
 
   return (
     <>
