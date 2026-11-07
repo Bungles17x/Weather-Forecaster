@@ -214,7 +214,7 @@ function PrecipIntensityChart({ grid, units }) {
             {activeIndex !== null && series[activeIndex] && (
               <>
                 <strong>{new Date(series[activeIndex].start).toLocaleString([], { weekday: 'short', hour: 'numeric' })} – {new Date(series[activeIndex].end).toLocaleTimeString([], { hour: 'numeric' })}</strong>
-                <span>{series[activeIndex].value.toFixed(2)} {unit} expected</span>
+                <span>{series[activeIndex].value.toFixed(2)} {unit} expected · {precipIntensity(series[activeIndex].value, unit).label} intensity</span>
               </>
             )}
           </ChartTooltip>
@@ -316,7 +316,7 @@ function HourlyPrecipChart({ grid, hourly, units }) {
             {activeIndex !== null && buckets[activeIndex] && (
               <>
                 <strong>{new Date(buckets[activeIndex].start).toLocaleString([], { weekday: 'short', hour: 'numeric' })}</strong>
-                <span>{buckets[activeIndex].amount < 0.01 ? 'Trace' : `${buckets[activeIndex].amount.toFixed(2)} ${unit}`} expected{buckets[activeIndex].period?.probabilityOfPrecipitation?.value != null ? ` · ${buckets[activeIndex].period.probabilityOfPrecipitation.value}% chance` : ''}</span>
+                <span>{buckets[activeIndex].amount < 0.01 ? 'Trace' : `${buckets[activeIndex].amount.toFixed(2)} ${unit}`} expected{buckets[activeIndex].period?.probabilityOfPrecipitation?.value != null ? ` · ${buckets[activeIndex].period.probabilityOfPrecipitation.value}% chance` : ''} · {precipIntensity(buckets[activeIndex].amount, unit).label}</span>
                 {buckets[activeIndex].period?.shortForecast && <span>{buckets[activeIndex].period.shortForecast}</span>}
               </>
             )}
@@ -422,6 +422,20 @@ function TempChart({ periods, units }) {
   )
 }
 
+// QPF accumulation intensity categories (thresholds in inches, converted for mm).
+const INTENSITY_LEVELS = [
+  { label: 'Trace', max: 0.02, color: '#7dd3fc' },
+  { label: 'Light', max: 0.10, color: '#38bdf8' },
+  { label: 'Moderate', max: 0.30, color: '#0ea5e9' },
+  { label: 'Heavy', max: 1.00, color: '#6366f1' },
+  { label: 'Extreme', max: Infinity, color: '#f43f5e' },
+]
+
+function precipIntensity(amount, unit) {
+  const inches = unit === 'mm' ? amount / 25.4 : amount
+  return INTENSITY_LEVELS.find(level => inches < level.max) || INTENSITY_LEVELS[INTENSITY_LEVELS.length - 1]
+}
+
 function EmptyState({ text }) {
   return <div className="fc-empty"><WeatherDeskIcon name="info" size={20} /><span>{text}</span></div>
 }
@@ -442,6 +456,13 @@ export default function ForecastCharts({ weather, units = 'imperial' }) {
         <HourlyPrecipChart grid={weather?.grid} hourly={hourly} units={units} />
         <PrecipIntensityChart grid={weather?.grid} units={units} />
         <TempChart periods={weather?.forecast?.periods} units={units} />
+      </div>
+      <div className="fc-intensity-legend" aria-label="Precipitation intensity scale">
+        <span className="fc-legend-label">QPF intensity:</span>
+        {INTENSITY_LEVELS.map(level => (
+          <span key={level.label} className="fc-legend-item"><i style={{ background: level.color }} />{level.label}</span>
+        ))}
+        <small>Accumulation over each forecast window — heavier colors mean more expected rain/snow equivalent.</small>
       </div>
     </section>
   )

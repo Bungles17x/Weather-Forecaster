@@ -122,6 +122,8 @@ export default function WeatherMap() {
   const [lastRadarRefresh, setLastRadarRefresh] = useState(null)
   const [refreshingRadar, setRefreshingRadar] = useState(false)
   const [mobileSheet, setMobileSheet] = useState(null)
+  const alertsFittedRef = useRef(false)
+  const mapInteractedRef = useRef(false)
   const alerts = weather?.alerts ?? EMPTY_ALERTS
   // Polygons come from the nationwide active-alert feed so every warning, watch,
   // and advisory with geometry renders — not only alerts covering this point.
@@ -145,6 +147,7 @@ export default function WeatherMap() {
     const centerLon = Number.isFinite(Number(coordinates?.lon)) ? Number(coordinates.lon) : -77.0369
     const map = L.map(mapNode.current, { zoomControl: false, preferCanvas: true, minZoom: 3, maxZoom: 12, worldCopyJump: true }).setView([centerLat, centerLon], 7)
     mapRef.current = map
+    map.on('dragstart zoomstart', () => { mapInteractedRef.current = true })
     L.control.zoom({ position: 'topright' }).addTo(map)
 
     const bases = Object.fromEntries(Object.entries(BASEMAPS).map(([key, config]) => [key, config.create()]))
@@ -204,6 +207,19 @@ export default function WeatherMap() {
     layerGroup.clearLayers().addData({ type: 'FeatureCollection', features })
     if (showAlerts) layerGroup.addTo(map).bringToFront()
     else if (map.hasLayer(layerGroup)) map.removeLayer(layerGroup)
+    // Frame every alert polygon once on first load so nationwide warnings are
+    // actually visible — skipped if the user already moved the map.
+    if (!alertsFittedRef.current && !mapInteractedRef.current && features.length) {
+      const bounds = L.latLngBounds([])
+      features.forEach(feature => {
+        const featureBox = featureBounds(feature)
+        if (featureBox?.isValid()) bounds.extend(featureBox)
+      })
+      if (bounds.isValid()) {
+        map.fitBounds(bounds, { padding: [28, 28] })
+        alertsFittedRef.current = true
+      }
+    }
     if (!features.length && polygonAlerts.length) setStatus('NWS alerts were returned, but none included usable map geometry.')
   }, [polygonAlerts, showAlerts])
 

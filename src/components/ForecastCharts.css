@@ -213,3 +213,46 @@
 @media (prefers-reduced-motion: reduce) {
   .fc-bar { transition: none; }
 }
+
+/* Precipitation intensity legend */
+.fc-intensity-legend {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--line, rgba(148, 163, 184, .16));
+  background: color-mix(in srgb, var(--panel-2, #13233a) 55%, transparent);
+}
+
+.fc-legend-label {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--muted, #8fa3bd);
+}
+
+.fc-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text, #e6eefb);
+}
+
+.fc-legend-item i {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.fc-intensity-legend small {
+  flex-basis: 100%;
+  font-size: 9px;
+  color: var(--muted, #8fa3bd);
+}

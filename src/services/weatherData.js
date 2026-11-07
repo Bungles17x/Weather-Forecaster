@@ -179,7 +179,7 @@ export async function getPointAlerts(coords, signal) {
 // warnings, and advisories render regardless of whether they touch the point.
 export async function getAllActiveAlerts(signal) {
   const payload = await fetchJson(`${NWS_API}/alerts/active`, signal)
-  return processAlertFeatures(payload.features, signal, { maxZoneLookups: 25 })
+  return processAlertFeatures(payload.features, signal, { maxZoneLookups: 40 })
 }
 
 async function getLatestStationObservation(stationsUrl, signal) {
