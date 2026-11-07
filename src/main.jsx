@@ -35,6 +35,29 @@ createRoot(document.getElementById('root')).render(
   </React.StrictMode>
 )
 
+// Dismiss the boot splash once React has mounted.
+const bootSplash = document.getElementById('boot-splash')
+if (bootSplash) {
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    bootSplash.classList.add('boot-splash-out')
+    window.setTimeout(() => bootSplash.remove(), 600)
+  }))
+}
+
+// Console test hooks — e.g. window.__weatherForecaster.testError()
+window.__weatherForecaster = {
+  version: '2.1.1',
+  testError() {
+    setTimeout(() => { throw new Error('[test] Simulated runtime error — triggered via window.__weatherForecaster.testError()') }, 0)
+  },
+  testRejection() {
+    Promise.reject(new Error('[test] Simulated unhandled rejection — triggered via window.__weatherForecaster.testRejection()'))
+  }
+}
+if (import.meta.env.DEV) {
+  console.info('[Weather Forecaster] Test the error screen: window.__weatherForecaster.testError()')
+}
+
 // Clear the one-shot chunk-reload guard once the app has started successfully.
 setTimeout(() => {
   try { sessionStorage.removeItem('weatherdesk:chunk-reload') } catch { /* ignore */ }
