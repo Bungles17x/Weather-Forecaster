@@ -159,6 +159,16 @@ export default function WeatherMap() {
 
     const alertsLayer = L.geoJSON([], {
       style: feature => ({ color: severityColor(feature.properties?.severity), weight: 3, opacity: 1, fillColor: severityColor(feature.properties?.severity), fillOpacity: 0.35 }),
+      pointToLayer: (feature, latlng) => {
+        return L.circleMarker(latlng, {
+          radius: 8,
+          fillColor: severityColor(feature.properties?.severity),
+          color: severityColor(feature.properties?.severity),
+          weight: 2,
+          opacity: 1,
+          fillOpacity: 0.7
+        })
+      },
       onEachFeature: (feature, item) => {
         const p = feature.properties || {}
         item.bindPopup(`<strong>${safeHtml(p.event || 'NWS alert')}</strong><br>${safeHtml(p.headline)}<br><b>Severity:</b> ${safeHtml(p.severity)}<br><b>Expires:</b> ${safeHtml(p.expires)}<br><br>${safeHtml(p.instruction || p.description).slice(0, 900)}`)
@@ -204,8 +214,10 @@ export default function WeatherMap() {
     const layerGroup = layersRef.current.alerts
     if (!map || !layerGroup) return
     const features = polygonAlerts.filter(feature => feature?.geometry)
-    console.log('[Alert polygons] features with geometry:', features.length, 'total alerts:', polygonAlerts.length, 'showAlerts:', showAlerts)
-    layerGroup.clearLayers().addData({ type: 'FeatureCollection', features })
+    const pointFeatures = polygonAlerts.filter(feature => !feature.geometry && (feature.properties?.point || (feature.properties?.geocode?.UGC && feature.properties?.geocode?.UGC.length)))
+    console.log('[Alert polygons] features with geometry:', features.length, 'point features without geometry:', pointFeatures.length, 'total alerts:', polygonAlerts.length, 'showAlerts:', showAlerts)
+    // Add both polygon and point features so alerts are always visible.
+    layerGroup.clearLayers().addData({ type: 'FeatureCollection', features: [...features, ...pointFeatures] })
     if (showAlerts) {
       layerGroup.addTo(map).bringToFront()
       console.log('[Alert polygons] layer added to map, hasLayer:', map.hasLayer(layerGroup), 'getLayers:', layerGroup.getLayers().length)
@@ -226,7 +238,7 @@ export default function WeatherMap() {
         console.log('[Alert polygons] auto-fit to bounds', bounds)
       }
     }
-    if (!features.length && polygonAlerts.length) setStatus('NWS alerts were returned, but none included usable map geometry.')
+    if (!features.length && !pointFeatures.length && polygonAlerts.length) setStatus('NWS alerts were returned, but none included usable map geometry or point data.')
   }, [polygonAlerts, showAlerts])
 
   useEffect(() => {
