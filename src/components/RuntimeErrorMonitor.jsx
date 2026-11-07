@@ -2,17 +2,16 @@ import React, { useEffect, useState } from 'react'
 import './RuntimeErrorMonitor.css'
 
 const BENIGN = [
-  /resizeobserver loop/i,
-  /script error\.?/i,
+  /script error\.?$/i,
   /chrome-extension:/i,
   /moz-extension:/i,
   /download the react devtools/i,
-  /^warning:/i,
-  /react does not recognize/i,
+  /^warning: react does not recognize/i,
   /validatedomnesting/i,
-  /cannot update a component/i,
   /a component is changing an uncontrolled/i,
-  /leaflet/i
+  /resizeobserver loop limit exceeded/i,
+  /react hydrate/i,
+  /did not match/i
 ]
 
 function stringifyArgs(args) {
@@ -68,7 +67,9 @@ export default function RuntimeErrorMonitor() {
     console.error = (...args) => {
       originalConsoleError.apply(console, args)
       const detail = stringifyArgs(args)
-      record('Console Error Detected', detail || 'The application wrote an error to the console.', 'error', false)
+      // Treat ALL console errors as blocking now (unless explicitly benign)
+      const blocking = !isBenign(detail)
+      record('Console Error Detected', detail || 'The application wrote an error to the console.', 'error', blocking)
     }
 
     console.warn = (...args) => {
@@ -84,7 +85,7 @@ export default function RuntimeErrorMonitor() {
     const handleRejection = event => {
       const reason = event.reason
       const detail = reason instanceof Error ? `${reason.name}: ${reason.message}\n${reason.stack || ''}` : String(reason ?? 'Unknown rejection')
-      if (isBenign(detail)) return
+      // Promise rejections are always blocking
       record('Unhandled Promise Rejection', detail, 'error', true)
     }
 
@@ -104,6 +105,11 @@ export default function RuntimeErrorMonitor() {
     error: '#ff5c68',
     warning: '#ffd166',
     info: '#67b7ff'
+  }
+
+  const copyToClipboard = () => {
+    const text = errorHistory.map(err => `[${err.time}] ${err.severity.toUpperCase()}: ${err.title}\n${err.detail}`).join('\n\n---\n\n')
+    navigator.clipboard.writeText(text).catch(() => {})
   }
 
   const nonBlocking = errorHistory.filter(item => !item.blocking)
@@ -145,9 +151,18 @@ export default function RuntimeErrorMonitor() {
               <button type="button" className="runtime-error-secondary" onClick={() => setRuntimeError(null)}>
                 Continue using the app
               </button>
+              <button type="button" className="runtime-error-tertiary" onClick={copyToClipboard}>
+                Copy Details
+              </button>
               <button type="button" className="runtime-error-tertiary" onClick={() => { setErrorHistory([]); setRuntimeError(null) }}>
                 Clear History
               </button>
+            </div>
+            <div className="runtime-error-system">
+              <strong>System Status:</strong>
+              <span>Online: {navigator.onLine ? 'Yes' : 'No'}</span>
+              <span>URL: {window.location.href}</span>
+              <span>User Agent: {navigator.userAgent?.slice(0, 60)}...</span>
             </div>
             <p className="runtime-error-footnote">This diagnostic screen does not replace official weather alerts or emergency instructions.</p>
           </section>
