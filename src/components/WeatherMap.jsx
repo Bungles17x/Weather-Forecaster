@@ -158,7 +158,7 @@ export default function WeatherMap() {
     bases.street.addTo(map)
 
     const alertsLayer = L.geoJSON([], {
-      style: feature => ({ color: severityColor(feature.properties?.severity), weight: 2.5, opacity: 0.95, fillColor: severityColor(feature.properties?.severity), fillOpacity: 0.2 }),
+      style: feature => ({ color: severityColor(feature.properties?.severity), weight: 3, opacity: 1, fillColor: severityColor(feature.properties?.severity), fillOpacity: 0.35 }),
       onEachFeature: (feature, item) => {
         const p = feature.properties || {}
         item.bindPopup(`<strong>${safeHtml(p.event || 'NWS alert')}</strong><br>${safeHtml(p.headline)}<br><b>Severity:</b> ${safeHtml(p.severity)}<br><b>Expires:</b> ${safeHtml(p.expires)}<br><br>${safeHtml(p.instruction || p.description).slice(0, 900)}`)
@@ -204,9 +204,14 @@ export default function WeatherMap() {
     const layerGroup = layersRef.current.alerts
     if (!map || !layerGroup) return
     const features = polygonAlerts.filter(feature => feature?.geometry)
+    console.log('[Alert polygons] features with geometry:', features.length, 'total alerts:', polygonAlerts.length, 'showAlerts:', showAlerts)
     layerGroup.clearLayers().addData({ type: 'FeatureCollection', features })
-    if (showAlerts) layerGroup.addTo(map).bringToFront()
-    else if (map.hasLayer(layerGroup)) map.removeLayer(layerGroup)
+    if (showAlerts) {
+      layerGroup.addTo(map).bringToFront()
+      console.log('[Alert polygons] layer added to map, hasLayer:', map.hasLayer(layerGroup), 'getLayers:', layerGroup.getLayers().length)
+    } else if (map.hasLayer(layerGroup)) {
+      map.removeLayer(layerGroup)
+    }
     // Frame every alert polygon once on first load so nationwide warnings are
     // actually visible — skipped if the user already moved the map.
     if (!alertsFittedRef.current && !mapInteractedRef.current && features.length) {
@@ -218,6 +223,7 @@ export default function WeatherMap() {
       if (bounds.isValid()) {
         map.fitBounds(bounds, { padding: [28, 28] })
         alertsFittedRef.current = true
+        console.log('[Alert polygons] auto-fit to bounds', bounds)
       }
     }
     if (!features.length && polygonAlerts.length) setStatus('NWS alerts were returned, but none included usable map geometry.')
