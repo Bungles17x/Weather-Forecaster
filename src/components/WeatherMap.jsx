@@ -158,15 +158,16 @@ export default function WeatherMap() {
     bases.street.addTo(map)
 
     const alertsLayer = L.geoJSON([], {
-      style: feature => ({ color: severityColor(feature.properties?.severity), weight: 3, opacity: 1, fillColor: severityColor(feature.properties?.severity), fillOpacity: 0.35 }),
+      style: feature => ({ color: severityColor(feature.properties?.severity), weight: 4, opacity: 1, fillColor: severityColor(feature.properties?.severity), fillOpacity: 0.4, className: 'wf-alert-polygon' }),
       pointToLayer: (feature, latlng) => {
         return L.circleMarker(latlng, {
-          radius: 8,
+          radius: 10,
           fillColor: severityColor(feature.properties?.severity),
           color: severityColor(feature.properties?.severity),
-          weight: 2,
+          weight: 3,
           opacity: 1,
-          fillOpacity: 0.7
+          fillOpacity: 0.8,
+          className: 'wf-alert-marker'
         })
       },
       onEachFeature: (feature, item) => {

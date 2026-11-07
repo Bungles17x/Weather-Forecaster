@@ -107,11 +107,16 @@ function dedupeAlertFeatures(features) {
 }
 
 async function fetchZoneGeometry(ugc, signal) {
-  for (const type of ZONE_ENDPOINT_TYPES) {
+  // Detect zone type from UGC prefix to avoid unnecessary 404s.
+  // F = forecast, C = county, Z = forecast (legacy), AM/AN = marine, etc.
+  let types = ZONE_ENDPOINT_TYPES
+  if (ugc.startsWith('F') || ugc.startsWith('Z')) types = ['forecast', 'county', 'marine', 'fire', 'publicLand']
+  else if (ugc.startsWith('C')) types = ['county', 'forecast', 'marine', 'fire', 'publicLand']
+  else if (ugc.startsWith('AM') || ugc.startsWith('AN')) types = ['marine', 'forecast', 'county', 'fire', 'publicLand']
+  for (const type of types) {
     try {
       const data = await fetchJson(`${NWS_API}/zones/${type}/${encodeURIComponent(ugc)}`, signal)
       if (data?.geometry) return data.geometry
-      return null
     } catch (error) {
       if (signal?.aborted) throw error
       if (error.status === 404) continue
