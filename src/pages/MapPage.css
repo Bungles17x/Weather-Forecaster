@@ -1151,3 +1151,13 @@
 
 .map-page .page-heading,
 .map-page .page-heading p { color: var(--text); }
+
+/* Radar canvas background is black, like a dedicated radar display.
+   Panels and controls stay light for readability. */
+.map-page .public-map-container,
+.map-page .wf-map-shell,
+.map-page .wf-map-area,
+.map-page .wf-leaflet-map,
+.map-page .leaflet-container {
+  background: #000;
+}
