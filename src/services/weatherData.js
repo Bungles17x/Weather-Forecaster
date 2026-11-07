@@ -107,12 +107,16 @@ function dedupeAlertFeatures(features) {
 }
 
 async function fetchZoneGeometry(ugc, signal) {
-  // Detect zone type from UGC prefix to avoid unnecessary 404s.
-  // F = forecast, C = county, Z = forecast (legacy), AM/AN = marine, etc.
+  // NWS zone codes are [State][Type][Number], e.g. TXZ229, CAC001, AMZ671.
+  // Detect zone type from the 3rd character (the type code).
+  // F/Z = forecast, C = county, A = area, M = marine, etc.
   let types = ZONE_ENDPOINT_TYPES
-  if (ugc.startsWith('F') || ugc.startsWith('Z')) types = ['forecast', 'county', 'marine', 'fire', 'publicLand']
-  else if (ugc.startsWith('C')) types = ['county', 'forecast', 'marine', 'fire', 'publicLand']
-  else if (ugc.startsWith('AM') || ugc.startsWith('AN')) types = ['marine', 'forecast', 'county', 'fire', 'publicLand']
+  const typeCode = ugc.length >= 3 ? ugc[2].toUpperCase() : ''
+  if (typeCode === 'F' || typeCode === 'Z') types = ['forecast', 'county', 'marine', 'fire', 'publicLand']
+  else if (typeCode === 'C') types = ['county', 'forecast', 'marine', 'fire', 'publicLand']
+  else if (typeCode === 'M') types = ['marine', 'forecast', 'county', 'fire', 'publicLand']
+  else if (typeCode === 'A') types = ['publicLand', 'forecast', 'county', 'marine', 'fire']
+  else types = ['forecast', 'county', 'marine', 'fire', 'publicLand'] // fallback
   for (const type of types) {
     try {
       const data = await fetchJson(`${NWS_API}/zones/${type}/${encodeURIComponent(ugc)}`, signal)
