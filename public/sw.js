@@ -1,5 +1,5 @@
 /* Weather Desk PWA shell cache. Weather/API responses are deliberately not cached. */
-const CACHE_NAME = 'weather-forecaster-shell-v12';
+const CACHE_NAME = 'weather-forecaster-shell-v13';
 const SHELL_FILES = ['./', './index.html', './manifest.webmanifest', './weather-icon.svg', './icons/weather-180.png', './icons/weather-192.png', './icons/weather-512.png', './icons/weather-maskable-512.png'];
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
@@ -52,5 +52,5 @@ self.addEventListener('fetch', event => {
       caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
     }
     return response;
-  })));
+  }).catch(() => caches.match(request).then(hit => hit || new Response('', { status: 504, statusText: 'Offline' })))));
 });

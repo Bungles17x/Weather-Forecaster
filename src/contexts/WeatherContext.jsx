@@ -6,6 +6,21 @@ import { useNotifications } from '../components/NotificationSystem'
 
 const WeatherContext = createContext(null)
 
+const bundleCacheKey = coordinates => `weatherforecaster:bundle:${Number(coordinates?.lat).toFixed(4)},${Number(coordinates?.lon).toFixed(4)}`
+
+function readCachedBundle(coordinates) {
+  try {
+    const raw = localStorage.getItem(bundleCacheKey(coordinates))
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    return parsed && typeof parsed === 'object' ? parsed : null
+  } catch { return null }
+}
+
+function writeCachedBundle(coordinates, bundle) {
+  try { localStorage.setItem(bundleCacheKey(coordinates), JSON.stringify(bundle)) } catch { /* quota or privacy mode — cache is best-effort */ }
+}
+
 export function WeatherProvider({ children }) {
   const { coordinates, ready: locationReady } = useLocation()
   const { settings } = useSettings()
@@ -26,7 +41,8 @@ export function WeatherProvider({ children }) {
     const locationChanged = lastLocationKey.current !== locationKey
     if (locationChanged) {
       lastLocationKey.current = locationKey
-      setWeather(null)
+      // Show the last saved bundle for this location instantly while fresh data loads.
+      setWeather(readCachedBundle(coordinates))
     }
     const isRefresh = !locationChanged && Boolean(weather)
     setLoading(!isRefresh)
@@ -36,6 +52,7 @@ export function WeatherProvider({ children }) {
       .then(result => {
         if (controller.signal.aborted) return
         setWeather(result)
+        writeCachedBundle(coordinates, result)
 
         // Validate weather data
         const validation = validateWeatherData(result)
@@ -79,6 +96,19 @@ export function WeatherProvider({ children }) {
       })
       .catch(fetchError => {
         if (controller.signal.aborted) return
+        const cached = readCachedBundle(coordinates)
+        if (cached) {
+          setWeather(cached)
+          const savedAt = cached.updatedAt ? new Date(cached.updatedAt).toLocaleString() : 'an earlier session'
+          setError(`Offline or feed unavailable — showing saved weather data from ${savedAt}. Live NWS products will resume when the connection returns.`)
+          addNotification({
+            type: 'warning',
+            title: 'Offline Mode',
+            message: 'Showing your last saved weather data until the connection returns.',
+            duration: 8000
+          })
+          return
+        }
         setError(fetchError.message || 'Weather.gov could not be reached. Check your connection and retry.')
         addNotification({
           type: 'error',

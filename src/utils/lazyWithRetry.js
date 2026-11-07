@@ -4,6 +4,11 @@ function importWithRetry(factory) {
   return factory().catch(() => new Promise((resolve, reject) => {
     setTimeout(() => {
       factory().then(resolve).catch(error => {
+        // Reloading can't help while offline — go straight to the error boundary.
+        if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+          reject(error)
+          return
+        }
         const reloadKey = 'weatherdesk:chunk-reload'
         try {
           if (!sessionStorage.getItem(reloadKey)) {
