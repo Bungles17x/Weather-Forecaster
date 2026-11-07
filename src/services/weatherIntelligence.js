@@ -247,8 +247,27 @@ export function getLocalAssistantReply(question, context) {
     [/weather desk|about this app|what is this/, 'Weather Forecaster is an independent educational weather workstation that displays official National Weather Service data. It shows forecasts, radar, alerts, and observations from api.weather.gov. It\'s not an official NWS product but is designed to help you understand weather conditions.']
   ]
 
+  // Safe arithmetic for simple expressions like "what is 12*8+5".
+  const mathExpr = q.replace(/^(?:what(?:'s| is)|calculate|compute|solve|evaluate)\s+/, '').replace(/[=?\s]+$/, '')
+  if (/^[\d+\-*/().%]+$/.test(mathExpr) && /[+\-*/%]/.test(mathExpr) && mathExpr.length <= 60) {
+    try {
+      const value = Function(`"use strict"; return (${mathExpr})`)()
+      if (typeof value === 'number' && Number.isFinite(value)) {
+        const rounded = Math.abs(value) >= 1e15 ? value.toExponential(6) : Number(value.toPrecision(12))
+        return `${mathExpr} = ${rounded}`
+      }
+    } catch { /* not a valid expression — fall through */ }
+  }
+
   const generalMatch = generalResponses.find(([pattern]) => pattern.test(q))
   if (generalMatch) return generalMatch[1]
+
+  // If the question doesn't look weather-related at all, be honest about the
+  // limits of the on-device helper instead of answering with weather data.
+  const weatherIntent = /\b(weather|forecast|rain|snow|storm|thunder|temp|hot|cold|freez|wind|humid|umbrella|jacket|coat|wear|outside|outdoor|alert|warning|watch|advisory|radar|degree|frost|heat|chill|downpour|drizzle|shower|hurricane|tornado|flood|cloud|sunny|overcast|fog|visibility|pressure|dew ?point|air quality|uv|sunrise|sunset|today|tonight|tomorrow|weekend|commute)\b/.test(q)
+  if (!weatherIntent) {
+    return `I'm Weather Forecaster's on-device helper — I can answer questions using your loaded NWS weather data, explain meteorology concepts, handle greetings and common prompts, do simple arithmetic, and record app reviews/feedback. For open-ended questions like that, I don't have reliable knowledge without the optional AI backend.\n\nTo unlock full general-purpose answers, configure the secure AI endpoint described in AI-ASSISTANT.md (VITE_WEATHERDESK_AI_ENDPOINT). Meanwhile, try asking about the forecast, alerts, radar, or current conditions for ${place}.`
+  }
 
   const summary = available
     ? `For ${place}, the latest loaded station report is ${obs.temperatureDisplayed || (finite(obs.temperatureF) ? fmtTemp(obs.temperatureF) : 'missing a temperature')}${obs.description ? ` and reports ${obs.description.toLowerCase()}` : ''}. There ${alerts.length === 1 ? 'is 1 active point-based alert' : `are ${alerts.length} active point-based alerts`} in the loaded response. The data bundle was updated ${context.bundleUpdatedAt ? new Date(context.bundleUpdatedAt).toLocaleString() : 'at an unknown time'}.`

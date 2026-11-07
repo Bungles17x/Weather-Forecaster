@@ -370,3 +370,10 @@
 .radar-teaser-bottom small{display:block;margin-top:3px;color:#b9d2e6;font-size:10px;line-height:1.45;max-width:300px;text-shadow:0 1px 4px rgba(0,0,0,.6)}
 .round-arrow{flex-shrink:0;width:38px;height:38px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;border:1px solid rgba(83,174,204,.45);background:rgba(8,20,32,.62);color:#a8d8ef;backdrop-filter:blur(6px);transition:background .15s ease,border-color .15s ease,transform .15s ease}
 .round-arrow:hover{background:rgba(24,52,74,.85);border-color:rgba(83,174,204,.7);transform:translate(2px,-2px)}
+
+/* Keep the two hero cards visually balanced at every breakpoint. */
+.hero-weather-grid { align-items: stretch; }
+.hero-weather-card, .radar-teaser-card { height: 100%; }
+@media (min-width: 1001px) {
+  .radar-teaser-card { min-height: 300px; }
+}

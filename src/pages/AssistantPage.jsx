@@ -4,7 +4,7 @@ import { WeatherDeskIcon } from '../components/WeatherIcons'
 import { useLocation } from '../contexts/LocationContext'
 import { useWeather } from '../contexts/WeatherContext'
 import { useSettings } from '../contexts/SettingsContext'
-import { askWeatherDesk, isRemoteAssistantConfigured } from '../services/weatherAssistant'
+import { askWeatherDesk, isRemoteAssistantConfigured, getReviews, clearReviews } from '../services/weatherAssistant'
 import './AssistantPage.css'
 
 const HISTORY_KEY = 'weatherdeskAssistantHistoryV1'
@@ -13,6 +13,7 @@ const starterPrompts = [
   { title: 'Help me write', prompt: 'Help me draft a clear, polished piece of writing. Ask what you need to know first.' },
   { title: 'Code & troubleshoot', prompt: 'Help me debug a coding problem. Tell me what information you need and explain the fix.' },
   { title: 'Plan my day', prompt: 'Help me make a practical plan for today. Ask one focused question if you need more details.' },
+  { title: 'Rate the app', prompt: 'I want to leave a review or feedback about Weather Forecaster.' },
 ]
 const welcome = {
   id: 'welcome', role: 'assistant', mode: 'welcome', createdAt: new Date().toISOString(),
@@ -26,8 +27,15 @@ function readHistory() {
   } catch { return [] }
 }
 
+function linkify(text) {
+  const parts = String(text).split(/(https?:\/\/[^\s)]+)/g)
+  return parts.map((part, index) => /^https?:\/\//.test(part)
+    ? <a key={index} href={part} target="_blank" rel="noreferrer">{part}</a>
+    : part)
+}
+
 function MessageText({ text }) {
-  return <div className="assistant-message-text">{String(text).split('\n').map((line, index) => line.trim() ? <p key={`${index}-${line.slice(0, 12)}`}>{line.replace(/^\*\*(.*?)\*\*$/, '$1')}</p> : <div key={`gap-${index}`} className="assistant-message-gap" />)}</div>
+  return <div className="assistant-message-text">{String(text).split('\n').map((line, index) => line.trim() ? <p key={`${index}-${line.slice(0, 12)}`}>{line.replace(/^\*\*(.*?)\*\*$/, '$1').split(/(\*\*.*?\*\*)/g).map((segment, i) => segment.startsWith('**') && segment.endsWith('**') ? <strong key={i}>{linkify(segment.slice(2, -2))}</strong> : linkify(segment))}</p> : <div key={`gap-${index}`} className="assistant-message-gap" />)}</div>
 }
 
 export default function AssistantPage() {
@@ -39,6 +47,7 @@ export default function AssistantPage() {
   const [busy, setBusy] = useState(false)
   const [mode, setMode] = useState(isRemoteAssistantConfigured() ? 'configured' : 'local')
   const [notice, setNotice] = useState('')
+  const [reviews, setReviews] = useState(getReviews)
   const listRef = useRef(null)
   const abortRef = useRef(null)
   const hasConversation = messages.length > 0
@@ -65,6 +74,7 @@ export default function AssistantPage() {
     abortRef.current = new AbortController()
     try {
       const result = await askWeatherDesk({ question, weather, location, units: settings.units, signal: abortRef.current.signal })
+      setReviews(getReviews())
       setMode(result.mode === 'ai' ? 'ai' : 'local')
       setMessages(previous => [...previous, { id: `${Date.now()}-a`, role: 'assistant', text: result.text, mode: result.mode, createdAt: new Date().toISOString(), updatedAt: result.context?.bundleUpdatedAt || null }].slice(-40))
       if (result.mode === 'local-fallback') setNotice('AI service unreachable · local weather helper used')
@@ -119,6 +129,7 @@ export default function AssistantPage() {
       <aside className="assistant-side-panel">
         <section className="assistant-side-card"><div className="assistant-side-heading"><span><WeatherDeskIcon name="database" size={17}/></span><div><small>GROUND TRUTH</small><strong>What the assistant knows</strong></div></div><p>When a general AI endpoint is configured, ask about writing, coding, studying, planning, troubleshooting, and everyday topics. Weather questions can use data loaded in this app. Local-only mode is limited and is not a full AI model.</p><div className="assistant-data-list"><div><span>Observed station</span><strong>{weather?.stationName || weather?.stationId || 'Not available'}</strong></div><div><span>Observation time</span><strong>{weather?.observation?.timestamp ? new Date(weather.observation.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : 'Not reported'}</strong></div><div><span>Active point alerts</span><strong>{weather?.errors?.alerts ? 'Not confirmed' : (weather?.alerts || []).length}</strong></div><div><span>Data source</span><strong><a href="https://www.weather.gov/documentation/services-web-api" target="_blank" rel="noreferrer">NWS / Weather.gov ↗</a></strong></div></div></section>
         <section className="assistant-side-card"><div className="assistant-side-heading"><span><WeatherDeskIcon name="forecast" size={17}/></span><div><small>GENERAL ASSISTANCE</small><strong>What you can ask</strong></div></div><div className="assistant-capability-list"><div><WeatherDeskIcon name="precipitation" size={16}/><span>Writing, ideas, and everyday planning</span></div><div><WeatherDeskIcon name="temperature" size={16}/><span>Explaining topics and studying</span></div><div><WeatherDeskIcon name="alerts" size={16}/><span>Coding and troubleshooting</span></div><div><WeatherDeskIcon name="radar" size={16}/><span>Weather, forecasts, and alerts</span></div><div><WeatherDeskIcon name="observations" size={16}/><span>Science and meteorology learning</span></div></div></section>
+        <section className="assistant-side-card"><div className="assistant-side-heading"><span><WeatherDeskIcon name="bookmark" size={17}/></span><div><small>APP REVIEWS</small><strong>{reviews.length} stored on this device</strong></div>{reviews.length > 0 && <button type="button" className="assistant-clear" onClick={() => { clearReviews(); setReviews([]); setNotice('Stored reviews cleared from this browser.') }}>Clear</button>}</div>{reviews.length ? <div className="assistant-data-list">{reviews.slice(0, 3).map(review => <div key={review.id}><span>{new Date(review.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}</span><strong>{review.text.length > 90 ? `${review.text.slice(0, 90)}…` : review.text}</strong></div>)}</div> : <p>Tell the assistant what you think of Weather Forecaster — try &ldquo;I&rsquo;d like to leave a review.&rdquo; Feedback is saved locally in this browser.</p>}</section>
         <section className="assistant-caution-card"><WeatherDeskIcon name="info" size={18}/><p><strong>Safety comes first.</strong> AI explanations are not official warnings. During severe weather, follow the actual NWS alert text and local emergency instructions. The assistant cannot see a radar image unless that image or its data is explicitly supplied.</p></section>
       </aside>
     </section>

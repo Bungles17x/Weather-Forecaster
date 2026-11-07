@@ -1127,3 +1127,27 @@
     max-width: 60vw;
   }
 }
+
+/* The whole radar page is always light — page background, header, and map
+   chrome ignore dark theme packs so radar imagery stays readable. */
+.map-page {
+  --panel: #ffffff;
+  --panel-2: #f2f6fb;
+  --panel-3: #e6edf5;
+  --bg: #eef2f7;
+  --text: #14233a;
+  --muted: #5a6b82;
+  --line: rgba(15, 30, 50, .14);
+  --line-soft: rgba(15, 30, 50, .08);
+  background: var(--bg);
+  color: var(--text);
+}
+
+.map-page .app-header {
+  background: rgba(255, 255, 255, .94);
+  border-bottom-color: rgba(15, 30, 50, .12);
+  color: #14233a;
+}
+
+.map-page .page-heading,
+.map-page .page-heading p { color: var(--text); }
