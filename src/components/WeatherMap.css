@@ -241,18 +241,3 @@
   .wf-mobile-sheet { animation: none; }
   .wf-dock-btn { transition: none; }
 }
-
-/* Radar chrome is always light — NEXRAD imagery reads best on bright surfaces
-   and the dark theme packs made panels/toolbars hard to scan. */
-.wf-map-shell {
-  --panel: #ffffff;
-  --panel-2: #f2f6fb;
-  --panel-3: #e6edf5;
-  --bg: #eef2f7;
-  --text: #14233a;
-  --muted: #5a6b82;
-  --line: rgba(15, 30, 50, .14);
-  --line-soft: rgba(15, 30, 50, .08);
-  background: var(--bg);
-  color: var(--text);
-}
