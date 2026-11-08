@@ -95,6 +95,7 @@ const glyphs = {
     <path d="m2 12 10 5 10-5M2 16l10 5 10-5" className="wd-blue-stroke" />
   </>,
   play: <path d="m8 5 11 7-11 7z" className="wd-purple-stroke" />,
+  pause: <><path d="M7 5v14M17 5v14" className="wd-purple-stroke" /></>,
   zoomIn: <><circle cx="10.5" cy="10.5" r="6.5" /><path d="m16 16 5 5M10.5 7v7m-3.5-3.5h7" /></>,
   zoomOut: <><circle cx="10.5" cy="10.5" r="6.5" /><path d="m16 16 5 5M7 10.5h7" /></>,
   maximize: <path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5" />,
@@ -120,6 +121,7 @@ const glyphs = {
   chevronRight: <path d="m9 6 6 6-6 6" />,
   arrowUpRight: <path d="M7 17 17 7M8 7h9v9" />,
   theme: <><path d="M20 15.5A8.5 8.5 0 0 1 8.5 4 8.5 8.5 0 1 0 20 15.5z" /><path d="M15 3v4m-2-2h4" className="wd-purple-stroke" /></>,
+  moon: <><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></>,
   units: <><path d="M7 3v18m10-18v18M4 7h6m4 4h6m-6 5h6" /><path d="M7 3h.01M17 3h.01" className="wd-purple-stroke" /></>,
   notifications: <><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" /><path d="M10 21h4" className="wd-purple-stroke" /></>,
   share: <><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="m8.7 10.6 6.6-4.2m-6.6 9 6.6 4.1" /></>,

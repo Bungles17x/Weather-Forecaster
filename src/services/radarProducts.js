@@ -7,25 +7,50 @@ export const NATIONAL_RADAR_PRODUCTS = {
     label: 'Base reflectivity · CONUS', title: 'National base reflectivity',
     url: `${OPEN_GEO}/conus/conus_bref_qcd/ows`, layerName: 'conus_bref_qcd', style: '',
     description: 'Quality-controlled MRMS base reflectivity (dBZ). Good for precipitation coverage and storm structure.',
-    source: 'NWS / NOAA OpenGeo · CONUS BREF.QCD'
+    source: 'NWS / NOAA OpenGeo · CONUS BREF.QCD',
+    timeDimension: true
   },
   cref: {
     label: 'Composite reflectivity · CONUS', title: 'National composite reflectivity',
     url: `${OPEN_GEO}/conus/conus_cref_qcd/ows`, layerName: 'conus_cref_qcd', style: '',
     description: 'Quality-controlled composite reflectivity (dBZ), showing the maximum reflectivity through the storm column.',
-    source: 'NWS / NOAA OpenGeo · CONUS CREF.QCD'
+    source: 'NWS / NOAA OpenGeo · CONUS CREF.QCD',
+    timeDimension: true
   },
   ptype: {
     label: 'Precipitation type · CONUS', title: 'Radar precipitation type',
     url: `${OPEN_GEO}/conus/conus_pcpn_typ/ows`, layerName: 'conus_pcpn_typ', style: '',
     description: 'MRMS precipitation classification, including rain, snow, and hail categories where available.',
-    source: 'NWS / NOAA OpenGeo · CONUS PCPN.TYP'
+    source: 'NWS / NOAA OpenGeo · CONUS PCPN.TYP',
+    timeDimension: true
   },
   echoTops: {
     label: 'Echo tops · CONUS', title: 'Radar echo tops',
     url: `${OPEN_GEO}/conus/conus_neet_v18/ows`, layerName: 'conus_neet_v18', style: '',
     description: 'MRMS echo-top height product. This is a storm-structure aid, not a direct measurement of cloud top.',
-    source: 'NWS / NOAA OpenGeo · CONUS NEET.V18'
+    source: 'NWS / NOAA OpenGeo · CONUS NEET.V18',
+    timeDimension: true
+  },
+  vrot: {
+    label: 'Velocity · CONUS', title: 'Storm relative motion',
+    url: `${OPEN_GEO}/conus/conus_srmt_v21/ows`, layerName: 'conus_srmt_v21', style: '',
+    description: 'Storm-relative motion product showing storm movement relative to the mean flow.',
+    source: 'NWS / NOAA OpenGeo · CONUS SRMT.V21',
+    timeDimension: true
+  },
+  vil: {
+    label: 'Vertically integrated liquid · CONUS', title: 'VIL density',
+    url: `${OPEN_GEO}/conus/conus_vil/ows`, layerName: 'conus_vil', style: '',
+    description: 'Vertically integrated liquid (kg/m²) — a proxy for heavy precipitation and hail potential.',
+    source: 'NWS / NOAA OpenGeo · CONUS VIL',
+    timeDimension: true
+  },
+  maxTemp: {
+    label: 'Maximum temperature · CONUS', title: 'Radar-derived max temp',
+    url: `${OPEN_GEO}/conus/conus_mtmp/ows`, layerName: 'conus_mtmp', style: '',
+    description: 'MRMS radar-derived maximum temperature.',
+    source: 'NWS / NOAA OpenGeo · CONUS MTMP',
+    timeDimension: true
   }
 }
 

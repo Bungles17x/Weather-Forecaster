@@ -84,8 +84,8 @@ async function getSiteCapabilities(site) {
 }
 
 
-function makeWmsLayer(definition, opacity) {
-  return L.tileLayer.wms(definition.url, {
+function makeWmsLayer(definition, opacity, timeDimension = null) {
+  const params = {
     layers: definition.layerName,
     styles: definition.style || '',
     format: 'image/png',
@@ -97,7 +97,9 @@ function makeWmsLayer(definition, opacity) {
     attribution: definition.source || 'Radar imagery: National Weather Service / NOAA',
     keepBuffer: 2,
     updateWhenIdle: true
-  })
+  }
+  if (timeDimension) params.time = timeDimension
+  return L.tileLayer.wms(definition.url, params)
 }
 
 export default function WeatherMap() {
@@ -124,6 +126,10 @@ export default function WeatherMap() {
   const [mobileSheet, setMobileSheet] = useState(null)
   const alertsFittedRef = useRef(false)
   const mapInteractedRef = useRef(false)
+  const [animating, setAnimating] = useState(false)
+  const [animationFrame, setAnimationFrame] = useState(0)
+  const [animationFrames, setAnimationFrames] = useState([])
+  const animationIntervalRef = useRef(null)
   const alerts = weather?.alerts ?? EMPTY_ALERTS
   // Polygons come from the nationwide active-alert feed so every warning, watch,
   // and advisory with geometry renders — not only alerts covering this point.
@@ -311,10 +317,10 @@ export default function WeatherMap() {
     if (previous && map.hasLayer(previous)) map.removeLayer(previous)
     tileFailuresRef.current = 0
     setStatus(`Loading ${definition.title} from official NWS/NOAA GIS…`)
-    const radarLayer = makeWmsLayer(definition, opacity)
+    const radarLayer = makeWmsLayer(definition, opacity, animationFrames[animationFrame] || null)
     radarLayer.on('tileload', () => {
       if (cancelled) return
-      setStatus(`${definition.title} · NWS/NOAA imagery loaded`)
+      setStatus(`${definition.title} · NWS/NOAA imagery loaded${animating ? ` · Frame ${animationFrame + 1}/${animationFrames.length}` : ''}`)
       setMapError('')
     })
     radarLayer.on('tileerror', () => {
@@ -352,9 +358,45 @@ export default function WeatherMap() {
   const chooseProduct = next => {
     setMapError('')
     setProductId(next)
+    setAnimating(false)
+    setAnimationFrame(0)
     const national = NATIONAL_RADAR_PRODUCTS[next]
     const site = SITE_RADAR_PRODUCTS[next]
     setStatus(national ? `Requesting ${national.title}…` : `Requesting ${site?.title || 'radar product'}…`)
+  }
+
+  const toggleAnimation = () => {
+    if (animating) {
+      setAnimating(false)
+      if (animationIntervalRef.current) {
+        window.clearInterval(animationIntervalRef.current)
+        animationIntervalRef.current = null
+      }
+    } else {
+      const now = new Date()
+      const frames = []
+      for (let i = 12; i >= 0; i--) {
+        const time = new Date(now.getTime() - i * 10 * 60 * 1000)
+        frames.push(time.toISOString())
+      }
+      setAnimationFrames(frames)
+      setAnimationFrame(0)
+      setAnimating(true)
+      animationIntervalRef.current = window.setInterval(() => {
+        setAnimationFrame(f => {
+          const next = f + 1
+          if (next >= frames.length) {
+            setAnimating(false)
+            if (animationIntervalRef.current) {
+              window.clearInterval(animationIntervalRef.current)
+              animationIntervalRef.current = null
+            }
+            return 0
+          }
+          return next
+        })
+      }, 600)
+    }
   }
 
   const refreshRadar = useCallback(async () => {
@@ -441,6 +483,12 @@ export default function WeatherMap() {
     <div className="wf-radar-secondary-bar">
       <label className="wf-checkbox"><input type="checkbox" checked={showAlerts} onChange={event => setShowAlerts(event.target.checked)}/> Show NWS alert polygons ({polygonAlerts.filter(item => item.geometry).length} nationwide)</label>
       <button type="button" className="wf-secondary-action" onClick={zoomAlerts}>Zoom to alerts</button>
+      {activeDefinition?.timeDimension && (
+        <button type="button" className={`wf-secondary-action ${animating ? 'animating' : ''}`} onClick={toggleAnimation}>
+          {animating ? <><WeatherDeskIcon name="pause" size={14} /> Pause</> : <><WeatherDeskIcon name="play" size={14} /> Animate</>}
+          {animating && ` ${animationFrame + 1}/${animationFrames.length}`}
+        </button>
+      )}
       <form className="wf-site-form" onSubmit={handleManualSite}><label htmlFor="wf-radar-site">Radar site ID</label><input id="wf-radar-site" value={siteInput} onChange={event => setSiteInput(event.target.value.toUpperCase().slice(0, 4))} placeholder={radarStation || 'e.g. KCCX'} maxLength={4} aria-label="Radar site ID"/><button type="submit">Load local products</button></form>
       <span className="wf-site-status">{localProductsLoading ? `Checking ${radarStation}…` : radarStation ? `Site ${radarStation}` : 'National mosaic mode'}{siteCatalog.state === 'error' ? ' · local catalog unavailable' : ''}</span>
       <Link to="/" className="wf-secondary-action wf-exit-map"><WeatherDeskIcon name="back" size={13} /> Done</Link>

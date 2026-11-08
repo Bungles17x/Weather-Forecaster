@@ -2,6 +2,60 @@ const NWS_API = 'https://api.weather.gov'
 const GEO_API = 'https://nominatim.openstreetmap.org/search'
 const ACCEPT = 'application/geo+json, application/ld+json;q=0.9, application/json;q=0.8'
 
+// UV index estimation based on latitude, month, and solar elevation
+export function estimateUVIndex(lat, lon, date = new Date()) {
+  const dayOfYear = Math.floor((date - new Date(date.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24))
+  const declination = 23.45 * Math.sin((360 / 365) * (dayOfYear - 81) * (Math.PI / 180))
+  const hourAngle = 15 * (date.getHours() + date.getMinutes() / 60 - 12)
+  const latRad = lat * (Math.PI / 180)
+  const decRad = declination * (Math.PI / 180)
+  const hourRad = hourAngle * (Math.PI / 180)
+  const solarElevation = Math.asin(Math.sin(latRad) * Math.sin(decRad) + Math.cos(latRad) * Math.cos(decRad) * Math.cos(hourRad)) * (180 / Math.PI)
+  if (solarElevation < 0) return 0
+  const maxUV = 11 * Math.cos((lat - declination) * (Math.PI / 180))
+  const uv = maxUV * Math.pow(Math.sin(solarElevation * (Math.PI / 180)), 1.2)
+  return Math.max(0, Math.min(11, uv))
+}
+
+// Sun position calculations
+export function calculateSunPosition(lat, lon, date = new Date()) {
+  const J2000 = 2451545.0
+  const jd = 2440587.5 + (date.getTime() / 86400000)
+  const n = jd - J2000 + 0.0008
+  const Jstar = n - lon / 360
+  const M = (357.5291 + 0.98560028 * Jstar) % 360
+  const C = 1.9148 * Math.sin(M * (Math.PI / 180)) + 0.0200 * Math.sin(2 * M * (Math.PI / 180)) + 0.0003 * Math.sin(3 * M * (Math.PI / 180))
+  const lambda = (M + C + 180 + 102.9372) % 360
+  const Jtransit = J2000 + Jstar + 0.0053 * Math.sin(M * (Math.PI / 180)) - 0.0069 * Math.sin(2 * lambda * (Math.PI / 180))
+  const delta = Math.asin(Math.sin(lambda * (Math.PI / 180)) * Math.sin(23.45 * (Math.PI / 180))) * (180 / Math.PI)
+  const omega = Math.acos((Math.sin(-0.83 * (Math.PI / 180)) - Math.sin(lat * (Math.PI / 180)) * Math.sin(delta * (Math.PI / 180))) / (Math.cos(lat * (Math.PI / 180)) * Math.cos(delta * (Math.PI / 180)))) * (180 / Math.PI)
+  const Jrise = Jtransit - omega / 360
+  const Jset = Jtransit + omega / 360
+  const sunrise = new Date((Jrise - J2000) * 86400000)
+  const sunset = new Date((Jset - J2000) * 86400000)
+  const solarNoon = new Date((Jtransit - J2000) * 86400000)
+  const dayLength = (sunset - sunrise) / 3600000
+  return { sunrise, sunset, solarNoon, dayLength }
+}
+
+// Moon phase calculation
+export function calculateMoonPhase(date = new Date()) {
+  const synodic = 29.53058867
+  const knownNew = new Date('2000-01-06T18:14:00Z')
+  const daysSince = (date - knownNew) / (1000 * 60 * 60 * 24)
+  const phase = (daysSince % synodic) / synodic
+  const age = phase * synodic
+  const illumination = 0.5 * (1 - Math.cos(2 * Math.PI * phase))
+  const phaseNames = ['New Moon', 'Waxing Crescent', 'First Quarter', 'Waxing Gibbous', 'Full Moon', 'Waning Gibbous', 'Last Quarter', 'Waning Crescent']
+  const phaseIndex = Math.floor(phase * 8)
+  return { phase: phaseNames[phaseIndex], age: Math.round(age), illumination: Math.round(illumination * 100) }
+}
+
+// Air quality placeholder (actual data requires separate API integration)
+export function getAirQualityPlaceholder(_lat, _lon) {
+  return { aqi: null, category: 'Air quality data requires EPA AirNow API integration', primaryPollutant: null }
+}
+
 async function fetchJson(url, signal) {
   const controller = new AbortController()
   let timedOut = false

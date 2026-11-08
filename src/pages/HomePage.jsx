@@ -10,7 +10,7 @@ import DailyBriefing from '../components/DailyBriefing'
 import WeatherMetrics from '../components/WeatherMetrics'
 import RadarPreview from '../components/RadarPreview'
 import ForecastCharts from '../components/ForecastCharts'
-import { convertPressure, convertTemperature, convertWindSpeed, formatTemperature, observationValue, temperatureToFahrenheit } from '../services/weatherData'
+import { convertPressure, convertTemperature, convertWindSpeed, formatTemperature, observationValue, temperatureToFahrenheit, estimateUVIndex, calculateSunPosition, calculateMoonPhase } from '../services/weatherData'
 
 function tempText(obs, units) {
   const value = observationValue(obs, 'temperature', convertTemperature)
@@ -21,7 +21,7 @@ function severityColor(severity) {
 }
 
 export default function HomePage() {
-  const { location } = useLocation()
+  const { location, coordinates } = useLocation()
   const { settings } = useSettings()
   const { weather, loading, refreshing, error, refresh } = useWeather()
   const obs = weather?.observation
@@ -34,6 +34,11 @@ export default function HomePage() {
   const humidity = observationValue(obs, 'relativeHumidity')
   const dewPoint = observationValue(obs, 'dewpoint', convertTemperature)
   const pressure = observationValue(obs, 'seaLevelPressure', convertPressure) ?? observationValue(obs, 'barometricPressure', convertPressure)
+  const lat = coordinates?.lat
+  const lon = coordinates?.lon
+  const uvIndex = lat != null && lon != null ? estimateUVIndex(lat, lon) : null
+  const sunPosition = lat != null && lon != null ? calculateSunPosition(lat, lon) : null
+  const moonPhase = calculateMoonPhase()
 
   return <div className="data-page home-page"><Header/><main className="data-main home-main">
     <div className="page-heading dashboard-heading"><div><div className="eyebrow"><span className="eyebrow-dot"/> NATIONAL WEATHER SERVICE DATA</div><h1>Weather, with context.</h1><p>Local conditions, official forecasts, radar, and active hazards—together in one desk.</p></div><div className="heading-actions"><div className={`data-chip ${error ? 'chip-warning' : ''}`}><span className={`status-light ${error ? 'status-light-error' : ''}`}/>{loading && !weather ? 'CONNECTING TO NWS' : error ? 'FEED ISSUE' : refreshing ? 'REFRESHING' : 'NWS FEED'}</div><button className="secondary-action" onClick={refresh} disabled={refreshing}>{refreshing ? 'Refreshing…' : <><WeatherDeskIcon name="refresh" size={15} /> Update now</>}</button></div></div>
@@ -50,7 +55,7 @@ export default function HomePage() {
     </section>
 
     <section className="metric-grid dashboard-metrics" aria-label="Latest observations">
-      {[['Wind', wind === null ? '—' : `${Math.round(wind)} mph`, gust === null ? 'Gust not reported' : `Gust ${Math.round(gust)} mph`, 'wind'], ['Humidity', humidity === null ? '—' : `${Math.round(humidity)}%`, 'Relative humidity', 'humidity'], ['Dew point', dewPoint === null ? '—' : formatTemperature(dewPoint, settings.units), 'Moisture indicator', 'dewpoint'], ['Sea-level pressure', pressure === null ? '—' : `${pressure.toFixed(1)} hPa`, 'Station-reported · hPa', 'pressure']].map(([title, value, sub, symbol]) => <article className="metric-card" key={title}><span className="metric-symbol"><WeatherDeskIcon name={symbol} size={21} /></span><span className="metric-label">{title}</span><strong>{value}</strong><small>{sub}</small></article>)}
+      {[['Wind', wind === null ? '—' : `${Math.round(wind)} mph`, gust === null ? 'Gust not reported' : `Gust ${Math.round(gust)} mph`, 'wind'], ['Humidity', humidity === null ? '—' : `${Math.round(humidity)}%`, 'Relative humidity', 'humidity'], ['Dew point', dewPoint === null ? '—' : formatTemperature(dewPoint, settings.units), 'Moisture indicator', 'dewpoint'], ['Sea-level pressure', pressure === null ? '—' : `${pressure.toFixed(1)} hPa`, 'Station-reported · hPa', 'pressure'], ['UV Index', uvIndex === null ? '—' : uvIndex.toFixed(1), uvIndex === null ? 'Needs coordinates' : uvIndex >= 8 ? 'Very high' : uvIndex >= 6 ? 'High' : uvIndex >= 3 ? 'Moderate' : 'Low', 'uv'], ['Sunrise', sunPosition?.sunrise ? sunPosition.sunrise.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '—', sunPosition?.sunset ? `Set ${sunPosition.sunset.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : 'Needs coordinates', 'sun'], ['Day length', sunPosition?.dayLength ? `${Math.round(sunPosition.dayLength)}h ${Math.round((sunPosition.dayLength % 1) * 60)}m` : '—', 'Daylight duration', 'sun'], ['Moon', moonPhase.phase, `${moonPhase.age} days · ${moonPhase.illumination}% illuminated`, 'moon']].map(([title, value, sub, symbol]) => <article className="metric-card" key={title}><span className="metric-symbol"><WeatherDeskIcon name={symbol} size={21} /></span><span className="metric-label">{title}</span><strong>{value}</strong><small>{sub}</small></article>)}
     </section>
 
     <WeatherMetrics observation={obs} settings={settings} grid={weather?.grid} />
