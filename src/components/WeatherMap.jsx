@@ -122,6 +122,7 @@ export default function WeatherMap() {
   const [lastRadarRefresh, setLastRadarRefresh] = useState(null)
   const [refreshingRadar, setRefreshingRadar] = useState(false)
   const [mobileSheet, setMobileSheet] = useState(null)
+  const [showOfficialRadar, setShowOfficialRadar] = useState(false)
   const alertsFittedRef = useRef(false)
   const mapInteractedRef = useRef(false)
   const alerts = weather?.alerts ?? EMPTY_ALERTS
@@ -441,7 +442,7 @@ export default function WeatherMap() {
     <div className="wf-radar-secondary-bar">
       <label className="wf-checkbox"><input type="checkbox" checked={showAlerts} onChange={event => setShowAlerts(event.target.checked)}/> Show NWS alert polygons ({polygonAlerts.filter(item => item.geometry).length} nationwide)</label>
       <button type="button" className="wf-secondary-action" onClick={zoomAlerts}>Zoom to alerts</button>
-      <a className="wf-secondary-action" href="https://radar.weather.gov" target="_blank" rel="noreferrer"><WeatherDeskIcon name="arrowUpRight" size={14} /> Animate radar (official)</a>
+      <button type="button" className="wf-secondary-action" onClick={() => setShowOfficialRadar(true)}><WeatherDeskIcon name="arrowUpRight" size={14} /> Open future radar</button>
       <form className="wf-site-form" onSubmit={handleManualSite}><label htmlFor="wf-radar-site">Radar site ID</label><input id="wf-radar-site" value={siteInput} onChange={event => setSiteInput(event.target.value.toUpperCase().slice(0, 4))} placeholder={radarStation || 'e.g. KCCX'} maxLength={4} aria-label="Radar site ID"/><button type="submit">Load local products</button></form>
       <span className="wf-site-status">{localProductsLoading ? `Checking ${radarStation}…` : radarStation ? `Site ${radarStation}` : 'National mosaic mode'}{siteCatalog.state === 'error' ? ' · local catalog unavailable' : ''}</span>
       <Link to="/" className="wf-secondary-action wf-exit-map"><WeatherDeskIcon name="back" size={13} /> Done</Link>
@@ -460,6 +461,24 @@ export default function WeatherMap() {
     </div>
     <footer className="wf-status"><span>{status}</span><span role="status" aria-live="polite">{mapError || (weather?.errors?.alerts ? `Alert data issue: ${weather.errors.alerts}` : lastRadarRefresh ? `Last refresh request: ${lastRadarRefresh.toLocaleTimeString()}` : 'Radar imagery is served by official NWS / NOAA GIS services.')}</span></footer>
     <div className="wf-note"><b>Radar interpretation:</b> BREF and CREF show reflectivity; base radial velocity shows motion toward or away from an individual radar. National mosaic products and single-site products are different datasets. A velocity couplet can have multiple causes and does not by itself confirm a tornado. Geographic basemap tiles are provided by the listed map providers; radar and warning data are NWS / NOAA.</div>
+
+    {showOfficialRadar && (
+      <div className="wf-official-radar-overlay" role="dialog" aria-modal="true" aria-label="Official NWS radar viewer">
+        <div className="wf-official-radar-header">
+          <strong>Official NWS Radar Viewer</strong>
+          <button onClick={() => setShowOfficialRadar(false)} aria-label="Close"><WeatherDeskIcon name="close" size={18} /></button>
+        </div>
+        <iframe
+          src="https://radar.weather.gov"
+          title="Official NWS radar viewer with past and future animation"
+          className="wf-official-radar-frame"
+          allowFullScreen
+        />
+        <div className="wf-official-radar-footer">
+          <small>This is the official National Weather Service radar viewer with full past and future animation capabilities. Close this panel to return to Weather Forecaster.</small>
+        </div>
+      </div>
+    )}
 
     {/* Mobile control dock — Weather Channel-style bottom bar (CSS-hidden on desktop). */}
     <div className="wf-mobile-dock" role="toolbar" aria-label="Radar controls">
@@ -517,10 +536,10 @@ export default function WeatherMap() {
 
           <div className="wf-sheet-field">
             <span className="wf-sheet-label">RADAR ANIMATION</span>
-            <a href="https://radar.weather.gov" target="_blank" rel="noreferrer" className="wf-sheet-animate">
-              <WeatherDeskIcon name="arrowUpRight" size={16} /> Open official NWS radar animator
-            </a>
-            <small>Time-based radar animation is available at the official NWS radar viewer (past and future).</small>
+            <button type="button" className="wf-sheet-animate" onClick={() => { setMobileSheet(null); setShowOfficialRadar(true) }}>
+              <WeatherDeskIcon name="arrowUpRight" size={16} /> Open future radar (official)
+            </button>
+            <small>Embedded official NWS radar viewer with past and future animation.</small>
           </div>
 
           <div className="wf-sheet-actions">
