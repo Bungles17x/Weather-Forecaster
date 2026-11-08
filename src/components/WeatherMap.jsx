@@ -129,6 +129,7 @@ export default function WeatherMap() {
   const [animating, setAnimating] = useState(false)
   const [animationFrame, setAnimationFrame] = useState(0)
   const [animationFrames, setAnimationFrames] = useState([])
+  const [animationMode, setAnimationMode] = useState('past')
   const animationIntervalRef = useRef(null)
   const alerts = weather?.alerts ?? EMPTY_ALERTS
   // Polygons come from the nationwide active-alert feed so every warning, watch,
@@ -360,6 +361,7 @@ export default function WeatherMap() {
     setProductId(next)
     setAnimating(false)
     setAnimationFrame(0)
+    setAnimationMode('past')
     const national = NATIONAL_RADAR_PRODUCTS[next]
     const site = SITE_RADAR_PRODUCTS[next]
     setStatus(national ? `Requesting ${national.title}…` : `Requesting ${site?.title || 'radar product'}…`)
@@ -375,9 +377,16 @@ export default function WeatherMap() {
     } else {
       const now = new Date()
       const frames = []
-      for (let i = 12; i >= 0; i--) {
-        const time = new Date(now.getTime() - i * 10 * 60 * 1000)
-        frames.push(time.toISOString())
+      if (animationMode === 'past') {
+        for (let i = 12; i >= 0; i--) {
+          const time = new Date(now.getTime() - i * 10 * 60 * 1000)
+          frames.push(time.toISOString())
+        }
+      } else {
+        for (let i = 0; i <= 12; i++) {
+          const time = new Date(now.getTime() + i * 10 * 60 * 1000)
+          frames.push(time.toISOString())
+        }
       }
       setAnimationFrames(frames)
       setAnimationFrame(0)
@@ -484,10 +493,16 @@ export default function WeatherMap() {
       <label className="wf-checkbox"><input type="checkbox" checked={showAlerts} onChange={event => setShowAlerts(event.target.checked)}/> Show NWS alert polygons ({polygonAlerts.filter(item => item.geometry).length} nationwide)</label>
       <button type="button" className="wf-secondary-action" onClick={zoomAlerts}>Zoom to alerts</button>
       {activeDefinition?.timeDimension && (
-        <button type="button" className={`wf-secondary-action ${animating ? 'animating' : ''}`} onClick={toggleAnimation}>
-          {animating ? <><WeatherDeskIcon name="pause" size={14} /> Pause</> : <><WeatherDeskIcon name="play" size={14} /> Animate</>}
-          {animating && ` ${animationFrame + 1}/${animationFrames.length}`}
-        </button>
+        <>
+          <div className="wf-animation-modes">
+            <button type="button" className={animationMode === 'past' ? 'selected' : ''} onClick={() => { setAnimationMode('past'); setAnimating(false); setAnimationFrame(0) }}>Past 2 hours</button>
+            <button type="button" className={animationMode === 'future' ? 'selected' : ''} onClick={() => { setAnimationMode('future'); setAnimating(false); setAnimationFrame(0) }}>Future 2 hours</button>
+          </div>
+          <button type="button" className={`wf-secondary-action ${animating ? 'animating' : ''}`} onClick={toggleAnimation}>
+            {animating ? <><WeatherDeskIcon name="pause" size={14} /> Pause</> : <><WeatherDeskIcon name="play" size={14} /> Animate</>}
+            {animating && ` ${animationFrame + 1}/${animationFrames.length}`}
+          </button>
+        </>
       )}
       <form className="wf-site-form" onSubmit={handleManualSite}><label htmlFor="wf-radar-site">Radar site ID</label><input id="wf-radar-site" value={siteInput} onChange={event => setSiteInput(event.target.value.toUpperCase().slice(0, 4))} placeholder={radarStation || 'e.g. KCCX'} maxLength={4} aria-label="Radar site ID"/><button type="submit">Load local products</button></form>
       <span className="wf-site-status">{localProductsLoading ? `Checking ${radarStation}…` : radarStation ? `Site ${radarStation}` : 'National mosaic mode'}{siteCatalog.state === 'error' ? ' · local catalog unavailable' : ''}</span>
