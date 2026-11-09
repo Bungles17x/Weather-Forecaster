@@ -14,6 +14,7 @@ const secondaryItems = [
   { to: '/analysis', label: 'Storm lab', icon: 'thunderstorm' },
   { to: '/assistant', label: 'AI Assistant', icon: 'help' },
   { to: '/observations', label: 'Observations', icon: 'observations' },
+  { to: '/errors', label: 'Error History', icon: 'database' },
   { to: '/settings', label: 'Settings', icon: 'settings' },
 ]
 

@@ -14,6 +14,7 @@ const AlertsPage = lazyWithRetry(() => import('./pages/AlertsPage'))
 const AnalysisPage = lazyWithRetry(() => import('./pages/AnalysisPage'))
 const ObservationsPage = lazyWithRetry(() => import('./pages/ObservationsPage'))
 const AssistantPage = lazyWithRetry(() => import('./pages/AssistantPage'))
+const ErrorHistoryPage = lazyWithRetry(() => import('./pages/ErrorHistoryPage'))
 
 function RouteFallback() {
   return (
@@ -37,6 +38,7 @@ export default function App() {
           <Route path="/assistant" element={<AssistantPage />} />
           <Route path="/observations" element={<ObservationsPage />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/errors" element={<ErrorHistoryPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>

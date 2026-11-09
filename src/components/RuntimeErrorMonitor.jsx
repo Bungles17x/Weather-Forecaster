@@ -1,18 +1,6 @@
 import React, { useEffect, useState } from 'react'
+import { errorManager, ERROR_SEVERITY } from '../services/errorManager'
 import './RuntimeErrorMonitor.css'
-
-const BENIGN = [
-  /script error\.?$/i,
-  /chrome-extension:/i,
-  /moz-extension:/i,
-  /download the react devtools/i,
-  /^warning: react does not recognize/i,
-  /validatedomnesting/i,
-  /a component is changing an uncontrolled/i,
-  /resizeobserver loop limit exceeded/i,
-  /react hydrate/i,
-  /did not match/i
-]
 
 function stringifyArgs(args) {
   return args.map(value => {
@@ -22,16 +10,9 @@ function stringifyArgs(args) {
   }).join(' ')
 }
 
-function isBenign(detail) {
-  const text = String(detail || '')
-  return BENIGN.some(pattern => pattern.test(text))
-}
-
 /**
  * Captures uncaught exceptions and console errors.
- * Full-screen recovery is reserved for real uncaught runtime failures.
- * Console errors are recorded in a non-blocking diagnostic dock so React/library
- * logging cannot take over the workstation UI.
+ * Integrates with the centralized error manager for tracking and reporting.
  */
 export default function RuntimeErrorMonitor() {
   const [runtimeError, setRuntimeError] = useState(null)
@@ -39,37 +20,34 @@ export default function RuntimeErrorMonitor() {
   const [dockOpen, setDockOpen] = useState(false)
 
   useEffect(() => {
+    // Subscribe to error manager events
+    const unsubscribe = errorManager.subscribe((event, data) => {
+      if (event === 'errorLogged' || event === 'errorGrouped') {
+        // Convert error manager format to runtime monitor format
+        const errorEntry = {
+          title: `${data.category.toUpperCase()} ERROR`,
+          detail: data.message,
+          time: new Date(data.timestamp).toLocaleTimeString(),
+          severity: data.severity,
+          timestamp: data.timestamp,
+          blocking: data.severity === ERROR_SEVERITY.FATAL || data.severity === ERROR_SEVERITY.CRITICAL,
+          count: data.count,
+          code: data.id
+        }
+        setErrorHistory(prev => [errorEntry, ...prev].slice(0, 50))
+        if (errorEntry.blocking) setRuntimeError(errorEntry)
+      }
+    })
+
     const originalConsoleError = console.error
     const originalConsoleWarn = console.warn
     const originalConsoleLog = console.log
-    let lastSignature = ''
-    let lastAt = 0
-
-    const record = (title, detail, severity, blocking) => {
-      const message = [title, detail].filter(Boolean).join('\n')
-      if (isBenign(message)) return
-      const now = Date.now()
-      if (message === lastSignature && now - lastAt < 1500) return
-      lastSignature = message
-      lastAt = now
-      const errorEntry = {
-        title,
-        detail: String(detail || title).slice(0, 15000),
-        time: new Date().toLocaleTimeString(),
-        severity,
-        timestamp: now,
-        blocking
-      }
-      setErrorHistory(prev => [errorEntry, ...prev].slice(0, 50))
-      if (blocking) setRuntimeError(errorEntry)
-    }
 
     console.error = (...args) => {
       originalConsoleError.apply(console, args)
       const detail = stringifyArgs(args)
-      // Treat ALL console errors as blocking now (unless explicitly benign)
-      const blocking = !isBenign(detail)
-      record('Console Error Detected', detail || 'The application wrote an error to the console.', 'error', blocking)
+      const error = args[0] instanceof Error ? args[0] : new Error(detail)
+      errorManager.logError(error, { source: 'console' })
     }
 
     console.warn = (...args) => {
@@ -77,22 +55,24 @@ export default function RuntimeErrorMonitor() {
     }
 
     const handleError = event => {
-      const detail = event.error?.stack || event.message || 'Unknown JavaScript error'
-      if (isBenign(detail)) return
-      record('Uncaught Runtime Error', detail, 'error', true)
+      const error = event.error || new Error(event.message)
+      errorManager.logError(error, {
+        source: event.filename,
+        line: event.lineno,
+        column: event.colno
+      })
     }
 
     const handleRejection = event => {
-      const reason = event.reason
-      const detail = reason instanceof Error ? `${reason.name}: ${reason.message}\n${reason.stack || ''}` : String(reason ?? 'Unknown rejection')
-      // Promise rejections are always blocking
-      record('Unhandled Promise Rejection', detail, 'error', true)
+      const error = event.reason instanceof Error ? event.reason : new Error(String(event.reason))
+      errorManager.logError(error, { promise: true })
     }
 
     window.addEventListener('error', handleError)
     window.addEventListener('unhandledrejection', handleRejection)
 
     return () => {
+      unsubscribe()
       console.error = originalConsoleError
       console.warn = originalConsoleWarn
       console.log = originalConsoleLog
@@ -102,14 +82,34 @@ export default function RuntimeErrorMonitor() {
   }, [])
 
   const severityColors = {
-    error: '#ff5c68',
+    fatal: '#ff003c',
+    critical: '#ff6a7a',
     warning: '#ffd166',
-    info: '#67b7ff'
+    minor: '#67b7ff'
   }
 
   const copyToClipboard = () => {
     const text = errorHistory.map(err => `[${err.time}] ${err.severity.toUpperCase()}: ${err.title}\n${err.detail}`).join('\n\n---\n\n')
     navigator.clipboard.writeText(text).catch(() => {})
+  }
+
+  const exportReport = () => {
+    const report = errorManager.exportReport()
+    const blob = new Blob([report], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `weather-forecaster-error-report-${Date.now()}.json`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
+  const clearHistory = () => {
+    errorManager.clearHistory()
+    setErrorHistory([])
+    setRuntimeError(null)
   }
 
   const nonBlocking = errorHistory.filter(item => !item.blocking)
@@ -128,6 +128,7 @@ export default function RuntimeErrorMonitor() {
                 {runtimeError.severity.toUpperCase()}
               </span>
               <span>Detected at {runtimeError.time}</span>
+              {runtimeError.count > 1 && <span>Count: {runtimeError.count}</span>}
             </div>
             <pre className="runtime-error-details">{runtimeError.title}{'\n\n'}{runtimeError.detail}</pre>
             {errorHistory.length > 1 && (
@@ -154,7 +155,10 @@ export default function RuntimeErrorMonitor() {
               <button type="button" className="runtime-error-tertiary" onClick={copyToClipboard}>
                 Copy Details
               </button>
-              <button type="button" className="runtime-error-tertiary" onClick={() => { setErrorHistory([]); setRuntimeError(null) }}>
+              <button type="button" className="runtime-error-tertiary" onClick={exportReport}>
+                Export Report
+              </button>
+              <button type="button" className="runtime-error-tertiary" onClick={clearHistory}>
                 Clear History
               </button>
             </div>
@@ -177,7 +181,7 @@ export default function RuntimeErrorMonitor() {
           {dockOpen && (
             <div className="runtime-error-dock-panel" role="status">
               <pre className="runtime-error-details">{nonBlocking[0].title}{'\n\n'}{nonBlocking[0].detail}</pre>
-              <button type="button" className="runtime-error-tertiary" onClick={() => setErrorHistory([])}>Clear</button>
+              <button type="button" className="runtime-error-tertiary" onClick={() => { errorManager.clearHistory(); setErrorHistory([]) }}>Clear</button>
             </div>
           )}
         </div>
