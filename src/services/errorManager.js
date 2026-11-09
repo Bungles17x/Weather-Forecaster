@@ -16,6 +16,9 @@ const ERROR_CATEGORIES = {
   UNKNOWN: 'unknown'
 }
 
+// Backend endpoint for error reporting (update this to your deployed function URL)
+const ERROR_REPORTING_ENDPOINT = process.env.VITE_ERROR_REPORTING_ENDPOINT || ''
+
 class ErrorManager {
   constructor() {
     this.errorHistory = []
@@ -23,7 +26,19 @@ class ErrorManager {
     this.listeners = new Set()
     this.maxHistorySize = 100
     this.groupingTimeout = 5 * 60 * 1000 // 5 minutes
+    this.emailEnabled = localStorage.getItem('weatherForecaster_emailEnabled') === 'true'
     this.loadFromStorage()
+  }
+
+  // Enable or disable email reporting
+  setEmailEnabled(enabled) {
+    this.emailEnabled = enabled
+    localStorage.setItem('weatherForecaster_emailEnabled', String(enabled))
+  }
+
+  // Check if email reporting is enabled
+  isEmailEnabled() {
+    return this.emailEnabled && ERROR_REPORTING_ENDPOINT
   }
 
   // Generate a unique error signature for grouping
@@ -122,9 +137,40 @@ class ErrorManager {
       
       this.saveToStorage()
       this.notifyListeners('errorLogged', errorRecord)
+
+      // Send email report if enabled and this is a new error group
+      if (this.emailEnabled && severity === ERROR_SEVERITY.FATAL || severity === ERROR_SEVERITY.CRITICAL) {
+        this.sendEmailReport(errorRecord)
+      }
     }
 
     return errorRecord
+  }
+
+  // Send error report to backend
+  async sendEmailReport(errorRecord) {
+    if (!ERROR_REPORTING_ENDPOINT) {
+      console.warn('Error reporting endpoint not configured')
+      return
+    }
+
+    try {
+      const response = await fetch(ERROR_REPORTING_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(errorRecord)
+      })
+
+      if (!response.ok) {
+        console.error('Failed to send error report:', response.status, await response.text())
+      } else {
+        console.log('Error report sent successfully')
+      }
+    } catch (error) {
+      console.error('Error sending error report:', error)
+    }
   }
 
   // Mark an error as resolved

@@ -10,6 +10,7 @@ export default function ErrorHistoryPage() {
   const [statistics, setStatistics] = useState(null)
   const [selectedSeverity, setSelectedSeverity] = useState('all')
   const [selectedCategory, setSelectedCategory] = useState('all')
+  const [emailEnabled, setEmailEnabled] = useState(errorManager.isEmailEnabled())
 
   useEffect(() => {
     const loadData = () => {
@@ -59,6 +60,12 @@ export default function ErrorHistoryPage() {
     errorManager.resolveError(signature)
     setErrorGroups(errorManager.getErrorGroups())
     setStatistics(errorManager.getStatistics())
+  }
+
+  const toggleEmailEnabled = () => {
+    const newState = !emailEnabled
+    errorManager.setEmailEnabled(newState)
+    setEmailEnabled(newState)
   }
 
   const severityColor = (severity) => ({
@@ -243,6 +250,31 @@ export default function ErrorHistoryPage() {
               ))}
             </div>
           )}
+        </section>
+
+        <section className="error-email-config">
+          <h2>Email Reporting</h2>
+          <div className="email-config-card">
+            <div className="email-config-info">
+              <strong>Automatic Email Reports</strong>
+              <p>Receive email notifications for fatal and critical errors. Requires a backend deployment (see ERROR_EMAIL_SETUP.md).</p>
+              <div className="email-status">
+                <span>Status:</span>
+                <span className={`status-badge ${!process.env.VITE_ERROR_REPORTING_ENDPOINT ? 'status-warning' : 'status-ok'}`}>
+                  {process.env.VITE_ERROR_REPORTING_ENDPOINT ? 'Endpoint configured' : 'No endpoint configured'}
+                </span>
+              </div>
+            </div>
+            <label className="email-toggle">
+              <input 
+                type="checkbox" 
+                checked={emailEnabled}
+                onChange={toggleEmailEnabled}
+                disabled={!process.env.VITE_ERROR_REPORTING_ENDPOINT}
+              />
+              <span>Email error reports to me</span>
+            </label>
+          </div>
         </section>
 
         <section className="error-architecture-note">

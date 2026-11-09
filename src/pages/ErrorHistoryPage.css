@@ -299,6 +299,93 @@
   letter-spacing: -0.02em;
 }
 
+.email-config-card {
+  padding: 20px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+.email-config-info {
+  margin-bottom: 16px;
+}
+
+.email-config-info strong {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.email-config-info p {
+  margin: 0 0 12px;
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--muted);
+}
+
+.email-status {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 12px;
+}
+
+.email-status span:first-child {
+  color: var(--muted);
+}
+
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.status-ok {
+  background: rgba(140, 230, 191, 0.15);
+  color: #8ce6bf;
+}
+
+.status-warning {
+  background: rgba(255, 208, 121, 0.15);
+  color: #ffd579;
+}
+
+.email-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  background: var(--panel-3);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.email-toggle input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--cyan);
+}
+
+.email-toggle input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.email-toggle span {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.error-architecture-note h2 {
+  font-size: 20px;
+  margin-bottom: 16px;
+  letter-spacing: -0.02em;
+}
+
 .note-card {
   padding: 20px;
   background: rgba(255, 208, 121, 0.1);
