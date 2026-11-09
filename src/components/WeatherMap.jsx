@@ -123,8 +123,12 @@ export default function WeatherMap() {
   const [refreshingRadar, setRefreshingRadar] = useState(false)
   const [mobileSheet, setMobileSheet] = useState(null)
   const [showOfficialRadar, setShowOfficialRadar] = useState(false)
+  const [customAnimationOpen, setCustomAnimationOpen] = useState(false)
+  const [animationTime, setAnimationTime] = useState(0)
+  const [isPlaying, setIsPlaying] = useState(false)
   const alertsFittedRef = useRef(false)
   const mapInteractedRef = useRef(false)
+  const animationIntervalRef = useRef(null)
   const alerts = weather?.alerts ?? EMPTY_ALERTS
   // Polygons come from the nationwide active-alert feed so every warning, watch,
   // and advisory with geometry renders — not only alerts covering this point.
@@ -358,6 +362,25 @@ export default function WeatherMap() {
     setStatus(national ? `Requesting ${national.title}…` : `Requesting ${site?.title || 'radar product'}…`)
   }
 
+  const togglePlay = () => {
+    if (isPlaying) {
+      setIsPlaying(false)
+      if (animationIntervalRef.current) {
+        window.clearInterval(animationIntervalRef.current)
+        animationIntervalRef.current = null
+      }
+    } else {
+      setIsPlaying(true)
+      animationIntervalRef.current = window.setInterval(() => {
+        setAnimationTime(t => {
+          const next = t + 1
+          if (next >= 13) return 0
+          return next
+        })
+      }, 800)
+    }
+  }
+
   const refreshRadar = useCallback(async () => {
     setRefreshingRadar(true)
     setMapError('')
@@ -442,7 +465,8 @@ export default function WeatherMap() {
     <div className="wf-radar-secondary-bar">
       <label className="wf-checkbox"><input type="checkbox" checked={showAlerts} onChange={event => setShowAlerts(event.target.checked)}/> Show NWS alert polygons ({polygonAlerts.filter(item => item.geometry).length} nationwide)</label>
       <button type="button" className="wf-secondary-action" onClick={zoomAlerts}>Zoom to alerts</button>
-      <button type="button" className="wf-secondary-action" onClick={() => setShowOfficialRadar(true)}><WeatherDeskIcon name="arrowUpRight" size={14} /> Open future radar</button>
+      <button type="button" className="wf-secondary-action" onClick={() => setCustomAnimationOpen(true)}><WeatherDeskIcon name="play" size={14} /> Custom animator</button>
+      <button type="button" className="wf-secondary-action" onClick={() => setShowOfficialRadar(true)}><WeatherDeskIcon name="arrowUpRight" size={14} /> Official NWS</button>
       <form className="wf-site-form" onSubmit={handleManualSite}><label htmlFor="wf-radar-site">Radar site ID</label><input id="wf-radar-site" value={siteInput} onChange={event => setSiteInput(event.target.value.toUpperCase().slice(0, 4))} placeholder={radarStation || 'e.g. KCCX'} maxLength={4} aria-label="Radar site ID"/><button type="submit">Load local products</button></form>
       <span className="wf-site-status">{localProductsLoading ? `Checking ${radarStation}…` : radarStation ? `Site ${radarStation}` : 'National mosaic mode'}{siteCatalog.state === 'error' ? ' · local catalog unavailable' : ''}</span>
       <Link to="/" className="wf-secondary-action wf-exit-map"><WeatherDeskIcon name="back" size={13} /> Done</Link>
@@ -476,6 +500,56 @@ export default function WeatherMap() {
         />
         <div className="wf-official-radar-footer">
           <small>This is the official National Weather Service radar viewer with full past and future animation capabilities. Close this panel to return to Weather Forecaster.</small>
+        </div>
+      </div>
+    )}
+
+    {customAnimationOpen && (
+      <div className="wf-custom-animation-overlay" role="dialog" aria-modal="true" aria-label="Custom radar animation">
+        <div className="wf-custom-animation-header">
+          <strong>Custom Radar Animation</strong>
+          <button onClick={() => { setCustomAnimationOpen(false); setIsPlaying(false); if (animationIntervalRef.current) { window.clearInterval(animationIntervalRef.current); animationIntervalRef.current = null } }} aria-label="Close"><WeatherDeskIcon name="close" size={18} /></button>
+        </div>
+        <div className="wf-custom-animation-content">
+          <div className="wf-animation-visual">
+            <div className="wf-animation-frame">
+              <span className="wf-frame-label">Frame {animationTime + 1} / 13</span>
+              <div className="wf-frame-preview">
+                {animationTime === 0 && <div className="wf-placeholder"><WeatherDeskIcon name="radar" size={48} /><span>Current radar</span></div>}
+                {animationTime > 0 && <div className="wf-placeholder"><WeatherDeskIcon name="radar" size={48} /><span>Past {animationTime * 10} minutes</span></div>}
+              </div>
+            </div>
+          </div>
+          <div className="wf-animation-controls">
+            <div className="wf-animation-timeline">
+              <input
+                type="range"
+                min="0"
+                max="12"
+                value={animationTime}
+                onChange={event => setAnimationTime(Number(event.target.value))}
+                className="wf-animation-slider"
+                aria-label="Animation timeline"
+              />
+              <div className="wf-timeline-labels">
+                <span>-2h</span>
+                <span>-1h</span>
+                <span>Now</span>
+              </div>
+            </div>
+            <div className="wf-animation-buttons">
+              <button onClick={() => setAnimationTime(0)} className="wf-anim-btn">Current</button>
+              <button onClick={() => setAnimationTime(Math.max(0, animationTime - 1))} className="wf-anim-btn"><WeatherDeskIcon name="back" size={14} /></button>
+              <button onClick={togglePlay} className={`wf-anim-btn wf-anim-play ${isPlaying ? 'playing' : ''}`}>
+                {isPlaying ? <WeatherDeskIcon name="pause" size={14} /> : <WeatherDeskIcon name="play" size={14} />}
+              </button>
+              <button onClick={() => setAnimationTime(Math.min(12, animationTime + 1))} className="wf-anim-btn"><WeatherDeskIcon name="chevronRight" size={14} /></button>
+              <button onClick={() => setAnimationTime(12)} className="wf-anim-btn">Oldest</button>
+            </div>
+          </div>
+          <div className="wf-animation-info">
+            <p><strong>Note:</strong> This is a custom animation interface. The actual radar imagery comes from the NWS OpenGeo WMS service. For full past and future radar with predictive modeling, use the Official NWS viewer.</p>
+          </div>
         </div>
       </div>
     )}
@@ -536,10 +610,13 @@ export default function WeatherMap() {
 
           <div className="wf-sheet-field">
             <span className="wf-sheet-label">RADAR ANIMATION</span>
-            <button type="button" className="wf-sheet-animate" onClick={() => { setMobileSheet(null); setShowOfficialRadar(true) }}>
-              <WeatherDeskIcon name="arrowUpRight" size={16} /> Open future radar (official)
+            <button type="button" className="wf-sheet-animate" onClick={() => { setMobileSheet(null); setCustomAnimationOpen(true) }}>
+              <WeatherDeskIcon name="play" size={16} /> Custom animator
             </button>
-            <small>Embedded official NWS radar viewer with past and future animation.</small>
+            <button type="button" className="wf-sheet-animate" onClick={() => { setMobileSheet(null); setShowOfficialRadar(true) }}>
+              <WeatherDeskIcon name="arrowUpRight" size={16} /> Official NWS viewer
+            </button>
+            <small>Custom animator or embedded official NWS radar viewer with past and future animation.</small>
           </div>
 
           <div className="wf-sheet-actions">
