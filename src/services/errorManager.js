@@ -1,5 +1,9 @@
-// Centralized Error Management System
-// This system detects, categorizes, and manages all errors in the application
+// Centralized error store for WeatherDesk.
+//
+// This module owns storage, grouping, statistics and reporting only. The global
+// browser hooks (window 'error', 'unhandledrejection' and console.error) live in
+// components/RuntimeErrorMonitor.jsx, so each failure is captured exactly once
+// instead of being logged twice by two competing listeners.
 
 const ERROR_SEVERITY = {
   FATAL: 'fatal',
@@ -7,6 +11,8 @@ const ERROR_SEVERITY = {
   WARNING: 'warning',
   MINOR: 'minor'
 }
+
+const SEVERITY_VALUES = new Set(Object.values(ERROR_SEVERITY))
 
 const ERROR_CATEGORIES = {
   NETWORK: 'network',
@@ -16,8 +22,33 @@ const ERROR_CATEGORIES = {
   UNKNOWN: 'unknown'
 }
 
-// Backend endpoint for error reporting (update this to your deployed function URL)
-const ERROR_REPORTING_ENDPOINT = process.env.VITE_ERROR_REPORTING_ENDPOINT || ''
+// Vite exposes only VITE_-prefixed keys on import.meta.env. Reading process.env
+// here would be undefined in the browser.
+const env = import.meta.env || {}
+const ERROR_REPORTING_ENDPOINT = String(env.VITE_ERROR_REPORTING_ENDPOINT || '').trim()
+
+// Third-party messages that are build advice rather than app failures. They are
+// never captured, and records stored by earlier builds are dropped on load.
+const IGNORED_MESSAGE_PATTERNS = [
+  /React Router Future Flag Warning/i,
+  /v7_startTransition|v7_relativeSplatPath|v7_fetcherPersist/i,
+  /Sourcemap for .* points to missing source files/i,
+  /Download the React DevTools/i
+]
+
+function isIgnorableMessage(text) {
+  return IGNORED_MESSAGE_PATTERNS.some(pattern => pattern.test(String(text || '')))
+}
+
+// localStorage throws in private mode and is absent in non-browser contexts.
+const storage = {
+  get(key) {
+    try { return window.localStorage.getItem(key) } catch { return null }
+  },
+  set(key, value) {
+    try { window.localStorage.setItem(key, value); return true } catch { return false }
+  }
+}
 
 class ErrorManager {
   constructor() {
@@ -26,27 +57,66 @@ class ErrorManager {
     this.listeners = new Set()
     this.maxHistorySize = 100
     this.groupingTimeout = 5 * 60 * 1000 // 5 minutes
-    this.emailEnabled = localStorage.getItem('weatherForecaster_emailEnabled') === 'true'
+    this.emailEnabled = storage.get('weatherForecaster_emailEnabled') === 'true'
+    // Marks this page load: the monitor uses it to tell freshly captured issues
+    // apart from history restored from a previous session.
+    this.sessionStartedAt = new Date().toISOString()
+    this.captureSuspended = false
     this.loadFromStorage()
+  }
+
+  // True while this module is writing to the console itself. Its own reports
+  // must never be captured as new failures, or reporting would feed itself.
+  isCaptureSuspended() {
+    return this.captureSuspended
+  }
+
+  // Console output that is part of error reporting, not a new error.
+  warnSilently(...args) {
+    this.captureSuspended = true
+    try {
+      console.warn(...args)
+    } finally {
+      this.captureSuspended = false
+    }
+  }
+
+  // Failures captured during this page load, newest first. Timestamps are
+  // compared as dates: string comparison would treat an unparseable timestamp
+  // from an older payload as newer than this session.
+  getSessionErrors() {
+    const sessionStart = Date.parse(this.sessionStartedAt)
+    return this.errorHistory.filter(entry => {
+      const detected = Date.parse(entry?.timestamp)
+      return Number.isFinite(detected) && detected >= sessionStart
+    })
   }
 
   // Enable or disable email reporting
   setEmailEnabled(enabled) {
-    this.emailEnabled = enabled
-    localStorage.setItem('weatherForecaster_emailEnabled', String(enabled))
+    this.emailEnabled = Boolean(enabled)
+    storage.set('weatherForecaster_emailEnabled', String(this.emailEnabled))
   }
 
-  // Check if email reporting is enabled
+  // Reporting needs both an explicit opt-in and a configured endpoint.
   isEmailEnabled() {
-    return this.emailEnabled && ERROR_REPORTING_ENDPOINT
+    return this.emailEnabled && Boolean(ERROR_REPORTING_ENDPOINT)
+  }
+
+  // What the user actually ticked, independent of endpoint configuration.
+  isEmailOptedIn() {
+    return this.emailEnabled
+  }
+
+  isReportingConfigured() {
+    return Boolean(ERROR_REPORTING_ENDPOINT)
   }
 
   // Generate a unique error signature for grouping
   generateErrorSignature(error) {
-    const message = error.message || error.toString()
-    const stack = error.stack || ''
-    const signature = `${message}-${stack.split('\n')[0] || ''}`
-    return this.hashString(signature)
+    const message = error?.message || String(error)
+    const stack = error?.stack || ''
+    return this.hashString(`${message}-${stack.split('\n')[1] || ''}`)
   }
 
   // Simple hash function for error grouping
@@ -57,23 +127,29 @@ class ErrorManager {
       hash = ((hash << 5) - hash) + char
       hash = hash & hash
     }
-    return hash.toString(36)
+    return Math.abs(hash).toString(36)
   }
 
   // Categorize error based on type and message
-  categorizeError(error) {
-    const message = error.message || error.toString() || ''
-    
-    if (message.includes('fetch') || message.includes('network') || message.includes('request')) {
+  categorizeError(error, context = {}) {
+    const message = String(error?.message || error || '')
+    const lower = message.toLowerCase()
+
+    if (context.kind === 'resource') return ERROR_CATEGORIES.NETWORK
+
+    if (error?.name === 'ChunkLoadError' || /failed to fetch dynamically imported module/.test(lower)) {
       return ERROR_CATEGORIES.NETWORK
     }
-    if (message.includes('API') || message.includes('weather.gov') || message.includes('nominatim')) {
+    if (lower.includes('fetch') || lower.includes('network') || lower.includes('request')) {
+      return ERROR_CATEGORIES.NETWORK
+    }
+    if (lower.includes('api') || lower.includes('weather.gov') || lower.includes('nominatim')) {
       return ERROR_CATEGORIES.API
     }
-    if (error instanceof TypeError || error instanceof ReferenceError) {
+    if (error instanceof TypeError || error instanceof ReferenceError || error instanceof RangeError) {
       return ERROR_CATEGORIES.RENDER
     }
-    if (message.includes('validation') || message.includes('invalid')) {
+    if (lower.includes('validation') || lower.includes('invalid')) {
       return ERROR_CATEGORIES.VALIDATION
     }
     return ERROR_CATEGORIES.UNKNOWN
@@ -81,31 +157,45 @@ class ErrorManager {
 
   // Determine error severity
   determineSeverity(error, category) {
-    if (error instanceof TypeError || error instanceof ReferenceError) {
-      return ERROR_SEVERITY.FATAL
-    }
-    if (category === ERROR_CATEGORIES.API && error.message?.includes('404')) {
+    const message = String(error?.message || '').toLowerCase()
+    if (error instanceof ReferenceError) return ERROR_SEVERITY.FATAL
+    if (/failed to fetch dynamically imported module|loading chunk/.test(message)) {
       return ERROR_SEVERITY.CRITICAL
     }
-    if (category === ERROR_CATEGORIES.NETWORK) {
-      return ERROR_SEVERITY.WARNING
-    }
-    return ERROR_SEVERITY.MINOR
+    if (error instanceof TypeError) return ERROR_SEVERITY.FATAL
+    if (category === ERROR_CATEGORIES.API && message.includes('404')) return ERROR_SEVERITY.CRITICAL
+    if (category === ERROR_CATEGORIES.NETWORK) return ERROR_SEVERITY.WARNING
+    // Anything that reached the screen is a real failure, never "minor".
+    return ERROR_SEVERITY.CRITICAL
+  }
+
+  // Severity for a single record. A console warning is always a warning, a
+  // console.error is at least critical (the app itself reported a failure), and
+  // a caller may pin a severity — a broken stylesheet is not a broken image.
+  resolveSeverity(error, category, context = {}) {
+    if (context.kind === 'warning') return ERROR_SEVERITY.WARNING
+    if (SEVERITY_VALUES.has(context.severity)) return context.severity
+    return this.determineSeverity(error, category)
   }
 
   // Log and process an error
   logError(error, context = {}) {
+    const normalized = error instanceof Error ? error : new Error(String(error))
     const timestamp = new Date().toISOString()
-    const category = this.categorizeError(error)
-    const severity = this.determineSeverity(error, category)
-    const signature = this.generateErrorSignature(error)
+    const category = this.categorizeError(normalized, context)
+    const severity = this.resolveSeverity(normalized, category, context)
+    const signature = this.generateErrorSignature(normalized)
 
     const errorRecord = {
       id: `${timestamp}-${signature}`,
       timestamp,
       signature,
-      message: error.message || error.toString(),
-      stack: error.stack || 'No stack trace available',
+      message: normalized.message || String(normalized),
+      // A plain console message carries no stack of its own; the frames it could
+      // attach would only point at the capture wrapper.
+      stack: context.stackless
+        ? 'No stack trace captured (console message).'
+        : (normalized.stack || 'No stack trace captured.'),
       category,
       severity,
       context: {
@@ -119,27 +209,26 @@ class ErrorManager {
       resolved: false
     }
 
-    // Check if this error was recently seen (grouping)
     const existingGroup = this.errorGroups.get(signature)
-    if (existingGroup && (Date.now() - existingGroup.timestamp < this.groupingTimeout)) {
-      existingGroup.count++
+    if (existingGroup && (Date.now() - new Date(existingGroup.timestamp).getTime() < this.groupingTimeout)) {
+      existingGroup.count += 1
       existingGroup.lastSeen = timestamp
       existingGroup.resolved = false
       this.notifyListeners('errorGrouped', existingGroup)
     } else {
       this.errorGroups.set(signature, errorRecord)
       this.errorHistory.unshift(errorRecord)
-      
-      // Trim history if needed
+
       if (this.errorHistory.length > this.maxHistorySize) {
         this.errorHistory = this.errorHistory.slice(0, this.maxHistorySize)
       }
-      
+
       this.saveToStorage()
       this.notifyListeners('errorLogged', errorRecord)
 
-      // Send email report if enabled and this is a new error group
-      if (this.emailEnabled && severity === ERROR_SEVERITY.FATAL || severity === ERROR_SEVERITY.CRITICAL) {
+      // Parentheses matter here: without them the endpoint flag alone would be
+      // enough to send mail for every warning.
+      if (this.isEmailEnabled() && (severity === ERROR_SEVERITY.FATAL || severity === ERROR_SEVERITY.CRITICAL)) {
         this.sendEmailReport(errorRecord)
       }
     }
@@ -147,41 +236,32 @@ class ErrorManager {
     return errorRecord
   }
 
-  // Send error report to backend
+  // Send error report to the configured backend
   async sendEmailReport(errorRecord) {
-    if (!ERROR_REPORTING_ENDPOINT) {
-      console.warn('Error reporting endpoint not configured')
-      return
-    }
+    if (!ERROR_REPORTING_ENDPOINT) return
 
     try {
       const response = await fetch(ERROR_REPORTING_ENDPOINT, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(errorRecord)
       })
-
-      if (!response.ok) {
-        console.error('Failed to send error report:', response.status, await response.text())
-      } else {
-        console.log('Error report sent successfully')
-      }
-    } catch (error) {
-      console.error('Error sending error report:', error)
+      // console.warn (not console.error) keeps report failures out of the
+      // capture path, which would otherwise create a reporting feedback loop.
+      if (!response.ok) this.warnSilently('[WeatherDesk] Error report rejected:', response.status)
+    } catch (reportError) {
+      this.warnSilently('[WeatherDesk] Error report could not be sent:', reportError?.message || reportError)
     }
   }
 
   // Mark an error as resolved
   resolveError(signature) {
     const group = this.errorGroups.get(signature)
-    if (group) {
-      group.resolved = true
-      group.resolvedAt = new Date().toISOString()
-      this.saveToStorage()
-      this.notifyListeners('errorResolved', group)
-    }
+    if (!group) return
+    group.resolved = true
+    group.resolvedAt = new Date().toISOString()
+    this.saveToStorage()
+    this.notifyListeners('errorResolved', group)
   }
 
   // Get error history
@@ -196,17 +276,16 @@ class ErrorManager {
 
   // Get errors by severity
   getErrorsBySeverity(severity) {
-    return this.errorHistory.filter(e => e.severity === severity)
+    return this.errorHistory.filter(entry => entry.severity === severity)
   }
 
   // Get errors by category
   getErrorsByCategory(category) {
-    return this.errorHistory.filter(e => e.category === category)
+    return this.errorHistory.filter(entry => entry.category === category)
   }
 
   // Get error statistics
   getStatistics() {
-    const total = this.errorHistory.length
     const bySeverity = {
       fatal: this.getErrorsBySeverity(ERROR_SEVERITY.FATAL).length,
       critical: this.getErrorsBySeverity(ERROR_SEVERITY.CRITICAL).length,
@@ -220,9 +299,13 @@ class ErrorManager {
       validation: this.getErrorsByCategory(ERROR_CATEGORIES.VALIDATION).length,
       unknown: this.getErrorsByCategory(ERROR_CATEGORIES.UNKNOWN).length
     }
-    const resolved = this.getErrorGroups().filter(g => g.resolved).length
 
-    return { total, bySeverity, byCategory, resolved }
+    return {
+      total: this.errorHistory.length,
+      bySeverity,
+      byCategory,
+      resolved: this.getErrorGroups().filter(group => group.resolved).length
+    }
   }
 
   // Clear error history
@@ -239,13 +322,13 @@ class ErrorManager {
     return () => this.listeners.delete(listener)
   }
 
-  // Notify all listeners
+  // Notify all listeners. A failing listener must never surface as a new error.
   notifyListeners(event, data) {
     this.listeners.forEach(listener => {
       try {
         listener(event, data)
-      } catch (e) {
-        console.error('Error in error listener:', e)
+      } catch (listenerError) {
+        this.warnSilently('[WeatherDesk] Error listener failed:', listenerError?.message || listenerError)
       }
     })
   }
@@ -253,72 +336,55 @@ class ErrorManager {
   // Save to localStorage
   saveToStorage() {
     try {
-      const data = {
-        history: this.errorHistory.slice(0, 50), // Only save last 50
+      storage.set('weatherForecaster_errors', JSON.stringify({
+        history: this.errorHistory.slice(0, 50),
         groups: Array.from(this.errorGroups.entries()).slice(0, 50)
-      }
-      localStorage.setItem('weatherForecaster_errors', JSON.stringify(data))
-    } catch (e) {
-      console.error('Failed to save error history:', e)
+      }))
+    } catch (storageError) {
+      this.warnSilently('[WeatherDesk] Error history could not be saved:', storageError?.message || storageError)
     }
   }
 
   // Load from localStorage
   loadFromStorage() {
+    const raw = storage.get('weatherForecaster_errors')
+    if (!raw) return
     try {
-      const data = localStorage.getItem('weatherForecaster_errors')
-      if (data) {
-        const parsed = JSON.parse(data)
-        this.errorHistory = parsed.history || []
-        this.errorGroups = new Map(parsed.groups || [])
-      }
-    } catch (e) {
-      console.error('Failed to load error history:', e)
+      const parsed = JSON.parse(raw)
+      this.errorHistory = (Array.isArray(parsed.history) ? parsed.history : [])
+        .filter(entry => !isIgnorableMessage(entry?.message))
+      this.errorGroups = new Map(
+        (Array.isArray(parsed.groups) ? parsed.groups : [])
+          .filter(([, entry]) => !isIgnorableMessage(entry?.message))
+      )
+    } catch {
+      // Corrupt or stale payload from an older build: start clean.
+      this.errorHistory = []
+      this.errorGroups = new Map()
     }
   }
 
   // Export error report
   exportReport() {
-    const report = {
+    return JSON.stringify({
+      app: 'WeatherDesk',
       timestamp: new Date().toISOString(),
+      environment: {
+        url: window.location.href,
+        route: window.location.hash || '#/',
+        userAgent: navigator.userAgent,
+        online: navigator.onLine,
+        viewport: `${window.innerWidth}×${window.innerHeight}`,
+        language: navigator.language
+      },
       statistics: this.getStatistics(),
       recentErrors: this.errorHistory.slice(0, 20),
       errorGroups: this.getErrorGroups().slice(0, 20)
-    }
-    return JSON.stringify(report, null, 2)
+    }, null, 2)
   }
 }
 
 // Create singleton instance
 const errorManager = new ErrorManager()
 
-// Global error handlers
-if (typeof window !== 'undefined') {
-  // Catch uncaught errors
-  window.addEventListener('error', (event) => {
-    errorManager.logError(event.error || new Error(event.message), {
-      source: event.filename,
-      line: event.lineno,
-      column: event.colno
-    })
-  })
-
-  // Catch unhandled promise rejections
-  window.addEventListener('unhandledrejection', (event) => {
-    errorManager.logError(event.reason || new Error('Unhandled promise rejection'), {
-      promise: true
-    })
-  })
-
-  // Catch console errors
-  const originalError = console.error
-  console.error = (...args) => {
-    originalError.apply(console, args)
-    const error = args[0]
-    if (error instanceof Error) {
-      errorManager.logError(error, { source: 'console' })
-    }
-  }
-}
-
-export { errorManager, ERROR_SEVERITY, ERROR_CATEGORIES }
+export { errorManager, ERROR_SEVERITY, ERROR_CATEGORIES, ERROR_REPORTING_ENDPOINT, isIgnorableMessage }

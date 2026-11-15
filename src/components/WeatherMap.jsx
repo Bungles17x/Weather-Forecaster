@@ -8,8 +8,21 @@ import { useWeather } from '../contexts/WeatherContext'
 import { NWS_RADAR, getAllActiveAlerts } from '../services/weatherData'
 import { findSiteRadarProduct, buildFallbackSiteLayerName, buildSiteWmsUrl, NATIONAL_RADAR_PRODUCTS, SITE_RADAR_PRODUCTS } from '../services/radarProducts'
 import { WeatherDeskIcon } from './WeatherIcons'
+import AlertDetailsDialog from './AlertDetailsDialog'
+import { alertIcon, formatAlertShort, severityColor } from '../utils/alertPresentation'
+import { PAST_FRAMES, TOTAL_FRAMES, PAST_STEP_MINUTES, FUTURE_STEP_MINUTES, frameTimes, buildNowcast, readView, wmsTime } from '../services/radarNowcast'
+
 const EMPTY_ALERTS = []
-const severityColor = severity => ({ Extreme: '#ff5364', Severe: '#ff8d52', Moderate: '#f2c45e', Minor: '#68b8ff' })[severity] || '#91a4ba'
+const SEVERITY_RANK = { Extreme: 0, Severe: 1, Moderate: 2, Minor: 3 }
+
+// Radar loop: official WMS frames for the past 30 minutes, then short-range
+// extrapolated frames for the next hour (see services/radarNowcast.js).
+const FRAME_STEP_MS = PAST_STEP_MINUTES * 60 * 1000
+
+// Stable identity for an alert across the feed, the layer and the details card.
+function alertKey(feature) {
+  return feature?.id || feature?.properties?.id || `${feature?.properties?.event || ''}|${feature?.properties?.areaDesc || ''}`
+}
 
 // Computes bounds straight from GeoJSON coordinates — L.geoJSON(...).getBounds()
 // is unreliable for layers that were never added to a map.
@@ -84,6 +97,26 @@ async function getSiteCapabilities(site) {
 }
 
 
+// The WMS catalog publishes the newest available scan time. The radar loop is
+// anchored to it so frame labels match the imagery instead of the wall clock
+// (conus_bref_qcd, for example, lags real time by several minutes).
+async function getLatestScanTime(definition) {
+  try {
+    const response = await fetch(`${definition.url}?service=WMS&request=GetCapabilities&version=1.3.0`)
+    if (!response.ok) return null
+    const xml = new DOMParser().parseFromString(await response.text(), 'text/xml')
+    if (xml.querySelector('parsererror')) return null
+    const layer = Array.from(xml.getElementsByTagName('Layer'))
+      .find(node => Array.from(node.children || []).some(child => child.localName === 'Name' && child.textContent.trim() === definition.layerName))
+    const dimension = layer && Array.from(layer.children).find(child => child.localName === 'Dimension' && child.getAttribute('name') === 'time')
+    const value = dimension?.getAttribute('default') || dimension?.textContent?.split(',')[0]?.trim() || ''
+    const parsed = Date.parse(value)
+    return Number.isFinite(parsed) ? parsed : null
+  } catch {
+    return null
+  }
+}
+
 function makeWmsLayer(definition, opacity) {
   return L.tileLayer.wms(definition.url, {
     layers: definition.layerName,
@@ -118,17 +151,19 @@ export default function WeatherMap() {
   const [siteOverride, setSiteOverride] = useState('')
   const [siteCatalog, setSiteCatalog] = useState({ state: 'idle', site: '', layers: [], error: '' })
   const [nationalAlerts, setNationalAlerts] = useState([])
+  const [alertsInView, setAlertsInView] = useState(null)
   const [alertScanKey, setAlertScanKey] = useState(0)
   const [lastRadarRefresh, setLastRadarRefresh] = useState(null)
   const [refreshingRadar, setRefreshingRadar] = useState(false)
   const [mobileSheet, setMobileSheet] = useState(null)
   const [showOfficialRadar, setShowOfficialRadar] = useState(false)
   const [customAnimationOpen, setCustomAnimationOpen] = useState(false)
-  const [animationTime, setAnimationTime] = useState(0)
+  const [animationAnchor, setAnimationAnchor] = useState(0)
+  const [frameIndex, setFrameIndex] = useState(PAST_FRAMES - 1)
   const [isPlaying, setIsPlaying] = useState(false)
-  const alertsFittedRef = useRef(false)
-  const mapInteractedRef = useRef(false)
-  const animationIntervalRef = useRef(null)
+  const [selectedAlert, setSelectedAlert] = useState(null)
+  const [nowcast, setNowcast] = useState({ state: 'idle', frames: [], bounds: null, speedMph: null, compass: null, baselineMinutes: null, trend: 'unknown', trendPercent: 0, still: false, uncertain: false, error: '' })
+  const selectAlertRef = useRef(null)
   const alerts = weather?.alerts ?? EMPTY_ALERTS
   // Polygons come from the nationwide active-alert feed so every warning, watch,
   // and advisory with geometry renders — not only alerts covering this point.
@@ -146,13 +181,19 @@ export default function WeatherMap() {
     return Object.entries(SITE_RADAR_PRODUCTS).filter(([, definition]) => findSiteRadarProduct(siteCatalog.layers, definition)).map(([id]) => id)
   }, [radarStation, siteCatalog])
 
+  // Warnings are nationwide; list the most severe ones so the panel never reads
+  // "no alerts" while polygons are on the map.
+  const sortedPolygonAlerts = useMemo(() => polygonAlerts
+    .slice()
+    .sort((a, b) => (SEVERITY_RANK[a.properties?.severity] ?? 4) - (SEVERITY_RANK[b.properties?.severity] ?? 4))
+    .slice(0, 12), [polygonAlerts])
+
   useEffect(() => {
     if (!mapNode.current || mapRef.current) return undefined
     const centerLat = Number.isFinite(Number(coordinates?.lat)) ? Number(coordinates.lat) : 38.9072
     const centerLon = Number.isFinite(Number(coordinates?.lon)) ? Number(coordinates.lon) : -77.0369
     const map = L.map(mapNode.current, { zoomControl: false, preferCanvas: true, minZoom: 3, maxZoom: 12, worldCopyJump: true }).setView([centerLat, centerLon], 7)
     mapRef.current = map
-    map.on('dragstart zoomstart', () => { mapInteractedRef.current = true })
     L.control.zoom({ position: 'topright' }).addTo(map)
 
     const bases = Object.fromEntries(Object.entries(BASEMAPS).map(([key, config]) => [key, config.create()]))
@@ -184,7 +225,14 @@ export default function WeatherMap() {
       },
       onEachFeature: (feature, item) => {
         const p = feature.properties || {}
-        item.bindPopup(`<strong>${safeHtml(p.event || 'NWS alert')}</strong><br>${safeHtml(p.headline)}<br><b>Severity:</b> ${safeHtml(p.severity)}<br><b>Expires:</b> ${safeHtml(p.expires)}<br><br>${safeHtml(p.instruction || p.description).slice(0, 900)}`)
+        // Hover gives a quick summary; clicking opens the full alert details.
+        item.bindTooltip(
+          `<strong>${safeHtml(p.event || 'NWS alert')}</strong><br>${safeHtml(p.areaDesc)}<br><em>Click for details</em>`,
+          { sticky: true, direction: 'top', opacity: 1, className: 'wf-alert-tip' }
+        )
+        item.on('click', () => selectAlertRef.current?.(feature))
+        if (!layersRef.current.alertLayers) layersRef.current.alertLayers = new Map()
+        layersRef.current.alertLayers.set(alertKey(feature), item)
       }
     })
     layersRef.current.alerts = alertsLayer
@@ -227,31 +275,42 @@ export default function WeatherMap() {
     const layerGroup = layersRef.current.alerts
     if (!map || !layerGroup) return
     const features = polygonAlerts.filter(feature => feature?.geometry)
-    const pointFeatures = polygonAlerts.filter(feature => !feature.geometry && (feature.properties?.point || (feature.properties?.geocode?.UGC && feature.properties?.geocode?.UGC.length)))
-    console.log('[Alert polygons] features with geometry:', features.length, 'point features without geometry:', pointFeatures.length, 'total alerts:', polygonAlerts.length, 'showAlerts:', showAlerts)
-    // Add both polygon and point features so alerts are always visible.
-    layerGroup.clearLayers().addData({ type: 'FeatureCollection', features: [...features, ...pointFeatures] })
-    if (showAlerts) {
-      layerGroup.addTo(map).bringToFront()
-      console.log('[Alert polygons] layer added to map, hasLayer:', map.hasLayer(layerGroup), 'getLayers:', layerGroup.getLayers().length)
-    } else if (map.hasLayer(layerGroup)) {
-      map.removeLayer(layerGroup)
+    // Alerts that only name forecast zones get a marker when NWS supplies a
+    // representative point. Leaflet drops features without geometry, so the
+    // point has to be promoted into geometry before addData().
+    const pointFeatures = polygonAlerts
+      .filter(feature => !feature.geometry && Array.isArray(feature.properties?.point?.coordinates))
+      .map(feature => ({ ...feature, geometry: feature.properties.point }))
+
+    layerGroup.clearLayers()
+    layersRef.current.alertLayers = new Map()
+    if (features.length || pointFeatures.length) {
+      layerGroup.addData({ type: 'FeatureCollection', features: [...features, ...pointFeatures] })
     }
-    // Frame every alert polygon once on first load so nationwide warnings are
-    // actually visible — skipped if the user already moved the map.
-    if (!alertsFittedRef.current && !mapInteractedRef.current && features.length) {
-      const bounds = L.latLngBounds([])
-      features.forEach(feature => {
-        const featureBox = featureBounds(feature)
-        if (featureBox?.isValid()) bounds.extend(featureBox)
-      })
-      if (bounds.isValid()) {
-        map.fitBounds(bounds, { padding: [28, 28] })
-        alertsFittedRef.current = true
-        console.log('[Alert polygons] auto-fit to bounds', bounds)
-      }
+    if (showAlerts) layerGroup.addTo(map).bringToFront()
+    else if (map.hasLayer(layerGroup)) map.removeLayer(layerGroup)
+
+    if (!features.length && !pointFeatures.length && polygonAlerts.length) {
+      setStatus('NWS alerts were returned, but none included usable map geometry or a representative point.')
     }
-    if (!features.length && !pointFeatures.length && polygonAlerts.length) setStatus('NWS alerts were returned, but none included usable map geometry or point data.')
+  }, [polygonAlerts, showAlerts])
+
+  // Nationwide polygons can be active while none are inside the current view,
+  // which reads as "the layer is broken". Count what is actually visible.
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map) return undefined
+    const updateVisibleAlerts = () => {
+      const group = layersRef.current.alerts
+      if (!group || !showAlerts) { setAlertsInView(null); return }
+      const bounds = map.getBounds()
+      setAlertsInView(group.getLayers().filter(layer => (
+        typeof layer.getBounds === 'function' && layer.getBounds().isValid() && layer.getBounds().intersects(bounds)
+      )).length)
+    }
+    updateVisibleAlerts()
+    map.on('moveend zoomend', updateVisibleAlerts)
+    return () => map.off('moveend zoomend', updateVisibleAlerts)
   }, [polygonAlerts, showAlerts])
 
   useEffect(() => {
@@ -342,9 +401,12 @@ export default function WeatherMap() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [productId, radarStation, siteCatalog])
 
+  // Extrapolated frames are painted on an image overlay, so the live WMS layer
+  // steps aside rather than showing through underneath.
+  const showingPastFrame = !customAnimationOpen || frameIndex < PAST_FRAMES
   useEffect(() => {
-    layersRef.current.activeProduct?.setOpacity(opacity / 100)
-  }, [opacity])
+    layersRef.current.activeProduct?.setOpacity(showingPastFrame ? opacity / 100 : 0)
+  }, [opacity, showingPastFrame, productId])
 
   const coordinateLat = coordinates?.lat
   const coordinateLon = coordinates?.lon
@@ -362,23 +424,141 @@ export default function WeatherMap() {
     setStatus(national ? `Requesting ${national.title}…` : `Requesting ${site?.title || 'radar product'}…`)
   }
 
-  const togglePlay = () => {
-    if (isPlaying) {
-      setIsPlaying(false)
-      if (animationIntervalRef.current) {
-        window.clearInterval(animationIntervalRef.current)
-        animationIntervalRef.current = null
-      }
-    } else {
-      setIsPlaying(true)
-      animationIntervalRef.current = window.setInterval(() => {
-        setAnimationTime(t => {
-          const next = t + 1
-          if (next >= 13) return 0
-          return next
-        })
-      }, 800)
+  // Timeline: the last 30 minutes of real scans, then the extrapolated hour.
+  const animationFrames = useMemo(() => frameTimes(animationAnchor), [animationAnchor])
+  const activeFrameTime = animationFrames[frameIndex]
+  const isForecastFrame = frameIndex >= PAST_FRAMES
+  const clockLabel = ms => (Number.isFinite(ms) ? new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—')
+  // Forecast frames only exist once the nowcast has been built.
+  const maxFrame = nowcast.state === 'ready' ? TOTAL_FRAMES - 1 : PAST_FRAMES - 1
+  const forecastMinutes = isForecastFrame && Number.isFinite(activeFrameTime) ? Math.round((activeFrameTime - animationAnchor) / 60000) : 0
+
+  // Past frames are genuine NWS requests through the WMS time dimension.
+  useEffect(() => {
+    const layer = layersRef.current.activeProduct
+    if (!layer?.wmsParams) return
+    const pastTime = customAnimationOpen && !isForecastFrame ? activeFrameTime : null
+    if (Number.isFinite(pastTime)) {
+      const iso = wmsTime(pastTime)
+      if (layer.wmsParams.time !== iso) layer.setParams({ time: iso })
+    } else if ('time' in layer.wmsParams) {
+      delete layer.wmsParams.time
+      layer.redraw()
     }
+  }, [customAnimationOpen, activeFrameTime, isForecastFrame, productId])
+
+  // Future frames: storm motion measured between the two newest official scans
+  // is applied to the newest frame. Rebuilt whenever the view changes.
+  useEffect(() => {
+    if (!customAnimationOpen) {
+      setNowcast(previous => (previous.state === 'idle' ? previous : { state: 'idle', frames: [], bounds: null, speedMph: null, compass: null, baselineMinutes: null, trend: 'unknown', trendPercent: 0, still: false, uncertain: false, error: '' }))
+      return undefined
+    }
+    const definition = NATIONAL_RADAR_PRODUCTS[productId]
+    const map = mapRef.current
+    if (!definition || !map) {
+      setNowcast({ state: 'unavailable', frames: [], bounds: null, speedMph: null, compass: null, still: false, error: 'Future radar is available for national NWS mosaics. Choose a national product to enable it.' })
+      return undefined
+    }
+    let cancelled = false
+    let timer = null
+    const run = () => {
+      const view = readView(map)
+      if (!view) {
+        setNowcast({ state: 'unavailable', frames: [], bounds: null, speedMph: null, compass: null, still: false, error: 'This map view is too wide to extrapolate.' })
+        return
+      }
+      const bounds = map.getBounds()
+      setNowcast(previous => ({ ...previous, state: 'loading' }))
+      buildNowcast({ definition, view, anchorMs: animationAnchor })
+        .then(result => {
+          if (cancelled) return
+          setNowcast({ state: 'ready', bounds, speedMph: result.speedMph, compass: result.compass, baselineMinutes: result.motionBaselineMinutes, trend: result.trend, trendPercent: result.trendPercent, still: result.still, uncertain: result.uncertain, frames: result.frames, error: '' })
+        })
+        .catch(error => {
+          if (cancelled) return
+          setNowcast({ state: 'unavailable', frames: [], bounds: null, speedMph: null, compass: null, still: false, error: error?.message || 'The extrapolated frames could not be built.' })
+        })
+    }
+    run()
+    const onMoveEnd = () => {
+      if (timer) window.clearTimeout(timer)
+      timer = window.setTimeout(run, 800)
+    }
+    map.on('moveend zoomend', onMoveEnd)
+    return () => {
+      cancelled = true
+      if (timer) window.clearTimeout(timer)
+      map.off('moveend zoomend', onMoveEnd)
+    }
+  }, [customAnimationOpen, productId, animationAnchor])
+
+  // Keep the slider inside the frames that actually exist.
+  useEffect(() => {
+    setFrameIndex(index => Math.min(index, maxFrame))
+  }, [maxFrame])
+
+  // Paint the selected extrapolated frame over the map.
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map) return
+    const existing = layersRef.current.nowcastOverlay
+    if (!customAnimationOpen || !isForecastFrame) {
+      if (existing) {
+        map.removeLayer(existing)
+        layersRef.current.nowcastOverlay = null
+      }
+      return
+    }
+    const frame = nowcast.frames[frameIndex - PAST_FRAMES]
+    if (!frame || !nowcast.bounds) return
+    if (existing) {
+      existing.setBounds(nowcast.bounds)
+      existing.setUrl(frame.url)
+      existing.setOpacity(opacity / 100)
+    } else {
+      layersRef.current.nowcastOverlay = L.imageOverlay(frame.url, nowcast.bounds, { opacity: opacity / 100, interactive: false, className: 'wf-nowcast-overlay' }).addTo(map)
+    }
+  }, [customAnimationOpen, isForecastFrame, frameIndex, nowcast.frames, nowcast.bounds, opacity])
+
+  // Highlight whichever polygon matches the alert shown in the details card.
+  useEffect(() => {
+    const alertLayers = layersRef.current.alertLayers
+    if (!alertLayers?.size) return
+    const selectedKey = selectedAlert ? alertKey(selectedAlert) : null
+    alertLayers.forEach((layer, key) => {
+      const isSelected = key === selectedKey
+      layer.setStyle({
+        color: isSelected ? '#63f7ff' : '#ffffff',
+        weight: isSelected ? 4 : 2,
+        opacity: 1,
+        fillOpacity: isSelected ? 0.62 : 0.45
+      })
+      if (isSelected && typeof layer.bringToFront === 'function') layer.bringToFront()
+    })
+  }, [selectedAlert, polygonAlerts])
+
+  useEffect(() => {
+    if (!isPlaying || !customAnimationOpen) return undefined
+    const timer = window.setInterval(() => setFrameIndex(index => (index + 1) % (maxFrame + 1)), 700)
+    return () => window.clearInterval(timer)
+  }, [isPlaying, customAnimationOpen, maxFrame])
+
+  const openAnimator = async () => {
+    // Prefer the scan time the product actually publishes; fall back to the
+    // nearest 5-minute boundary when the catalog cannot be read.
+    const definition = NATIONAL_RADAR_PRODUCTS[productId]
+    const published = definition ? await getLatestScanTime(definition) : null
+    const anchor = published ?? Math.floor(Date.now() / FRAME_STEP_MS) * FRAME_STEP_MS
+    setAnimationAnchor(Math.floor(anchor / FRAME_STEP_MS) * FRAME_STEP_MS)
+    setFrameIndex(PAST_FRAMES - 1)
+    setIsPlaying(false)
+    setCustomAnimationOpen(true)
+  }
+
+  const closeAnimator = () => {
+    setIsPlaying(false)
+    setCustomAnimationOpen(false)
   }
 
   const refreshRadar = useCallback(async () => {
@@ -412,9 +592,18 @@ export default function WeatherMap() {
     const group = layersRef.current.alerts
     if (group?.getLayers().length && mapRef.current) {
       const bounds = group.getBounds()
-      if (bounds.isValid()) mapRef.current.fitBounds(bounds, { padding: [24, 24], maxZoom: 9 })
-    } else setStatus('No NWS alert polygons with geometry are available for the selected point.')
+      if (bounds.isValid()) mapRef.current.fitBounds(bounds, { padding: [24, 24], maxZoom: 9, animate: false })
+    } else setStatus('No NWS alert geometry is loaded yet. Try Refresh scan, or confirm the alert feed is reachable.')
   }
+
+  const selectAlert = feature => {
+    setSelectedAlert(feature)
+    const bounds = featureBounds(feature)
+    if (bounds?.isValid() && mapRef.current) mapRef.current.fitBounds(bounds, { padding: [26, 26], maxZoom: 9, animate: false })
+  }
+
+  // The polygon click handler is bound once, inside the Leaflet setup effect.
+  useEffect(() => { selectAlertRef.current = selectAlert })
 
   const resetView = () => {
     if (mapRef.current && Number.isFinite(Number(coordinateLat)) && Number.isFinite(Number(coordinateLon))) {
@@ -439,7 +628,7 @@ export default function WeatherMap() {
 
   return <div className="wf-map-shell">
     <div className="wf-toolbar">
-      <div className="wf-brand"><span className="wf-live-dot"/>WEATHER FORECASTER RADAR<small>NWS / NOAA PRODUCTS · NO RADAR API KEY</small></div>
+      <div className="wf-brand"><span className="wf-live-dot"/>WEATHERDESK RADAR<small>NWS / NOAA PRODUCTS · NO RADAR API KEY</small></div>
       <label className="wf-product-select">RADAR PRODUCT
         <select aria-label="Radar product" value={productId} onChange={event => chooseProduct(event.target.value)}>
           <optgroup label="National NWS / NOAA mosaics">
@@ -464,8 +653,13 @@ export default function WeatherMap() {
     </div>
     <div className="wf-radar-secondary-bar">
       <label className="wf-checkbox"><input type="checkbox" checked={showAlerts} onChange={event => setShowAlerts(event.target.checked)}/> Show NWS alert polygons ({polygonAlerts.filter(item => item.geometry).length} nationwide)</label>
+      {showAlerts && alertsInView !== null && (
+        <span className={`wf-alert-inview ${alertsInView === 0 ? 'is-empty' : ''}`}>
+          {alertsInView === 0 ? 'none in this view · Zoom to alerts' : `${alertsInView} in this view`}
+        </span>
+      )}
       <button type="button" className="wf-secondary-action" onClick={zoomAlerts}>Zoom to alerts</button>
-      <button type="button" className="wf-secondary-action" onClick={() => setCustomAnimationOpen(true)}><WeatherDeskIcon name="play" size={14} /> Custom animator</button>
+      <button type="button" className="wf-secondary-action" onClick={openAnimator}><WeatherDeskIcon name="play" size={14} /> Radar loop</button>
       <button type="button" className="wf-secondary-action" onClick={() => setShowOfficialRadar(true)}><WeatherDeskIcon name="arrowUpRight" size={14} /> Official NWS</button>
       <form className="wf-site-form" onSubmit={handleManualSite}><label htmlFor="wf-radar-site">Radar site ID</label><input id="wf-radar-site" value={siteInput} onChange={event => setSiteInput(event.target.value.toUpperCase().slice(0, 4))} placeholder={radarStation || 'e.g. KCCX'} maxLength={4} aria-label="Radar site ID"/><button type="submit">Load local products</button></form>
       <span className="wf-site-status">{localProductsLoading ? `Checking ${radarStation}…` : radarStation ? `Site ${radarStation}` : 'National mosaic mode'}{siteCatalog.state === 'error' ? ' · local catalog unavailable' : ''}</span>
@@ -476,15 +670,46 @@ export default function WeatherMap() {
       <aside className="wf-side-panel">
         <div className="wf-panel-heading">SITUATIONAL AWARENESS</div>
         <div className="wf-metric"><span>SELECTED LOCATION</span><strong>{location || 'Map location'}</strong><small>{coordinates ? `${Number(coordinates.lat).toFixed(3)}, ${Number(coordinates.lon).toFixed(3)}` : 'Coordinates unavailable'}</small></div>
-        <div className="wf-metric"><span>ACTIVE NWS ALERTS</span><strong>{alerts.length}</strong><small>Official point-based alert feed; polygons show all active NWS alerts nationwide.</small></div>
+        <div className="wf-metric"><span>ACTIVE NWS ALERTS</span><strong>{polygonAlerts.length}</strong><small>{alerts.length} cover the selected point · {polygonAlerts.filter(item => item.geometry).length} active nationwide with map geometry. Click a polygon or a row for details.</small></div>
         <div className="wf-metric"><span>RADAR PRODUCT</span><strong>{activeProductLabel}</strong><small>{selectedDescription}</small></div>
         <div className="wf-metric"><span>DATA SOURCE</span><strong>NWS / NOAA OpenGeo</strong><small>{NATIONAL_RADAR_PRODUCTS[productId]?.source || (radarStation ? `Radar site ${radarStation} · official WMS capabilities` : 'National products do not require a radar-site selection')}</small></div>
-        <div className="wf-alert-list"><div className="wf-panel-heading">HIGHEST PRIORITY ALERTS</div>{alerts.slice().sort((a, b) => ({ Extreme: 0, Severe: 1, Moderate: 2, Minor: 3 }[a.properties?.severity] ?? 4) - ({ Extreme: 0, Severe: 1, Moderate: 2, Minor: 3 }[b.properties?.severity] ?? 4)).slice(0, 5).map((feature, index) => <button key={feature.id || index} onClick={() => { const bounds = featureBounds(feature); if (bounds?.isValid() && mapRef.current) mapRef.current.fitBounds(bounds, { padding: [20, 20], maxZoom: 9 }) }} className="wf-alert-row"><i style={{ background: severityColor(feature.properties?.severity) }}/><span><b>{feature.properties?.event || 'NWS alert'}</b><small>{feature.properties?.areaDesc || 'Area not specified'}</small></span></button>)}{!alerts.length && <p className="wf-muted">No active point alerts returned. Check feed status on the dashboard if that seems unexpected.</p>}</div>
+        <div className="wf-alert-list">
+          <div className="wf-panel-heading">ACTIVE NWS WARNINGS</div>
+          {sortedPolygonAlerts.map((feature, index) => {
+            const properties = feature.properties || {}
+            const isSelected = Boolean(selectedAlert) && alertKey(selectedAlert) === alertKey(feature)
+            return (
+              <button
+                key={alertKey(feature) || index}
+                type="button"
+                onClick={() => selectAlert(feature)}
+                className={`wf-alert-row ${isSelected ? 'is-selected' : ''}`}
+                style={{ '--alert-color': severityColor(properties.severity) }}
+              >
+                <span className="wf-alert-row-icon" aria-hidden="true">
+                  <WeatherDeskIcon name={alertIcon(properties.event)} size={16} />
+                </span>
+                <span className="wf-alert-row-body">
+                  <span className="wf-alert-row-kicker">
+                    <span className="wf-alert-row-sev">{properties.severity || 'Unknown'}</span>
+                    <span className="wf-alert-row-time">{formatAlertShort(properties.ends || properties.expires)}</span>
+                  </span>
+                  <b className="wf-alert-row-title">{properties.event || 'NWS alert'}</b>
+                  <small className="wf-alert-row-area">{properties.areaDesc || 'Area not specified'}</small>
+                </span>
+                <WeatherDeskIcon name="chevronRight" size={14} className="wf-alert-row-chevron" />
+              </button>
+            )
+          })}
+          {!sortedPolygonAlerts.length && <p className="wf-muted">No active NWS alerts with map geometry were returned. That means none were active nationwide at refresh time — not that the layer is broken.</p>}
+        </div>
         <p className="wf-disclaimer">Independent educational display. Radar may be delayed, have gaps, or be temporarily unavailable. Always verify urgent warnings and instructions with the official NWS.</p>
       </aside>
     </div>
     <footer className="wf-status"><span>{status}</span><span role="status" aria-live="polite">{mapError || (weather?.errors?.alerts ? `Alert data issue: ${weather.errors.alerts}` : lastRadarRefresh ? `Last refresh request: ${lastRadarRefresh.toLocaleTimeString()}` : 'Radar imagery is served by official NWS / NOAA GIS services.')}</span></footer>
     <div className="wf-note"><b>Radar interpretation:</b> BREF and CREF show reflectivity; base radial velocity shows motion toward or away from an individual radar. National mosaic products and single-site products are different datasets. A velocity couplet can have multiple causes and does not by itself confirm a tornado. Geographic basemap tiles are provided by the listed map providers; radar and warning data are NWS / NOAA.</div>
+
+    {selectedAlert && <AlertDetailsDialog alert={selectedAlert} onClose={() => setSelectedAlert(null)} />}
 
     {showOfficialRadar && (
       <div className="wf-official-radar-overlay" role="dialog" aria-modal="true" aria-label="Official NWS radar viewer">
@@ -505,52 +730,57 @@ export default function WeatherMap() {
     )}
 
     {customAnimationOpen && (
-      <div className="wf-custom-animation-overlay" role="dialog" aria-modal="true" aria-label="Custom radar animation">
-        <div className="wf-custom-animation-header">
-          <strong>Custom Radar Animation</strong>
-          <button onClick={() => { setCustomAnimationOpen(false); setIsPlaying(false); if (animationIntervalRef.current) { window.clearInterval(animationIntervalRef.current); animationIntervalRef.current = null } }} aria-label="Close"><WeatherDeskIcon name="close" size={18} /></button>
+      <div className="wf-anim-panel" role="group" aria-label="Radar loop controls">
+        <div className="wf-anim-head">
+          <span className="wf-anim-title"><WeatherDeskIcon name="play" size={13} /> Radar loop</span>
+          <span className={`wf-anim-state ${isPlaying ? 'is-playing' : ''}`}>{isPlaying ? 'Playing' : 'Paused'}</span>
+          {isForecastFrame && <span className="wf-anim-forecast">Forecast +{forecastMinutes} min</span>}
+          <span className="wf-anim-clock">{clockLabel(activeFrameTime)}</span>
+          <button type="button" className="wf-anim-close" onClick={closeAnimator} aria-label="Close radar loop"><WeatherDeskIcon name="close" size={15} /></button>
         </div>
-        <div className="wf-custom-animation-content">
-          <div className="wf-animation-visual">
-            <div className="wf-animation-frame">
-              <span className="wf-frame-label">Frame {animationTime + 1} / 13</span>
-              <div className="wf-frame-preview">
-                {animationTime === 0 && <div className="wf-placeholder"><WeatherDeskIcon name="radar" size={48} /><span>Current radar</span></div>}
-                {animationTime > 0 && <div className="wf-placeholder"><WeatherDeskIcon name="radar" size={48} /><span>Past {animationTime * 10} minutes</span></div>}
-              </div>
-            </div>
-          </div>
-          <div className="wf-animation-controls">
-            <div className="wf-animation-timeline">
-              <input
-                type="range"
-                min="0"
-                max="12"
-                value={animationTime}
-                onChange={event => setAnimationTime(Number(event.target.value))}
-                className="wf-animation-slider"
-                aria-label="Animation timeline"
-              />
-              <div className="wf-timeline-labels">
-                <span>-2h</span>
-                <span>-1h</span>
-                <span>Now</span>
-              </div>
-            </div>
-            <div className="wf-animation-buttons">
-              <button onClick={() => setAnimationTime(0)} className="wf-anim-btn">Current</button>
-              <button onClick={() => setAnimationTime(Math.max(0, animationTime - 1))} className="wf-anim-btn"><WeatherDeskIcon name="back" size={14} /></button>
-              <button onClick={togglePlay} className={`wf-anim-btn wf-anim-play ${isPlaying ? 'playing' : ''}`}>
-                {isPlaying ? <WeatherDeskIcon name="pause" size={14} /> : <WeatherDeskIcon name="play" size={14} />}
-              </button>
-              <button onClick={() => setAnimationTime(Math.min(12, animationTime + 1))} className="wf-anim-btn"><WeatherDeskIcon name="chevronRight" size={14} /></button>
-              <button onClick={() => setAnimationTime(12)} className="wf-anim-btn">Oldest</button>
-            </div>
-          </div>
-          <div className="wf-animation-info">
-            <p><strong>Note:</strong> This is a custom animation interface. The actual radar imagery comes from the NWS OpenGeo WMS service. For full past and future radar with predictive modeling, use the Official NWS viewer.</p>
-          </div>
+        <input
+          type="range"
+          min="0"
+          max={maxFrame}
+          value={Math.min(frameIndex, maxFrame)}
+          onChange={event => { setIsPlaying(false); setFrameIndex(Number(event.target.value)) }}
+          className="wf-anim-slider"
+          aria-label="Radar frame time"
+        />
+        <div className="wf-anim-labels">
+          <span>{clockLabel(animationFrames[0])}</span>
+          <span>{clockLabel(animationFrames[PAST_FRAMES - 1])} · now</span>
+          <span>{maxFrame >= PAST_FRAMES ? `+${FUTURE_STEP_MINUTES * (TOTAL_FRAMES - PAST_FRAMES)} min · forecast` : 'forecast unavailable'}</span>
         </div>
+        <div className="wf-anim-buttons">
+          <button type="button" className="wf-anim-btn" onClick={() => { setIsPlaying(false); setFrameIndex(0) }}>Oldest</button>
+          <button type="button" className="wf-anim-btn" onClick={() => { setIsPlaying(false); setFrameIndex(index => Math.max(0, index - 1)) }} aria-label="Previous frame"><WeatherDeskIcon name="back" size={14} /></button>
+          <button type="button" className="wf-anim-btn is-play" onClick={() => setIsPlaying(value => !value)}>
+            {isPlaying ? <WeatherDeskIcon name="pause" size={14} /> : <WeatherDeskIcon name="play" size={14} />}
+            {isPlaying ? 'Pause' : 'Play'}
+          </button>
+          <button type="button" className="wf-anim-btn" onClick={() => { setIsPlaying(false); setFrameIndex(index => Math.min(maxFrame, index + 1)) }} aria-label="Next frame"><WeatherDeskIcon name="chevronRight" size={14} /></button>
+          <button type="button" className="wf-anim-btn" onClick={() => { setIsPlaying(false); setFrameIndex(PAST_FRAMES - 1) }}>Now</button>
+          {maxFrame >= PAST_FRAMES && (
+            <button type="button" className="wf-anim-btn wf-anim-btn-forecast" onClick={() => { setIsPlaying(false); setFrameIndex(TOTAL_FRAMES - 1) }}>+60m</button>
+          )}
+        </div>
+        <p className="wf-anim-note">
+          Past frames are official NWS/NOAA scans requested through the WMS time dimension ({PAST_STEP_MINUTES}-minute steps).
+          {nowcast.state === 'ready' && nowcast.uncertain
+            ? ' Storm motion could not be measured reliably in this view, so the forecast frames hold the newest scan instead of inventing a drift.'
+            : nowcast.state === 'ready' && !nowcast.still
+              ? ` Forecast frames advect the newest official scan along storm motion measured over the last ${nowcast.baselineMinutes ?? PAST_STEP_MINUTES} minutes (about ${nowcast.speedMph} mph toward ${nowcast.compass})${
+                  nowcast.trend === 'growing' ? `, and echo intensity was strengthening (about ${nowcast.trendPercent}% over an hour), so growing areas brighten in the forecast`
+                    : nowcast.trend === 'weakening' ? `, and echo intensity was weakening (about ${Math.abs(nowcast.trendPercent)}% over an hour), so fading areas thin out in the forecast`
+                      : ''
+                }. They are a short-range nowcast, not an official NWS forecast.`
+              : nowcast.state === 'ready'
+                ? ' Forecast frames are available, but the storm motion measured across those scans is too small to shift the echoes, so they match the newest scan.'
+                : nowcast.state === 'loading'
+                ? ' Measuring storm motion across the last few official scans to build the forecast frames…'
+                : ` ${nowcast.error || ''}`}
+        </p>
       </div>
     )}
 
@@ -610,13 +840,13 @@ export default function WeatherMap() {
 
           <div className="wf-sheet-field">
             <span className="wf-sheet-label">RADAR ANIMATION</span>
-            <button type="button" className="wf-sheet-animate" onClick={() => { setMobileSheet(null); setCustomAnimationOpen(true) }}>
-              <WeatherDeskIcon name="play" size={16} /> Custom animator
+            <button type="button" className="wf-sheet-animate" onClick={() => { setMobileSheet(null); openAnimator() }}>
+              <WeatherDeskIcon name="play" size={16} /> Radar loop
             </button>
             <button type="button" className="wf-sheet-animate" onClick={() => { setMobileSheet(null); setShowOfficialRadar(true) }}>
               <WeatherDeskIcon name="arrowUpRight" size={16} /> Official NWS viewer
             </button>
-            <small>Custom animator or embedded official NWS radar viewer with past and future animation.</small>
+            <small>Radar loop steps through official NWS frames plus an extrapolated hour of forecast frames, or open the embedded official NWS viewer.</small>
           </div>
 
           <div className="wf-sheet-actions">

@@ -5,13 +5,13 @@ export const OPEN_GEO = 'https://opengeo.ncep.noaa.gov/geoserver'
 export const NATIONAL_RADAR_PRODUCTS = {
   bref: {
     label: 'Base reflectivity · CONUS', title: 'National base reflectivity',
-    url: `${OPEN_GEO}/conus/conus_bref_qcd/ows`, layerName: 'conus_bref_qcd', style: '',
+    url: `${OPEN_GEO}/conus/conus_bref_qcd/ows`,     layerName: 'conus_bref_qcd', style: '', trend: true,
     description: 'Quality-controlled MRMS base reflectivity (dBZ). Good for precipitation coverage and storm structure.',
     source: 'NWS / NOAA OpenGeo · CONUS BREF.QCD'
   },
   cref: {
     label: 'Composite reflectivity · CONUS', title: 'National composite reflectivity',
-    url: `${OPEN_GEO}/conus/conus_cref_qcd/ows`, layerName: 'conus_cref_qcd', style: '',
+    url: `${OPEN_GEO}/conus/conus_cref_qcd/ows`,     layerName: 'conus_cref_qcd', style: '', trend: true,
     description: 'Quality-controlled composite reflectivity (dBZ), showing the maximum reflectivity through the storm column.',
     source: 'NWS / NOAA OpenGeo · CONUS CREF.QCD'
   },

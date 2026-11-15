@@ -1,0 +1,235 @@
+/* Full NWS alert record, opened from the map list or a polygon. */
+.wf-alert-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 2147482000;
+  display: grid;
+  place-items: center;
+  padding: clamp(12px, 3vw, 30px);
+  background: rgba(3, 9, 17, .74);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.wf-alert-modal-card {
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 560px);
+  max-height: min(86vh, 780px);
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--alert-color, #91a4ba) 46%, #233750);
+  border-radius: 18px;
+  background: linear-gradient(166deg, #101f31 0%, #0a1725 58%, #060e18 100%);
+  box-shadow: 0 40px 100px rgba(2, 8, 18, .68), inset 0 1px 0 rgba(255, 255, 255, .06);
+  color: #eaf3ff;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  animation: wfAlertDialogIn .22s cubic-bezier(.16, 1, .3, 1) both;
+}
+
+@keyframes wfAlertDialogIn {
+  from { opacity: 0; transform: translateY(12px) scale(.99); }
+  to { opacity: 1; transform: none; }
+}
+
+.wf-alert-modal-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 18px 14px;
+  border-bottom: 1px solid #1d3145;
+  background:
+    radial-gradient(340px 120px at 0% 0%, color-mix(in srgb, var(--alert-color, #91a4ba) 26%, transparent), transparent 70%);
+}
+
+.wf-alert-modal-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  border: 1px solid color-mix(in srgb, var(--alert-color, #91a4ba) 50%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--alert-color, #91a4ba) 16%, transparent);
+  color: var(--alert-color, #91a4ba);
+}
+
+.wf-alert-modal-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+  flex: 1;
+}
+
+.wf-alert-modal-sev {
+  align-self: flex-start;
+  padding: 3px 9px;
+  border: 1px solid color-mix(in srgb, var(--alert-color, #91a4ba) 55%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--alert-color, #91a4ba) 18%, transparent);
+  color: var(--alert-color, #91a4ba);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.wf-alert-modal-event {
+  margin: 0;
+  color: #f6fbff;
+  font-size: clamp(17px, 2.4vw, 21px);
+  font-weight: 850;
+  line-height: 1.2;
+  letter-spacing: -.015em;
+  text-wrap: balance;
+}
+
+.wf-alert-modal-close {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  border: 1px solid #2a4058;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, .04);
+  color: #a9bdd1;
+  cursor: pointer;
+  transition: background-color .16s ease, color .16s ease, border-color .16s ease;
+}
+
+.wf-alert-modal-close:hover { background: rgba(255, 255, 255, .1); color: #fff; border-color: #3d5b79; }
+.wf-alert-modal-close:focus-visible { outline: 3px solid #6ee7f9; outline-offset: 2px; }
+
+.wf-alert-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px 18px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.wf-alert-modal-headline {
+  margin: 0;
+  color: #d5e7f7;
+  font-size: 12.5px;
+  font-weight: 650;
+  line-height: 1.6;
+}
+
+/* Labelled fields, so the record reads like a filled-in form. */
+.wf-alert-modal-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid #1e3348;
+  border-radius: 12px;
+  background: #1e3348;
+}
+
+.wf-alert-modal-facts > div {
+  min-width: 0;
+  padding: 9px 11px;
+  background: rgba(9, 21, 34, .96);
+}
+
+.wf-alert-modal-facts dt {
+  margin-bottom: 3px;
+  color: #74889e;
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.wf-alert-modal-facts dd {
+  margin: 0;
+  color: #e4f0fb;
+  font-size: 11.5px;
+  font-weight: 650;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.wf-alert-modal-section h3 {
+  margin: 0 0 6px;
+  color: #6dd6e9;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.wf-alert-modal-section p {
+  margin: 0;
+  color: #bed2e5;
+  font-size: 11.5px;
+  line-height: 1.7;
+}
+
+.wf-alert-modal-section p.is-preserve { white-space: pre-wrap; }
+
+.wf-alert-modal-section.is-instruction {
+  padding: 11px 12px;
+  border: 1px solid rgba(255, 209, 102, .3);
+  border-left: 2px solid #ffd166;
+  border-radius: 9px;
+  background: rgba(255, 209, 102, .08);
+}
+
+.wf-alert-modal-section.is-instruction h3 { color: #ffd98c; }
+.wf-alert-modal-section.is-instruction p { color: #ffe9b8; }
+
+.wf-alert-modal-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 18px;
+  border-top: 1px solid #1d3145;
+  background: rgba(6, 14, 24, .9);
+}
+
+.wf-alert-modal-foot a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #6ee7f9;
+  font-size: 11px;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.wf-alert-modal-foot a:hover { text-decoration: underline; }
+
+.wf-alert-modal-foot button {
+  padding: 8px 14px;
+  border: 1px solid rgba(150, 196, 232, .26);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, .06);
+  color: #e9f4ff;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color .16s ease, border-color .16s ease;
+}
+
+.wf-alert-modal-foot button:hover {
+  background: rgba(110, 231, 249, .14);
+  border-color: rgba(110, 231, 249, .45);
+}
+
+@media (max-width: 560px) {
+  .wf-alert-modal-facts { grid-template-columns: 1fr; }
+  .wf-alert-modal-foot { flex-direction: column-reverse; align-items: stretch; }
+  .wf-alert-modal-foot button { width: 100%; }
+  .wf-alert-modal-foot a { justify-content: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wf-alert-modal-card { animation: none; }
+}

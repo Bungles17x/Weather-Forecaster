@@ -1137,3 +1137,71 @@
 .map-page .leaflet-container {
   background: #000;
 }
+
+/* ── Immersive radar mode on desktop ─────────────────────────────────────────
+   Same idea as the phone layout: the radar owns the viewport. The page heading
+   and the interpretation note step aside, the surrounding chrome loses its
+   borders and rounding, and the map grows into whatever space is left. */
+@media (min-width: 861px) {
+  .map-page.map-immersive {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  .map-page.map-immersive .data-main {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 0;
+  }
+
+  /* The app header and location strip give up their space to the radar, exactly
+     as they do on phones; the toolbar keeps a "Done" link back to the dashboard. */
+  .map-page.map-immersive .app-header,
+  .map-page.map-immersive .location-bar,
+  .map-page.map-immersive .page-heading,
+  .map-page.map-immersive .wf-note {
+    display: none;
+  }
+
+  .map-page.map-immersive .public-map-container {
+    flex: 1;
+    min-height: 0;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .map-page.map-immersive .public-map-container .wf-map-shell {
+    flex: 1;
+    min-height: 0;
+    height: auto;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .map-page.map-immersive .wf-map-area {
+    flex: 1;
+    min-height: 0;
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  .map-page.map-immersive .wf-leaflet-map {
+    height: 100%;
+    min-height: 0;
+    max-height: none;
+  }
+}

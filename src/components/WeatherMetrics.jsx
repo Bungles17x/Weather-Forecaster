@@ -1,45 +1,65 @@
 import React from 'react'
 import { WeatherDeskIcon } from './WeatherIcons'
-import { calculateHeatIndex, calculateWindChill, getDewPointCategory, getWindDescription, formatTemperature } from '../services/weatherData'
+import {
+  calculateHeatIndex,
+  calculateWindChill,
+  getDewPointCategory,
+  getWindDescription,
+  formatTemperature,
+  convertTemperature,
+  convertWindSpeed,
+  observationValue
+} from '../services/weatherData'
 import './WeatherMetrics.css'
 
+// NWS station observations arrive in SI units (degC, km/h). The comfort indices
+// are defined in Fahrenheit and mph, so convert once here instead of feeding
+// Celsius straight into a Fahrenheit formula.
 export default function WeatherMetrics({ observation, settings, _grid }) {
-  const temp = observation?.temperature?.value
-  const humidity = observation?.relativeHumidity?.value
-  const windSpeed = observation?.windSpeed?.value
-  const dewPoint = observation?.dewpoint?.value
+  // observationValue() reads the NWS unitCode for each field, so degC and km/h
+  // are converted rather than silently treated as degrees Fahrenheit.
+  const temperatureF = observationValue(observation, 'temperature', convertTemperature)
+  const humidity = observationValue(observation, 'relativeHumidity')
+  const windMph = observationValue(observation, 'windSpeed', convertWindSpeed)
+  const dewPointF = observationValue(observation, 'dewpoint', convertTemperature)
 
-  const heatIndex = calculateHeatIndex(temp, humidity)
-  const windChill = calculateWindChill(temp, windSpeed)
-  const dewPointInfo = getDewPointCategory(dewPoint)
-  const windDesc = getWindDescription(windSpeed)
+  const heatIndex = calculateHeatIndex(temperatureF, humidity)
+  const windChill = calculateWindChill(temperatureF, windMph)
+  const dewPointInfo = getDewPointCategory(dewPointF)
+  const windDesc = getWindDescription(windMph)
+
+  const windDisplay = windMph === null
+    ? 'N/A'
+    : settings.units === 'metric'
+      ? `${Math.round(windMph * 1.60934)} km/h`
+      : `${Math.round(windMph)} mph`
 
   const metrics = [
     {
       icon: 'temperature',
       label: 'Heat Index',
       value: heatIndex !== null ? formatTemperature(heatIndex, settings.units) : 'N/A',
-      subtext: heatIndex !== null && heatIndex > temp ? 'Feels warmer' : 'Not applicable',
+      subtext: heatIndex !== null && temperatureF !== null && heatIndex > temperatureF ? 'Feels warmer' : 'Not applicable',
       color: heatIndex !== null && heatIndex > 105 ? '#ff5c68' : '#67b7ff'
     },
     {
       icon: 'wind',
       label: 'Wind Chill',
       value: windChill !== null ? formatTemperature(windChill, settings.units) : 'N/A',
-      subtext: windChill !== null && windChill < temp ? 'Feels colder' : 'Not applicable',
+      subtext: windChill !== null && temperatureF !== null && windChill < temperatureF ? 'Feels colder' : 'Not applicable',
       color: windChill !== null && windChill < 20 ? '#67b7ff' : '#6ee7f9'
     },
     {
       icon: 'dewpoint',
       label: 'Dew Point',
-      value: dewPoint !== null ? formatTemperature(dewPoint, settings.units) : 'N/A',
+      value: dewPointF !== null ? formatTemperature(dewPointF, settings.units) : 'N/A',
       subtext: dewPointInfo.category,
       color: dewPointInfo.color
     },
     {
       icon: 'windDirection',
       label: 'Wind Conditions',
-      value: windSpeed !== null ? `${Math.round(windSpeed)} mph` : 'N/A',
+      value: windDisplay,
       subtext: windDesc,
       color: '#ffd166'
     }
@@ -50,7 +70,7 @@ export default function WeatherMetrics({ observation, settings, _grid }) {
       <div className="metrics-header">
         <span className="metrics-eyebrow">ADVANCED METRICS</span>
         <h2>Comfort Index</h2>
-        <p>Calculated indices based on current conditions</p>
+        <p>Calculated from the latest station report: heat index, wind chill, dew point, and wind character.</p>
       </div>
       <div className="metrics-grid">
         {metrics.map((metric, index) => (

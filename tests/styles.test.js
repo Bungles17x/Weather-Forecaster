@@ -66,7 +66,21 @@ test('runtime error monitor stylesheet exists and is imported', () => {
   const component = readFileSync(path.join(root, 'src/components/RuntimeErrorMonitor.jsx'), 'utf8')
   assert.ok(component.includes("import './RuntimeErrorMonitor.css'"))
   assert.ok(existsSync(path.join(root, 'src/components/RuntimeErrorMonitor.css')))
-  assert.ok(component.includes("window.addEventListener('error'"))
-  assert.ok(component.includes("window.addEventListener('unhandledrejection'"))
-  assert.ok(component.includes('console.error ='))
+})
+
+test('every error and warning source is captured once, before React mounts', () => {
+  // Capture lives in a single module so the hooks are installed before the app
+  // renders and each failure is recorded exactly once.
+  const capture = readFileSync(path.join(root, 'src/services/runtimeCapture.js'), 'utf8')
+  assert.ok(capture.includes("window.addEventListener('error'"), 'script and resource errors must be captured')
+  assert.ok(capture.includes("window.addEventListener('unhandledrejection'"), 'rejections must be captured')
+  assert.ok(capture.includes('console.error ='), 'console.error must be captured')
+  assert.ok(capture.includes('console.warn ='), 'console warnings must be captured too')
+
+  const main = readFileSync(path.join(root, 'src/main.jsx'), 'utf8')
+  assert.ok(main.includes('installGlobalErrorCapture()'), 'main must install the capture hooks')
+  assert.ok(
+    main.indexOf('installGlobalErrorCapture()') < main.indexOf('createRoot('),
+    'capture must be installed before React renders'
+  )
 })

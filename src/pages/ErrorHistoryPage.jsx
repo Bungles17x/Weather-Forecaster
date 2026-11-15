@@ -1,8 +1,43 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import Header from '../components/Header'
 import { errorManager } from '../services/errorManager'
 import { WeatherDeskIcon } from '../components/WeatherIcons'
+import { APP_NAME, APP_VERSION } from '../utils/appInfo'
+import { copyText } from '../utils/clipboard'
 import './ErrorHistoryPage.css'
+
+// Readable clipboard text for one stored record, and for the whole history.
+function buildRecordReport(record, index, total) {
+  return [
+    total > 1 ? `${index + 1} of ${total} · ${record.severity} · ${record.category}` : `${record.severity} · ${record.category}`,
+    `code: ${record.id}`,
+    `detected: ${record.timestamp}`,
+    `last seen: ${record.lastSeen}`,
+    `occurrences: ${record.count}`,
+    `route: ${record.context?.route || record.context?.url || 'unknown'}`,
+    '',
+    record.message,
+    '',
+    record.stack || 'No stack trace captured.'
+  ].join('\n')
+}
+
+function buildAllRecordsReport(records) {
+  const header = [
+    `${APP_NAME} error history report`,
+    `version: ${APP_VERSION}`,
+    `generated: ${new Date().toISOString()}`,
+    `route: ${window.location.hash || '#/'}`,
+    `url: ${window.location.href}`,
+    `online: ${navigator.onLine ? 'yes' : 'no'}`,
+    `records: ${records.length}`,
+    ''
+  ].join('\n')
+
+  if (!records.length) return `${header}\nNo errors recorded.`
+  return [header, ...records.map((record, index) => buildRecordReport(record, index, records.length))]
+    .join('\n\n────────────────────────\n\n')
+}
 
 export default function ErrorHistoryPage() {
   const [errorHistory, setErrorHistory] = useState([])
@@ -10,7 +45,11 @@ export default function ErrorHistoryPage() {
   const [statistics, setStatistics] = useState(null)
   const [selectedSeverity, setSelectedSeverity] = useState('all')
   const [selectedCategory, setSelectedCategory] = useState('all')
-  const [emailEnabled, setEmailEnabled] = useState(errorManager.isEmailEnabled())
+  const [emailEnabled, setEmailEnabled] = useState(errorManager.isEmailOptedIn())
+  const [copyFeedback, setCopyFeedback] = useState({ id: null, state: 'idle' })
+  const [copyAllState, setCopyAllState] = useState('idle')
+  const copyTimer = useRef(null)
+  const reportingConfigured = errorManager.isReportingConfigured()
 
   useEffect(() => {
     const loadData = () => {
@@ -26,6 +65,10 @@ export default function ErrorHistoryPage() {
     })
 
     return unsubscribe
+  }, [])
+
+  useEffect(() => () => {
+    if (copyTimer.current) window.clearTimeout(copyTimer.current)
   }, [])
 
   const filteredErrors = errorHistory.filter(error => {
@@ -56,6 +99,26 @@ export default function ErrorHistoryPage() {
     URL.revokeObjectURL(url)
   }
 
+  // Copy feedback clears itself so the buttons return to their normal labels.
+  const flashCopy = apply => {
+    apply()
+    if (copyTimer.current) window.clearTimeout(copyTimer.current)
+    copyTimer.current = window.setTimeout(() => {
+      setCopyFeedback({ id: null, state: 'idle' })
+      setCopyAllState('idle')
+    }, 2600)
+  }
+
+  const copyReport = async record => {
+    const copied = await copyText(buildRecordReport(record, 0, 1))
+    flashCopy(() => setCopyFeedback({ id: record.id, state: copied ? 'copied' : 'failed' }))
+  }
+
+  const copyAllReports = async () => {
+    const copied = await copyText(buildAllRecordsReport(errorHistory))
+    flashCopy(() => setCopyAllState(copied ? 'copied' : 'failed'))
+  }
+
   const resolveError = (signature) => {
     errorManager.resolveError(signature)
     setErrorGroups(errorManager.getErrorGroups())
@@ -76,8 +139,13 @@ export default function ErrorHistoryPage() {
   }[severity] || '#91a4ba')
 
   const formatTimestamp = (timestamp) => {
-    return new Date(timestamp).toLocaleString()
+    const date = new Date(timestamp)
+    return Number.isNaN(date.getTime()) ? 'Unknown time' : date.toLocaleString()
   }
+
+  // Records restored from an older or partially written payload may be missing
+  // fields; showing "UNKNOWN" keeps the page usable instead of crashing on it.
+  const upper = (value, fallback = 'unknown') => String(value || fallback).toUpperCase()
 
   return (
     <div className="data-page error-history-page">
@@ -90,6 +158,10 @@ export default function ErrorHistoryPage() {
             <p>View, analyze, and manage all application errors with detailed diagnostics and statistics.</p>
           </div>
           <div className="heading-actions">
+            <button className="secondary-action" onClick={copyAllReports} disabled={!errorHistory.length}>
+              <WeatherDeskIcon name={copyAllState === 'copied' ? 'check' : 'copy'} size={15} />
+              {copyAllState === 'copied' ? 'Copied All Reports' : copyAllState === 'failed' ? 'Copy Blocked' : 'Copy All Reports'}
+            </button>
             <button className="secondary-action" onClick={exportReport}>
               <WeatherDeskIcon name="download" size={15} /> Export Report
             </button>
@@ -179,10 +251,10 @@ export default function ErrorHistoryPage() {
                   <div className="error-card-header">
                     <div className="error-card-badges">
                       <span className="error-badge" style={{ background: severityColor(error.severity) + '20', color: severityColor(error.severity), borderColor: severityColor(error.severity) }}>
-                        {error.severity.toUpperCase()}
+                        {upper(error.severity)}
                       </span>
                       <span className="error-badge category-badge">
-                        {error.category.toUpperCase()}
+                        {upper(error.category)}
                       </span>
                     </div>
                     <span className="error-time">{formatTimestamp(error.timestamp)}</span>
@@ -215,11 +287,21 @@ export default function ErrorHistoryPage() {
                       <pre className="error-stack">{error.stack}</pre>
                     </div>
                   </details>
-                  {!error.resolved && (
-                    <button className="resolve-btn" onClick={() => resolveError(error.signature)}>
-                      Mark as Resolved
+                  <div className="error-card-actions">
+                    <button className="copy-report-btn" onClick={() => copyReport(error)}>
+                      <WeatherDeskIcon name={copyFeedback.id === error.id && copyFeedback.state === 'copied' ? 'check' : 'copy'} size={13} />
+                      {copyFeedback.id === error.id && copyFeedback.state === 'copied'
+                        ? 'Copied'
+                        : copyFeedback.id === error.id && copyFeedback.state === 'failed'
+                          ? 'Copy blocked'
+                          : 'Copy Report'}
                     </button>
-                  )}
+                    {!error.resolved && (
+                      <button className="resolve-btn" onClick={() => resolveError(error.signature)}>
+                        Mark as Resolved
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -241,8 +323,8 @@ export default function ErrorHistoryPage() {
                     <span className="group-count">{group.count} occurrences</span>
                   </div>
                   <div className="group-meta">
-                    <span>{group.category.toUpperCase()}</span>
-                    <span style={{ color: severityColor(group.severity) }}>{group.severity.toUpperCase()}</span>
+                    <span>{upper(group.category)}</span>
+                    <span style={{ color: severityColor(group.severity) }}>{upper(group.severity)}</span>
                     <span>Last: {formatTimestamp(group.lastSeen)}</span>
                   </div>
                   {group.resolved && <span className="resolved-badge">Resolved</span>}
@@ -260,8 +342,8 @@ export default function ErrorHistoryPage() {
               <p>Receive email notifications for fatal and critical errors. Requires a backend deployment (see ERROR_EMAIL_SETUP.md).</p>
               <div className="email-status">
                 <span>Status:</span>
-                <span className={`status-badge ${!process.env.VITE_ERROR_REPORTING_ENDPOINT ? 'status-warning' : 'status-ok'}`}>
-                  {process.env.VITE_ERROR_REPORTING_ENDPOINT ? 'Endpoint configured' : 'No endpoint configured'}
+                <span className={`status-badge ${reportingConfigured ? 'status-ok' : 'status-warning'}`}>
+                  {reportingConfigured ? 'Endpoint configured' : 'No endpoint configured'}
                 </span>
               </div>
             </div>
@@ -270,7 +352,7 @@ export default function ErrorHistoryPage() {
                 type="checkbox" 
                 checked={emailEnabled}
                 onChange={toggleEmailEnabled}
-                disabled={!process.env.VITE_ERROR_REPORTING_ENDPOINT}
+                disabled={!reportingConfigured}
               />
               <span>Email error reports to me</span>
             </label>
@@ -294,7 +376,7 @@ export default function ErrorHistoryPage() {
         </section>
 
         <footer className="app-footer">
-          <span>WEATHER FORECASTER <i>•</i> ERROR MANAGEMENT SYSTEM</span>
+          <span>WEATHERDESK <i>•</i> ERROR MANAGEMENT SYSTEM</span>
           <p>Errors are stored locally in your browser. Export reports for sharing with developers.</p>
         </footer>
       </main>

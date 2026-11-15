@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import Header from '../components/Header'
 import { WeatherDeskIcon } from '../components/WeatherIcons'
 import { useSettings } from '../contexts/SettingsContext'
+import { APP_NAME, APP_VERSION } from '../utils/appInfo'
 import './SettingsPage.css'
 
 export default function SettingsPage() {
@@ -114,7 +115,7 @@ export default function SettingsPage() {
             <button type="button" className="reset-btn" onClick={resetSettings}>Reset settings</button>
           </section>
         </div>
-        <footer className="settings-footer">WEATHER FORECASTER · VERSION 2.0.0 · FORECAST DATA FROM NWS / NOAA</footer>
+        <footer className="settings-footer">{APP_NAME.toUpperCase()} · VERSION {APP_VERSION} · FORECAST DATA FROM NWS / NOAA</footer>
       </main>
     </div>
   )

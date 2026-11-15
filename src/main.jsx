@@ -7,7 +7,11 @@ import { SettingsProvider } from './contexts/SettingsContext'
 import { WeatherProvider } from './contexts/WeatherContext'
 import { NotificationProvider } from './components/NotificationSystem'
 import ErrorBoundary from './components/ErrorBoundary'
+import ErrorScreen from './components/ErrorScreen'
 import RuntimeErrorMonitor from './components/RuntimeErrorMonitor'
+import { installGlobalErrorCapture } from './services/runtimeCapture'
+import { errorManager } from './services/errorManager'
+import { APP_NAME, APP_VERSION } from './utils/appInfo'
 import './styles.css'
 import './design-polish.css'
 
@@ -16,24 +20,44 @@ if (import.meta.env.DEV) {
   import('./utils/devTools')
 }
 
-createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <ErrorBoundary>
-      <HashRouter>
-        <RuntimeErrorMonitor />
-        <NotificationProvider>
-          <SettingsProvider>
-            <LocationProvider>
-              <WeatherProvider>
-                <App />
-              </WeatherProvider>
-            </LocationProvider>
-          </SettingsProvider>
-        </NotificationProvider>
-      </HashRouter>
-    </ErrorBoundary>
-  </React.StrictMode>
-)
+// Capture starts before React renders, so a failure during startup reaches the
+// error screen instead of dying quietly in the console.
+installGlobalErrorCapture()
+
+const rootElement = document.getElementById('root')
+
+try {
+  createRoot(rootElement).render(
+    <React.StrictMode>
+      <ErrorBoundary>
+        <HashRouter>
+          <RuntimeErrorMonitor />
+          <NotificationProvider>
+            <SettingsProvider>
+              <LocationProvider>
+                <WeatherProvider>
+                  <App />
+                </WeatherProvider>
+              </LocationProvider>
+            </SettingsProvider>
+          </NotificationProvider>
+        </HashRouter>
+      </ErrorBoundary>
+    </React.StrictMode>
+  )
+} catch (bootError) {
+  // Nothing else can render the app, so fall back to the crash screen itself in
+  // a separate container (reusing #root would trip React's double-root warning).
+  errorManager.logError(bootError, { kind: 'boot' })
+  try {
+    const fallback = document.createElement('div')
+    fallback.id = 'boot-error-fallback'
+    document.body.appendChild(fallback)
+    createRoot(fallback).render(<ErrorScreen error={bootError} />)
+  } catch {
+    document.body.innerHTML = '<div style="min-height:100vh;display:grid;place-items:center;padding:24px;background:#050b13;color:#e6f2ff;font:15px/1.6 system-ui,sans-serif;text-align:center">WeatherDesk could not start. Reload the page to try again.<br><a style="color:#6ee7f9" href="">Reload</a></div>'
+  }
+}
 
 // Dismiss the boot splash once React has mounted.
 const bootSplash = document.getElementById('boot-splash')
@@ -46,7 +70,7 @@ if (bootSplash) {
 
 // Console test hooks — e.g. window.__weatherForecaster.testError()
 window.__weatherForecaster = {
-  version: '2.1.1',
+  version: APP_VERSION,
   testError() {
     setTimeout(() => { throw new Error('[test] Simulated runtime error — triggered via window.__weatherForecaster.testError()') }, 0)
   },
@@ -55,7 +79,7 @@ window.__weatherForecaster = {
   }
 }
 if (import.meta.env.DEV) {
-  console.info('[Weather Forecaster] Test the error screen: window.__weatherForecaster.testError()')
+      console.info(`[${APP_NAME}] Crash-screen test hooks: window.__weatherForecaster.testError()`)
 }
 
 // Clear the one-shot chunk-reload guard once the app has started successfully.

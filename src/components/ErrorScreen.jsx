@@ -1,248 +1,316 @@
-import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { WeatherDeskIcon } from './WeatherIcons'
+import { APP_NAME, APP_VERSION, SUPPORT_EMAIL } from '../utils/appInfo'
+import { copyText, downloadJson } from '../utils/clipboard'
 import './ErrorScreen.css'
 
-const APP_VERSION = '2.1.1'
+const REPO_URL = 'https://github.com/Bungles17x/Weather-Forecaster'
+
+function normalizeError(error) {
+  if (error instanceof Error) {
+    return { name: error.name || 'Error', message: error.message || 'No message was provided.', stack: error.stack || '' }
+  }
+  if (typeof error === 'string' && error.trim()) {
+    return { name: 'Error', message: error.trim(), stack: '' }
+  }
+  if (error && typeof error === 'object') {
+    try {
+      return { name: 'Error', message: JSON.stringify(error) || 'Unknown error', stack: '' }
+    } catch {
+      return { name: 'Error', message: String(error), stack: '' }
+    }
+  }
+  return { name: 'Error', message: 'An unexpected error occurred.', stack: '' }
+}
+
+// Stable, shareable code so a support conversation can refer to one error.
+function shortCode(message) {
+  let hash = 0
+  for (let index = 0; index < message.length; index += 1) {
+    hash = (hash * 31 + message.charCodeAt(index)) >>> 0
+  }
+  return `WD-${hash.toString(16).toUpperCase().padStart(6, '0').slice(-6)}`
+}
+
+function readMemory() {
+  // performance.memory is Chromium-only; everywhere else we simply omit it.
+  if (typeof performance === 'undefined' || !performance.memory) return null
+  const mb = bytes => `${(Number(bytes) / 1048576).toFixed(2)} MB`
+  return {
+    used: mb(performance.memory.usedJSHeapSize),
+    total: mb(performance.memory.totalJSHeapSize),
+    limit: mb(performance.memory.jsHeapSizeLimit)
+  }
+}
+
+function buildSnapshot(errorInfo, errorDetails) {
+  const details = errorDetails || {}
+  const safeWindow = typeof window !== 'undefined' ? window : null
+  const safeNavigator = typeof navigator !== 'undefined' ? navigator : null
+
+  return {
+    app: APP_NAME,
+    version: APP_VERSION,
+    code: details.code || shortCode(errorInfo.message),
+    error: `${errorInfo.name}: ${errorInfo.message}`,
+    stack: errorInfo.stack || 'No stack trace captured.',
+    componentStack: details.componentStack || null,
+    file: details.fileName || safeWindow?.location?.pathname || 'Unknown',
+    line: details.lineNumber || null,
+    column: details.columnNumber || null,
+    route: safeWindow?.location?.hash || '#/',
+    url: safeWindow?.location?.href || 'Unknown',
+    detectedAt: new Date().toISOString(),
+    online: safeNavigator ? safeNavigator.onLine : null,
+    language: safeNavigator?.language || null,
+    viewport: safeWindow ? `${safeWindow.innerWidth}×${safeWindow.innerHeight}` : 'Unknown',
+    devicePixelRatio: safeWindow?.devicePixelRatio ?? null,
+    userAgent: safeNavigator?.userAgent || 'Unknown',
+    memory: readMemory()
+  }
+}
+
+function formatReport(snapshot) {
+  return [
+    `${snapshot.app} diagnostic snapshot`,
+    `generated: ${snapshot.detectedAt}`,
+    `version: ${snapshot.version}`,
+    `code: ${snapshot.code}`,
+    `route: ${snapshot.route}`,
+    `url: ${snapshot.url}`,
+    `online: ${snapshot.online === null ? 'unknown' : snapshot.online ? 'yes' : 'no'}`,
+    `viewport: ${snapshot.viewport} @${snapshot.devicePixelRatio ?? '?'}x`,
+    `language: ${snapshot.language || 'unknown'}`,
+    `userAgent: ${snapshot.userAgent}`,
+    snapshot.memory ? `memory: used ${snapshot.memory.used} / total ${snapshot.memory.total} / limit ${snapshot.memory.limit}` : null,
+    '',
+    `error: ${snapshot.error}`,
+    `source: ${snapshot.file}${snapshot.line ? `:${snapshot.line}` : ''}${snapshot.column ? `:${snapshot.column}` : ''}`,
+    '',
+    'stack:',
+    snapshot.stack,
+    snapshot.componentStack ? '\ncomponent stack:' : null,
+    snapshot.componentStack || null
+  ].filter(line => line !== null).join('\n')
+}
 
 export default function ErrorScreen({ error, resetError, errorDetails = null }) {
-  const navigate = useNavigate()
-  const [showDevPanel, setShowDevPanel] = useState(false)
-  const [devPanelExpanded, setDevPanelExpanded] = useState(false)
+  const errorInfo = normalizeError(error)
+  const snapshot = buildSnapshot(errorInfo, errorDetails)
+  const [copyState, setCopyState] = useState('idle')
+  const [downloadState, setDownloadState] = useState('idle')
+  const screenRef = useRef(null)
+  const feedbackTimer = useRef(null)
 
-  const handleGoHome = () => {
-    navigate('/')
-    if (resetError) resetError()
-  }
-
-  const handleRetry = () => {
-    if (resetError) resetError()
-  }
-
-  const handleReload = () => {
-    window.location.reload()
-  }
-
-  const handleCopy = () => {
-    const diagnosticInfo = {
-      timestamp: new Date().toISOString(),
-      appVersion: APP_VERSION,
-      error: error || 'Unknown error',
-      url: window.location.href,
-      online: navigator.onLine,
-      userAgent: navigator.userAgent,
-      memory: performance.memory ? {
-        used: `${(performance.memory.usedJSHeapSize / 1048576).toFixed(2)} MB`,
-        total: `${(performance.memory.totalJSHeapSize / 1048576).toFixed(2)} MB`,
-        limit: `${(performance.memory.jsHeapSizeLimit / 1048576).toFixed(2)} MB`
-      } : 'N/A',
-      ...errorDetails
+  // Move focus into the screen so keyboard and screen-reader users land here,
+  // without focusing a destructive action by accident.
+  useEffect(() => {
+    screenRef.current?.focus()
+    return () => {
+      if (feedbackTimer.current) window.clearTimeout(feedbackTimer.current)
     }
+  }, [])
 
-    const report = Object.entries(diagnosticInfo)
-      .map(([key, value]) => `${key}: ${typeof value === 'object' ? JSON.stringify(value, null, 2) : value}`)
-      .join('\n')
+  const flash = useCallback((setter, value) => {
+    setter(value)
+    if (feedbackTimer.current) window.clearTimeout(feedbackTimer.current)
+    feedbackTimer.current = window.setTimeout(() => setter('idle'), 2600)
+  }, [])
 
-    navigator.clipboard.writeText(report).catch(() => {})
+  // No router context is required: the boundary that renders this screen lives
+  // outside <HashRouter>, so navigation has to work with the raw hash.
+  const goToDashboard = () => {
+    if (resetError) resetError()
+    window.location.hash = '#/'
   }
 
-  const handleExport = () => {
-    const diagnosticInfo = {
-      timestamp: new Date().toISOString(),
-      appVersion: APP_VERSION,
-      error: error || 'Unknown error',
-      url: window.location.href,
-      online: navigator.onLine,
-      userAgent: navigator.userAgent,
-      memory: performance.memory ? {
-        used: `${(performance.memory.usedJSHeapSize / 1048576).toFixed(2)} MB`,
-        total: `${(performance.memory.totalJSHeapSize / 1048576).toFixed(2)} MB`,
-        limit: `${(performance.memory.jsHeapSizeLimit / 1048576).toFixed(2)} MB`
-      } : 'N/A',
-      ...errorDetails
-    }
-
-    const blob = new Blob([JSON.stringify(diagnosticInfo, null, 2)], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `weather-forecaster-error-${Date.now()}.json`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
+  const retry = () => {
+    if (resetError) resetError()
+    else window.location.reload()
   }
 
-  const errorSummary = errorDetails?.summary || error || 'An unexpected error occurred'
-  const errorCode = errorDetails?.code || 'ERR-UNKNOWN'
-  const stackTrace = errorDetails?.stack || (error?.stack ? error.stack : 'No stack trace available')
-  const affectedFile = errorDetails?.file || 'Unknown file'
-  const lineNumber = errorDetails?.line || 'Unknown'
+  const handleCopy = async () => {
+    const copied = await copyText(formatReport(snapshot))
+    flash(setCopyState, copied ? 'copied' : 'failed')
+  }
+
+  const handleDownload = () => {
+    const saved = downloadJson(`weatherdesk-diagnostics-${snapshot.code}-${Date.now()}.json`, snapshot)
+    flash(setDownloadState, saved ? 'saved' : 'failed')
+  }
+
+  const detectedTime = new Date(snapshot.detectedAt).toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  })
+
+  const mailSubject = `${APP_NAME} error report ${snapshot.code}`
+  const mailBody = [
+    `Hi ${APP_NAME} support,`,
+    '',
+    'The workstation stopped with an unexpected error.',
+    '',
+    `Error code: ${snapshot.code}`,
+    `Message: ${errorInfo.message}`,
+    `Version: ${snapshot.version}`,
+    `Route: ${snapshot.route}`,
+    `Detected: ${snapshot.detectedAt}`,
+    '',
+    'I can attach the diagnostics file exported from the crash screen.'
+  ].join('\n')
+  const mailtoHref = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(mailSubject)}&body=${encodeURIComponent(mailBody)}`
 
   return (
-    <div className="error-screen fatal-error">
-      <div className="error-screen-container">
-        <div className="error-visual fatal-visual">
-          <div className="error-icon-wrapper fatal-icon">
-            <WeatherDeskIcon name="thunderstorm" size={72} />
-          </div>
-          <div className="error-particles fatal-particles">
-            <span className="particle particle-1" />
-            <span className="particle particle-2" />
-            <span className="particle particle-3" />
-            <span className="particle particle-4" />
-          </div>
-        </div>
-
-        <div className="error-content">
-          <div className="error-badge fatal-badge">
-            <span className="error-dot fatal-dot" />
-            FATAL ERROR
-          </div>
-
-          <h1 className="error-title fatal-title">
-            Application Crashed
-          </h1>
-
-          <p className="error-description fatal-description">
-            {errorSummary}
-          </p>
-
-          <div className="error-code">
-            <span>Error Code:</span>
-            <code>{errorCode}</code>
-          </div>
-
-          <div className="error-actions">
-            <button className="error-button error-button-primary fatal-primary" onClick={handleReload}>
-              <WeatherDeskIcon name="refresh" size={16} />
-              Restart Application
-            </button>
-            <button className="error-button error-button-secondary" onClick={handleRetry}>
-              <WeatherDeskIcon name="sync" size={16} />
-              Try Again
-            </button>
-            <button className="error-button error-button-secondary" onClick={handleGoHome}>
-              <WeatherDeskIcon name="home" size={16} />
-              Go to Dashboard
-            </button>
-          </div>
-
-          <button className="error-dev-button" onClick={() => setShowDevPanel(!showDevPanel)}>
-            <WeatherDeskIcon name="database" size={16} />
-            DEV DEBUG INFO
-          </button>
-
-          {showDevPanel && (
-            <div className={`error-dev-panel ${devPanelExpanded ? 'expanded' : ''}`}>
-              <div className="dev-panel-header">
-                <strong>Developer Diagnostics</strong>
-                <button className="dev-panel-toggle" onClick={() => setDevPanelExpanded(!devPanelExpanded)}>
-                  {devPanelExpanded ? 'Collapse' : 'Expand'}
-                </button>
-              </div>
-
-              <div className="dev-panel-section">
-                <h4>Error Information</h4>
-                <div className="dev-info-row">
-                  <span>Error Code:</span>
-                  <code>{errorCode}</code>
-                </div>
-                <div className="dev-info-row">
-                  <span>Timestamp:</span>
-                  <code>{new Date().toISOString()}</code>
-                </div>
-                <div className="dev-info-row">
-                  <span>Affected File:</span>
-                  <code>{affectedFile}</code>
-                </div>
-                <div className="dev-info-row">
-                  <span>Line Number:</span>
-                  <code>{lineNumber}</code>
-                </div>
-              </div>
-
-              <div className="dev-panel-section">
-                <h4>Stack Trace</h4>
-                <pre className="dev-stack-trace">{stackTrace}</pre>
-              </div>
-
-              <div className="dev-panel-section">
-                <h4>Application Info</h4>
-                <div className="dev-info-row">
-                  <span>Version:</span>
-                  <code>{APP_VERSION}</code>
-                </div>
-                <div className="dev-info-row">
-                  <span>URL:</span>
-                  <code>{window.location.href}</code>
-                </div>
-                <div className="dev-info-row">
-                  <span>Online:</span>
-                  <code>{navigator.onLine ? 'Yes' : 'No'}</code>
-                </div>
-              </div>
-
-              <div className="dev-panel-section">
-                <h4>System Information</h4>
-                <div className="dev-info-row">
-                  <span>Browser:</span>
-                  <code>{navigator.userAgent?.slice(0, 100)}</code>
-                </div>
-                {performance.memory && (
-                  <>
-                    <div className="dev-info-row">
-                      <span>Memory Used:</span>
-                      <code>{(performance.memory.usedJSHeapSize / 1048576).toFixed(2)} MB</code>
-                    </div>
-                    <div className="dev-info-row">
-                      <span>Memory Total:</span>
-                      <code>{(performance.memory.totalJSHeapSize / 1048576).toFixed(2)} MB</code>
-                    </div>
-                    <div className="dev-info-row">
-                      <span>Memory Limit:</span>
-                      <code>{(performance.memory.jsHeapSizeLimit / 1048576).toFixed(2)} MB</code>
-                    </div>
-                  </>
-                )}
-              </div>
-
-              <div className="dev-panel-section">
-                <h4>Diagnostic Logs</h4>
-                <pre className="dev-logs">{errorDetails?.logs || 'No diagnostic logs available'}</pre>
-              </div>
-
-              <div className="dev-panel-actions">
-                <button className="dev-action-btn" onClick={handleCopy}>
-                  <WeatherDeskIcon name="copy" size={14} />
-                  Copy Diagnostics
-                </button>
-                <button className="dev-action-btn" onClick={handleExport}>
-                  <WeatherDeskIcon name="download" size={14} />
-                  Export JSON
-                </button>
-              </div>
-            </div>
-          )}
-
-          <div className="error-tips">
-            <strong>Recovery Steps:</strong>
-            <ul>
-              <li>Reload the page to restart the application</li>
-              <li>Check your internet connection</li>
-              <li>Clear browser cache and cookies</li>
-              <li>Try a different browser or device</li>
-              <li>If the issue persists, contact support with the diagnostic information</li>
-            </ul>
-          </div>
-        </div>
-
-        <div className="error-decoration fatal-decoration">
-          <div className="decoration-circle circle-1" />
-          <div className="decoration-circle circle-2" />
-          <div className="decoration-circle circle-3" />
-        </div>
+    <div className="error-screen" role="alert" aria-labelledby="error-screen-title">
+      <div className="error-screen-backdrop" aria-hidden="true">
+        <span className="error-glint error-glint-1" />
+        <span className="error-glint error-glint-2" />
+        <span className="error-glint error-glint-3" />
       </div>
+
+      <section className="error-shell" tabIndex={-1} ref={screenRef}>
+        <header className="error-shell-head">
+          <span className="error-brand">
+            <span className="error-brand-mark" aria-hidden="true">
+              <WeatherDeskIcon name="brand" size={18} />
+            </span>
+            <span className="error-brand-copy">
+              <strong>{APP_NAME}</strong>
+              <small>Forecast workstation</small>
+            </span>
+          </span>
+          <span className="error-status">
+            <span className="error-status-dot" aria-hidden="true" />
+            Application error
+          </span>
+        </header>
+
+        <div className="error-hero">
+          <span className="error-icon-wrapper" aria-hidden="true">
+            <WeatherDeskIcon name="thunderstorm" size={34} />
+          </span>
+          <div className="error-hero-copy">
+            <h1 className="error-title" id="error-screen-title">
+              The workstation hit an unexpected error
+            </h1>
+            <p className="error-description">
+              Your saved location and display preferences are untouched, and no data was sent anywhere.
+              Retry the last action, restart the app, or share the diagnostic snapshot with support.
+            </p>
+          </div>
+        </div>
+
+        <dl className="error-facts">
+          <div className="error-fact">
+            <dt>Error code</dt>
+            <dd className="error-fact-code">{snapshot.code}</dd>
+          </div>
+          <div className="error-fact">
+            <dt>Detected</dt>
+            <dd>{detectedTime}</dd>
+          </div>
+          <div className="error-fact">
+            <dt>Route</dt>
+            <dd>{snapshot.route}</dd>
+          </div>
+          <div className="error-fact">
+            <dt>Connection</dt>
+            <dd className={snapshot.online ? 'is-ok' : 'is-warn'}>
+              {snapshot.online === null ? 'Unknown' : snapshot.online ? 'Online' : 'Offline'}
+            </dd>
+          </div>
+        </dl>
+
+        <div className="error-actions">
+          <button type="button" className="error-button error-button-primary" onClick={() => window.location.reload()}>
+            <WeatherDeskIcon name="refresh" size={16} />
+            Restart app
+          </button>
+          <button type="button" className="error-button error-button-secondary" onClick={retry}>
+            <WeatherDeskIcon name="sync" size={16} />
+            Try again
+          </button>
+          <button type="button" className="error-button error-button-ghost" onClick={goToDashboard}>
+            <WeatherDeskIcon name="home" size={16} />
+            Back to dashboard
+          </button>
+        </div>
+
+        <details className="error-details">
+          <summary>
+            <span className="error-details-label">
+              <WeatherDeskIcon name="terminal" size={15} />
+              Technical details
+            </span>
+            <span className="error-details-hint">stack trace, source, environment</span>
+          </summary>
+
+          <div className="error-details-body">
+            <div className="error-detail-grid">
+              <div><span>Thrown</span><code>{snapshot.error}</code></div>
+              <div><span>Source</span><code>{snapshot.file}{snapshot.line ? `:${snapshot.line}` : ''}{snapshot.column ? `:${snapshot.column}` : ''}</code></div>
+              <div><span>Version</span><code>{snapshot.version}</code></div>
+              <div><span>Viewport</span><code>{snapshot.viewport} @{snapshot.devicePixelRatio ?? '?'}×</code></div>
+              <div><span>Language</span><code>{snapshot.language || 'Unknown'}</code></div>
+              <div><span>Memory</span><code>{snapshot.memory ? `${snapshot.memory.used} / ${snapshot.memory.total}` : 'Not reported by this browser'}</code></div>
+            </div>
+
+            <div className="error-trace-block">
+              <span className="error-trace-label">Stack trace</span>
+              <pre className="error-trace">{snapshot.stack}</pre>
+            </div>
+
+            {snapshot.componentStack && (
+              <div className="error-trace-block">
+                <span className="error-trace-label">React component stack</span>
+                <pre className="error-trace">{snapshot.componentStack}</pre>
+              </div>
+            )}
+
+            <div className="error-details-actions">
+              <button type="button" className="error-button error-button-secondary error-button-small" onClick={handleCopy}>
+                <WeatherDeskIcon name={copyState === 'copied' ? 'check' : 'copy'} size={14} />
+                {copyState === 'copied' ? 'Copied to clipboard' : copyState === 'failed' ? 'Copy blocked — select the text' : 'Copy diagnostics'}
+              </button>
+              <button type="button" className="error-button error-button-secondary error-button-small" onClick={handleDownload}>
+                <WeatherDeskIcon name={downloadState === 'saved' ? 'check' : 'download'} size={14} />
+                {downloadState === 'saved' ? 'Report downloaded' : downloadState === 'failed' ? 'Download blocked' : 'Download JSON report'}
+              </button>
+            </div>
+          </div>
+        </details>
+
+        <div className="error-recovery">
+          <div className="error-recovery-steps">
+            <strong>Before you report it</strong>
+            <ol>
+              <li>Retry with <b>Try again</b> — most one-off errors clear on a re-render.</li>
+              <li>Reload with <b>Restart app</b> for a clean session.</li>
+              <li>Confirm you are online if radar, forecasts, or alerts look stale.</li>
+              <li>Still stuck? Send the error code and the JSON report to support.</li>
+            </ol>
+          </div>
+          <div className="error-recovery-contact">
+            <a className="error-button error-button-secondary" href={mailtoHref}>
+              <WeatherDeskIcon name="contact" size={15} />
+              Email support
+            </a>
+            <a className="error-inline-link" href={REPO_URL} target="_blank" rel="noreferrer">
+              <WeatherDeskIcon name="arrowUpRight" size={13} />
+              Report an issue on GitHub
+            </a>
+            <small>
+              Nothing is uploaded automatically. Only what you choose to copy, download, or paste into an email leaves this browser.
+            </small>
+          </div>
+        </div>
+
+        <footer className="error-footnote">
+          Weather data comes from the U.S. National Weather Service. {APP_NAME} is an independent educational
+          workstation and never replaces official warnings or emergency instructions.
+        </footer>
+      </section>
     </div>
   )
 }

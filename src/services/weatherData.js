@@ -17,25 +17,61 @@ export function estimateUVIndex(lat, lon, date = new Date()) {
   return Math.max(0, Math.min(11, uv))
 }
 
-// Sun position calculations
+// Sun position calculations (NOAA/ESRL sunrise equation).
+// Julian Day 2440587.5 is 1970-01-01T00:00:00Z, so that — not J2000 — is the
+// anchor for converting a Julian date back into a JavaScript Date. Using J2000
+// shifted every result by 10957.5 days and reported sunrise near sunset.
+const JULIAN_UNIX_EPOCH = 2440587.5
+const MS_PER_DAY = 86400000
+
+const julianToDate = julian => new Date((julian - JULIAN_UNIX_EPOCH) * MS_PER_DAY)
+const toRadians = degrees => degrees * (Math.PI / 180)
+const normalizeDegrees = degrees => ((degrees % 360) + 360) % 360
+
 export function calculateSunPosition(lat, lon, date = new Date()) {
+  if (!Number.isFinite(Number(lat)) || !Number.isFinite(Number(lon))) {
+    return { sunrise: null, sunset: null, solarNoon: null, dayLength: null, polar: false }
+  }
+  const latitude = Number(lat)
+  const longitude = Number(lon)
   const J2000 = 2451545.0
-  const jd = 2440587.5 + (date.getTime() / 86400000)
-  const n = jd - J2000 + 0.0008
-  const Jstar = n - lon / 360
-  const M = (357.5291 + 0.98560028 * Jstar) % 360
-  const C = 1.9148 * Math.sin(M * (Math.PI / 180)) + 0.0200 * Math.sin(2 * M * (Math.PI / 180)) + 0.0003 * Math.sin(3 * M * (Math.PI / 180))
-  const lambda = (M + C + 180 + 102.9372) % 360
-  const Jtransit = J2000 + Jstar + 0.0053 * Math.sin(M * (Math.PI / 180)) - 0.0069 * Math.sin(2 * lambda * (Math.PI / 180))
-  const delta = Math.asin(Math.sin(lambda * (Math.PI / 180)) * Math.sin(23.45 * (Math.PI / 180))) * (180 / Math.PI)
-  const omega = Math.acos((Math.sin(-0.83 * (Math.PI / 180)) - Math.sin(lat * (Math.PI / 180)) * Math.sin(delta * (Math.PI / 180))) / (Math.cos(lat * (Math.PI / 180)) * Math.cos(delta * (Math.PI / 180)))) * (180 / Math.PI)
-  const Jrise = Jtransit - omega / 360
-  const Jset = Jtransit + omega / 360
-  const sunrise = new Date((Jrise - J2000) * 86400000)
-  const sunset = new Date((Jset - J2000) * 86400000)
-  const solarNoon = new Date((Jtransit - J2000) * 86400000)
-  const dayLength = (sunset - sunrise) / 3600000
-  return { sunrise, sunset, solarNoon, dayLength }
+  const jd = JULIAN_UNIX_EPOCH + (date.getTime() / MS_PER_DAY)
+  // The mean solar noon must be anchored to the start of the Julian day; keeping
+  // the time-of-day fraction here shifted every sunrise/sunset by the current hour.
+  const n = Math.ceil(jd - J2000 + 0.0008)
+  const Jstar = n - longitude / 360
+  const M = normalizeDegrees(357.5291 + 0.98560028 * Jstar)
+  const C = 1.9148 * Math.sin(toRadians(M)) + 0.0200 * Math.sin(toRadians(2 * M)) + 0.0003 * Math.sin(toRadians(3 * M))
+  const lambda = normalizeDegrees(M + C + 180 + 102.9372)
+  const Jtransit = J2000 + Jstar + 0.0053 * Math.sin(toRadians(M)) - 0.0069 * Math.sin(toRadians(2 * lambda))
+  const declination = Math.asin(Math.sin(toRadians(lambda)) * Math.sin(toRadians(23.4397)))
+  const solarNoon = julianToDate(Jtransit)
+
+  const cosHourAngle = (Math.sin(toRadians(-0.833)) - Math.sin(toRadians(latitude)) * Math.sin(declination)) /
+    (Math.cos(toRadians(latitude)) * Math.cos(declination))
+
+  // Beyond the polar circles the sun can stay above or below the horizon all day;
+  // there is no sunrise or sunset to report and acos() would return NaN.
+  if (!Number.isFinite(cosHourAngle) || cosHourAngle < -1 || cosHourAngle > 1) {
+    return {
+      sunrise: null,
+      sunset: null,
+      solarNoon,
+      dayLength: cosHourAngle < -1 ? 24 : 0,
+      polar: true
+    }
+  }
+
+  const hourAngle = Math.acos(cosHourAngle) * (180 / Math.PI)
+  const sunrise = julianToDate(Jtransit - hourAngle / 360)
+  const sunset = julianToDate(Jtransit + hourAngle / 360)
+  return {
+    sunrise,
+    sunset,
+    solarNoon,
+    dayLength: (sunset.getTime() - sunrise.getTime()) / 3600000,
+    polar: false
+  }
 }
 
 // Moon phase calculation
@@ -125,8 +161,26 @@ export async function resolveLocation(query, signal) {
 // messages are excluded so stale or administrative traffic never draws polygons.
 const ALERT_MESSAGE_TYPES = new Set(['Alert', 'Update'])
 const ZONE_ENDPOINT_TYPES = ['county', 'forecast', 'marine', 'fire', 'publicLand']
-const MAX_ZONE_LOOKUPS = 10
-const MAX_ZONES_PER_ALERT = 4
+// Most active warning polygons are zone-based: the nationwide feed returned 463
+// alerts with only 7 embedded geometries. Ten lookups left the map effectively
+// empty, so resolve a realistic set, cache it, and keep concurrency polite.
+const MAX_ZONE_LOOKUPS = 120
+const MAX_ZONES_PER_ALERT = 24
+const ZONE_LOOKUP_CONCURRENCY = 8
+const ZONE_GEOMETRY_CACHE = new Map()
+const ZONE_GEOMETRY_MISSES = new Set()
+
+async function mapWithConcurrency(items, limit, worker) {
+  let cursor = 0
+  const runners = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (cursor < items.length) {
+      const index = cursor
+      cursor += 1
+      await worker(items[index])
+    }
+  })
+  await Promise.all(runners)
+}
 
 function alertDedupeKey(feature) {
   const props = feature.properties || {}
@@ -162,25 +216,34 @@ function dedupeAlertFeatures(features) {
 
 async function fetchZoneGeometry(ugc, signal) {
   // NWS zone codes are [State][Type][Number], e.g. TXZ229, CAC001, AMZ671.
-  // Detect zone type from the 3rd character (the type code).
-  // F/Z = forecast, C = county, A = area, M = marine, etc.
-  let types = ZONE_ENDPOINT_TYPES
+  // Detect zone type from the 3rd character (the type code) and query that
+  // endpoint first: county zones 404 under /zones/forecast/.
+  if (ZONE_GEOMETRY_CACHE.has(ugc)) return ZONE_GEOMETRY_CACHE.get(ugc)
+  if (ZONE_GEOMETRY_MISSES.has(ugc)) return null
+
   const typeCode = ugc.length >= 3 ? ugc[2].toUpperCase() : ''
-  if (typeCode === 'F' || typeCode === 'Z') types = ['forecast', 'county', 'marine', 'fire', 'publicLand']
-  else if (typeCode === 'C') types = ['county', 'forecast', 'marine', 'fire', 'publicLand']
+  let types = ZONE_ENDPOINT_TYPES
+  if (typeCode === 'C') types = ['county', 'forecast', 'marine', 'fire', 'publicLand']
+  else if (typeCode === 'F' || typeCode === 'Z') types = ['forecast', 'county', 'marine', 'fire', 'publicLand']
   else if (typeCode === 'M') types = ['marine', 'forecast', 'county', 'fire', 'publicLand']
   else if (typeCode === 'A') types = ['publicLand', 'forecast', 'county', 'marine', 'fire']
-  else types = ['forecast', 'county', 'marine', 'fire', 'publicLand'] // fallback
+
   for (const type of types) {
     try {
       const data = await fetchJson(`${NWS_API}/zones/${type}/${encodeURIComponent(ugc)}`, signal)
-      if (data?.geometry) return data.geometry
+      if (data?.geometry) {
+        ZONE_GEOMETRY_CACHE.set(ugc, data.geometry)
+        return data.geometry
+      }
     } catch (error) {
       if (signal?.aborted) throw error
-      if (error.status === 404) continue
+      // A wrong endpoint type is a normal miss; a transport failure should not
+      // be retried against four more endpoints for the same zone.
+      if (error?.status === 404 || error?.status === 400) continue
       return null
     }
   }
+  ZONE_GEOMETRY_MISSES.add(ugc)
   return null
 }
 
@@ -201,14 +264,15 @@ async function augmentAlertGeometries(features, signal, maxZoneLookups = MAX_ZON
   if (!missing.length) return features
   const wanted = [...new Set(missing.flatMap(feature => feature.properties.geocode.UGC))].slice(0, maxZoneLookups)
   const geometries = new Map()
-  await Promise.all(wanted.map(async ugc => {
+  await mapWithConcurrency(wanted, ZONE_LOOKUP_CONCURRENCY, async ugc => {
     try {
       const geometry = await fetchZoneGeometry(ugc, signal)
       if (geometry) geometries.set(ugc, geometry)
     } catch (error) {
       if (signal?.aborted) throw error
     }
-  }))
+  })
+  if (signal?.aborted) return features
   if (!geometries.size) return features
   for (const feature of missing) {
     const polygons = (feature.properties.geocode.UGC || [])
@@ -240,9 +304,20 @@ export async function getPointAlerts(coords, signal) {
 
 // Every currently active NWS alert nationwide — used for map polygons so watches,
 // warnings, and advisories render regardless of whether they touch the point.
+// The raw feed is several megabytes and zone geometries are cached, so a short
+// TTL keeps revisiting the map from re-downloading and re-resolving everything.
+const ACTIVE_ALERTS_TTL_MS = 2 * 60 * 1000
+const activeAlertsCache = { at: 0, features: null }
+
 export async function getAllActiveAlerts(signal) {
+  if (activeAlertsCache.features?.length && Date.now() - activeAlertsCache.at < ACTIVE_ALERTS_TTL_MS) {
+    return activeAlertsCache.features
+  }
   const payload = await fetchJson(`${NWS_API}/alerts/active`, signal)
-  return processAlertFeatures(payload.features, signal, { maxZoneLookups: 40 })
+  const features = await processAlertFeatures(payload.features, signal, { maxZoneLookups: MAX_ZONE_LOOKUPS })
+  activeAlertsCache.at = Date.now()
+  activeAlertsCache.features = features
+  return features
 }
 
 async function getLatestStationObservation(stationsUrl, signal) {
