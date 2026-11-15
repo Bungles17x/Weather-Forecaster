@@ -1,0 +1,65 @@
+{
+  "id": "./",
+  "name": "Weather Forecaster 2.0 \u2014 NWS Forecast Workstation",
+  "short_name": "Weather Forecaster",
+  "description": "Weather Forecaster 2.0: official NWS forecast workstation, radar tools, weather intelligence, and a general-purpose AI assistant.",
+  "start_url": "./#/",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#07101c",
+  "theme_color": "#07101c",
+  "categories": [
+    "weather",
+    "education",
+    "utilities"
+  ],
+  "icons": [
+    {
+      "src": "./icons/weather-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/weather-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/weather-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Radar",
+      "short_name": "Radar",
+      "description": "Open Weather Forecaster radar and map layers.",
+      "url": "./#/map",
+      "icons": [
+        {
+          "src": "./icons/weather-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Weather Forecaster AI",
+      "short_name": "AI Assistant",
+      "description": "Ask about the forecast and learn meteorology.",
+      "url": "./#/assistant",
+      "icons": [
+        {
+          "src": "./icons/weather-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
+}
