@@ -1,0 +1,40 @@
+name: Windows installer
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm test
+
+      - run: npm run desktop:build
+
+      # A vX.Y.Z tag publishes the release that installed copies auto-update from;
+      # a manual run only produces the installer artifact.
+      - name: Package installer
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PUBLISH: ${{ startsWith(github.ref, 'refs/tags/v') && 'always' || 'never' }}
+        run: npx electron-builder --win --publish "$env:PUBLISH"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: WeatherDesk-Windows
+          path: release/*.exe
+          if-no-files-found: error

@@ -1,8 +1,13 @@
 {
   "name": "weather-forecaster-app",
   "private": true,
-  "version": "2.1.1",
+  "version": "2.2.0",
   "type": "module",
+  "main": "electron/main.cjs",
+  "description": "WeatherDesk — an independent NWS/NOAA weather workstation for the web and Windows desktop.",
+  "author": {
+    "name": "WeatherDesk"
+  },
   "homepage": "https://Bungles17x.github.io/Weather-Forecaster",
   "scripts": {
     "dev": "vite --host --open",
@@ -21,9 +26,14 @@
     "test": "node --test",
     "test:watch": "node --test --watch",
     "start:ai": "node server/ai-server.mjs",
-    "verify": "npm test && npm run lint && npm run build"
+    "verify": "npm test && npm run lint && npm run build",
+    "desktop:build": "vite build --mode production --outDir dist-desktop --base ./",
+    "desktop": "npm run desktop:build && electron .",
+    "desktop:pack": "npm run desktop:build && electron-builder --win --publish never",
+    "desktop:publish": "npm run desktop:build && electron-builder --win --publish always"
   },
   "dependencies": {
+    "electron-updater": "^6.8.11",
     "leaflet": "^1.9.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -33,6 +43,8 @@
     "@types/react": "^18.2.64",
     "@types/react-dom": "^18.2.21",
     "@vitejs/plugin-react": "^4.2.1",
+    "electron": "^45.3.3",
+    "electron-builder": "^26.18.0",
     "eslint": "^8.57.0",
     "eslint-plugin-react": "^7.34.0",
     "eslint-plugin-react-hooks": "^4.6.0",
@@ -40,5 +52,50 @@
     "gh-pages": "^6.1.1",
     "terser": "^5.46.1",
     "vite": "^5.1.6"
+  },
+  "build": {
+    "appId": "com.weatherdesk.desktop",
+    "productName": "WeatherDesk",
+    "copyright": "WeatherDesk",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "electron/**/*",
+      "dist-desktop/**/*",
+      "public/icons/weather-512.png",
+      "package.json",
+      "!**/*.map"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "public/icons/weather-512.png",
+      "artifactName": "WeatherDesk-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "WeatherDesk",
+      "uninstallDisplayName": "WeatherDesk ${version}"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Bungles17x",
+        "repo": "Weather-Forecaster",
+        "releaseType": "release"
+      }
+    ]
   }
 }

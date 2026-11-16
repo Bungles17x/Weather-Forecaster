@@ -88,7 +88,9 @@ setTimeout(() => {
 }, 5000)
 
 // Register the installable app shell on secure hosting (HTTPS or localhost).
-if ('serviceWorker' in navigator && import.meta.env.PROD) {
+// The desktop shell ships its own files and updates through its installer, so it
+// has no service worker to register.
+if ('serviceWorker' in navigator && import.meta.env.PROD && !window.weatherdeskDesktop) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`, { scope: import.meta.env.BASE_URL })
       .catch(() => { /* The website remains usable if offline support is unavailable. */ })

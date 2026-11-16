@@ -33,7 +33,14 @@ const IGNORED_MESSAGE_PATTERNS = [
   /React Router Future Flag Warning/i,
   /v7_startTransition|v7_relativeSplatPath|v7_fetcherPersist/i,
   /Sourcemap for .* points to missing source files/i,
-  /Download the React DevTools/i
+  /Download the React DevTools/i,
+  // Extensions inject their own scripts into the page. A failure inside one
+  // ("Cannot redefine property: location" is the common one) says nothing about
+  // WeatherDesk, so it is dropped instead of filling the report a user sends.
+  /(?:chrome|moz|safari|ms-browser|edge)-extension:\/\//i,
+  // NOAA retired these national mosaics; their GetMap requests 404 by design and
+  // the app no longer offers them. Records from older builds are dropped too.
+  /conus_(?:[a-z0-9]+:)?(?:mtmp|srmt_v\d+|vil)\b/i
 ]
 
 function isIgnorableMessage(text) {
@@ -214,6 +221,8 @@ class ErrorManager {
       existingGroup.count += 1
       existingGroup.lastSeen = timestamp
       existingGroup.resolved = false
+      // Persist the new count: a burst of grouped failures must survive a reload.
+      this.saveToStorage()
       this.notifyListeners('errorGrouped', existingGroup)
     } else {
       this.errorGroups.set(signature, errorRecord)
@@ -351,11 +360,13 @@ class ErrorManager {
     if (!raw) return
     try {
       const parsed = JSON.parse(raw)
-      this.errorHistory = (Array.isArray(parsed.history) ? parsed.history : [])
-        .filter(entry => !isIgnorableMessage(entry?.message))
+      // A stored record is judged on its message and its stack: an extension's
+      // throw only names its origin in the frames, never in the message.
+      const keep = entry => !isIgnorableMessage(entry?.message) && !isIgnorableMessage(entry?.stack)
+      this.errorHistory = (Array.isArray(parsed.history) ? parsed.history : []).filter(keep)
       this.errorGroups = new Map(
         (Array.isArray(parsed.groups) ? parsed.groups : [])
-          .filter(([, entry]) => !isIgnorableMessage(entry?.message))
+          .filter(([, entry]) => keep(entry))
       )
     } catch {
       // Corrupt or stale payload from an older build: start clean.

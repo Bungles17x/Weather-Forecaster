@@ -26,26 +26,11 @@ export const NATIONAL_RADAR_PRODUCTS = {
     url: `${OPEN_GEO}/conus/conus_neet_v18/ows`, layerName: 'conus_neet_v18', style: '',
     description: 'MRMS echo-top height product. This is a storm-structure aid, not a direct measurement of cloud top.',
     source: 'NWS / NOAA OpenGeo · CONUS NEET.V18'
-  },
-  vrot: {
-    label: 'Velocity · CONUS', title: 'Storm relative motion',
-    url: `${OPEN_GEO}/conus/conus_srmt_v21/ows`, layerName: 'conus_srmt_v21', style: '',
-    description: 'Storm-relative motion product showing storm movement relative to the mean flow.',
-    source: 'NWS / NOAA OpenGeo · CONUS SRMT.V21'
-  },
-  vil: {
-    label: 'Vertically integrated liquid · CONUS', title: 'VIL density',
-    url: `${OPEN_GEO}/conus/conus_vil/ows`, layerName: 'conus_vil', style: '',
-    description: 'Vertically integrated liquid (kg/m²) — a proxy for heavy precipitation and hail potential.',
-    source: 'NWS / NOAA OpenGeo · CONUS VIL'
-  },
-  maxTemp: {
-    label: 'Maximum temperature · CONUS', title: 'Radar-derived max temp',
-    url: `${OPEN_GEO}/conus/conus_mtmp/ows`, layerName: 'conus_mtmp', style: '',
-    description: 'MRMS radar-derived maximum temperature.',
-    source: 'NWS / NOAA OpenGeo · CONUS MTMP'
   }
 }
+// NOAA's public OpenGeo server publishes exactly these four CONUS mosaics. The
+// former SRMT, VIL and MTMP workspaces were retired and now answer every GetMap
+// with HTTP 404, so they are no longer offered rather than shown as broken tiles.
 
 // These products are advertised for NEXRAD sites by the NWS OpenGeo directory.
 // Actual WMS layer names are discovered through GetCapabilities where possible.

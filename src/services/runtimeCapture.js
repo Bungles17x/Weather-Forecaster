@@ -21,6 +21,18 @@ function describe(args) {
     .join(' ')
 }
 
+// Browser extensions inject their own scripts into the page, and a broken one
+// throws here like app code does (one common case: "Cannot redefine property:
+// location"). Those failures say nothing about WeatherDesk, so they are dropped
+// rather than polluting the error report a user is asked to send.
+const EXTENSION_ORIGIN = /(chrome|moz|safari|ms-browser|edge)-extension:\/\//i
+
+function fromBrowserExtension(value) {
+  if (!value) return false
+  if (typeof value === 'string') return EXTENSION_ORIGIN.test(value)
+  return EXTENSION_ORIGIN.test(`${value.stack || ''} ${value.message || ''}`)
+}
+
 // Images, scripts, stylesheets and fonts report failures as an 'error' event on
 // the element itself. Those do not bubble, so they only reach a capture-phase
 // window listener.
@@ -30,6 +42,21 @@ function failedResource(event) {
   const url = target.currentSrc || target.src || target.href
   if (!url) return null
   return { tag: String(target.tagName || 'resource').toLowerCase(), url: String(url) }
+}
+
+// A WMS map is requested tile by tile, so every failing URL differs only in its
+// bbox: a retired layer would otherwise fill the history with one record per
+// tile. Report the service and layer, which is what actually failed.
+function describeResourceUrl(url) {
+  try {
+    const parsed = new URL(url)
+    const layers = parsed.searchParams.get('layers') || parsed.searchParams.get('LAYERS')
+    const isMapRequest = /getmap|getlegendgraphic/i.test(parsed.search) || /\/(wms|ows)$/i.test(parsed.pathname)
+    if (!layers || !isMapRequest) return url
+    return `${parsed.origin}${parsed.pathname} · layers=${layers}`
+  } catch {
+    return url
+  }
 }
 
 export function installGlobalErrorCapture() {
@@ -63,11 +90,14 @@ export function installGlobalErrorCapture() {
 
   const handleError = event => {
     if (errorManager.isCaptureSuspended()) return
+    if (fromBrowserExtension(event?.filename) || fromBrowserExtension(event?.error)) return
 
     const resource = failedResource(event)
     if (resource) {
       const isImage = resource.tag === 'img'
-      errorManager.logError(new Error(`Failed to load ${resource.tag}: ${resource.url}`), {
+      const message = `Failed to load ${resource.tag}: ${describeResourceUrl(resource.url)}`
+      if (isIgnorableMessage(message)) return
+      errorManager.logError(new Error(message), {
         kind: 'resource',
         resourceTag: resource.tag,
         resourceUrl: resource.url,
@@ -86,6 +116,7 @@ export function installGlobalErrorCapture() {
   const handleRejection = event => {
     if (errorManager.isCaptureSuspended()) return
     const reason = event?.reason
+    if (fromBrowserExtension(reason)) return
     errorManager.logError(
       reason instanceof Error ? reason : new Error(String(reason ?? 'Unhandled rejection')),
       { kind: 'rejection' }

@@ -21,7 +21,14 @@ export default defineConfig(({ mode }) => {
       sourcemap: false,
       target: 'es2020'
     },
-    server: { host: true, port: 5173, strictPort: true },
+    // Desktop packaging writes large binaries into release/ and dist-desktop/;
+    // watching those makes the dev server fall over mid-build.
+    server: {
+      host: true,
+      port: 5173,
+      strictPort: true,
+      watch: { ignored: ['**/release/**', '**/dist-desktop/**'] }
+    },
     preview: { host: true, port: 4173, strictPort: true }
   }
 })
