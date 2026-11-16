@@ -3,7 +3,11 @@ name: Windows installer
 on:
   push:
     tags: ['v*']
+    # Tag pushes always build a release. On main this workflow only runs when this
+    # file itself changes (to reconcile a duplicated release); ordinary commits
+    # must not spin up the Windows installer job.
     branches: [main]
+    paths: ['.github/workflows/desktop.yml']
   workflow_dispatch:
 
 permissions:
