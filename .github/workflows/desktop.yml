@@ -3,6 +3,7 @@ name: Windows installer
 on:
   push:
     tags: ['v*']
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -10,6 +11,8 @@ permissions:
 
 jobs:
   build:
+    # Tag pushes ship a release; a manual run only produces the installer artifact.
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,16 +28,81 @@ jobs:
 
       - run: npm run desktop:build
 
-      # A vX.Y.Z tag publishes the release that installed copies auto-update from;
-      # a manual run only produces the installer artifact.
+      # electron-builder only packages here. Its own GitHub publisher can create a
+      # second release object for one tag, and GitHub then serves
+      # /releases/download/<tag>/latest.yml from the incomplete one, which is
+      # exactly what breaks auto-update. Uploading through gh keeps one release.
       - name: Package installer
+        run: npx electron-builder --win --publish never
+
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PUBLISH: ${{ startsWith(github.ref, 'refs/tags/v') && 'always' || 'never' }}
-        run: npx electron-builder --win --publish "$env:PUBLISH"
+          TAG: ${{ github.ref_name }}
+        run: |
+          assets=(release/*.exe release/latest.yml release/*.blockmap)
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            gh release upload "$TAG" "${assets[@]}" --clobber --repo "$GITHUB_REPOSITORY"
+          else
+            gh release create "$TAG" "${assets[@]}" \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "WeatherDesk ${TAG#v}" \
+              --notes "Windows installer and auto-update feed for WeatherDesk ${TAG#v}." \
+              --latest
+          fi
 
       - uses: actions/upload-artifact@v4
         with:
           name: WeatherDesk-Windows
           path: release/*.exe
           if-no-files-found: error
+
+  reconcile:
+    # A tag can end up with two release objects, and GitHub resolves
+    # /releases/download/<tag>/ to just one of them. This folds every duplicate
+    # back into the release the tag resolves to, then removes the extras, so the
+    # updater always finds latest.yml next to the installer.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fold duplicate releases into one
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          repo="$GITHUB_REPOSITORY"
+          duplicated=$(gh api "repos/$repo/releases?per_page=100" --jq '.[].tag_name' | sort | uniq -d)
+          if [ -z "$duplicated" ]; then
+            echo "No tag has duplicate releases."
+            exit 0
+          fi
+
+          for tag in $duplicated; do
+            mapfile -t ids < <(gh api "repos/$repo/releases?per_page=100" --jq ".[] | select(.tag_name == \"$tag\") | .id")
+            resolved=$(gh api "repos/$repo/releases/tags/$tag" --jq .id)
+            echo "$tag: releases ${ids[*]}; tag downloads resolve to $resolved"
+
+            workdir=$(mktemp -d)
+            have=$(gh api "repos/$repo/releases/$resolved/assets" --jq '.[].name' || true)
+            for id in "${ids[@]}"; do
+              if [ "$id" = "$resolved" ]; then continue; fi
+              while read -r asset_id name; do
+                if [ -z "$name" ]; then continue; fi
+                if grep -qx "$name" <<<"$have"; then continue; fi
+                gh api -H "Accept: application/octet-stream" "repos/$repo/releases/assets/$asset_id" > "$workdir/$name"
+                gh release upload "$tag" "$workdir/$name" --clobber --repo "$repo"
+                echo "  copied $name into the release the tag serves"
+              done < <(gh api "repos/$repo/releases/$id/assets" --jq '.[] | "\(.id) \(.name)"')
+            done
+
+            for id in "${ids[@]}"; do
+              if [ "$id" != "$resolved" ]; then
+                gh api -X DELETE "repos/$repo/releases/$id"
+                echo "  removed duplicate release $id"
+              fi
+            done
+            rm -rf "$workdir"
+          done
