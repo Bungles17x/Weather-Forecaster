@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import Header from '../components/Header'
+import DesktopUpdatePanel from '../components/DesktopUpdatePanel'
 import { WeatherDeskIcon } from '../components/WeatherIcons'
 import { useSettings } from '../contexts/SettingsContext'
 import { APP_NAME, APP_VERSION } from '../utils/appInfo'
@@ -109,6 +110,8 @@ export default function SettingsPage() {
               <a href="https://github.com/Bungles17x/Weather-Forecaster" target="_blank" rel="noreferrer" className="about-link"><WeatherDeskIcon name="arrowUpRight" size={13} /> Source repository</a>
             </div>
           </section>
+
+          <DesktopUpdatePanel />
 
           <section className="settings-reset-section">
             <div><strong>Reset preferences</strong><p>Restore the original temperature, theme, and refresh settings for this browser.</p></div>

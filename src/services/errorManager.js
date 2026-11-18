@@ -263,14 +263,29 @@ class ErrorManager {
     }
   }
 
-  // Mark an error as resolved
+  // Mark an error as resolved. The group map and the history can drift apart —
+  // an older payload may have history without groups — so the history record is
+  // updated too instead of the button silently doing nothing.
   resolveError(signature) {
+    if (!signature) return
     const group = this.errorGroups.get(signature)
-    if (!group) return
-    group.resolved = true
-    group.resolvedAt = new Date().toISOString()
+    const record = this.errorHistory.find(entry => entry.signature === signature)
+    if (!group && !record) return
+    const resolvedAt = new Date().toISOString()
+    if (group) { group.resolved = true; group.resolvedAt = resolvedAt }
+    if (record) { record.resolved = true; record.resolvedAt = resolvedAt }
     this.saveToStorage()
-    this.notifyListeners('errorResolved', group)
+    this.notifyListeners('errorResolved', group || record)
+  }
+
+  // Remove one record and its group. Resolving keeps a record for the report;
+  // removing is for noise the user has decided is not worth keeping at all.
+  removeError(signature) {
+    if (!signature) return
+    this.errorGroups.delete(signature)
+    this.errorHistory = this.errorHistory.filter(entry => entry.signature !== signature)
+    this.saveToStorage()
+    this.notifyListeners('errorRemoved', signature)
   }
 
   // Get error history

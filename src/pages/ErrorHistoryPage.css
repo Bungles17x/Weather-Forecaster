@@ -241,6 +241,28 @@
   gap: 8px;
 }
 
+.remove-report-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  padding: 8px 14px;
+  background: transparent;
+  border: 1px solid rgba(255, 106, 122, 0.32);
+  border-radius: 6px;
+  color: #ff9aa5;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.remove-report-btn:hover {
+  background: rgba(255, 106, 122, 0.12);
+  border-color: rgba(255, 106, 122, 0.6);
+  color: #ffd0d6;
+}
+
 .copy-report-btn {
   display: inline-flex;
   align-items: center;

@@ -4,6 +4,7 @@ import { useLocation } from '../contexts/LocationContext'
 import { useWeather } from '../contexts/WeatherContext'
 import { LogoIcon, WeatherDeskIcon } from './WeatherIcons'
 import './Header.css'
+import './SavedPlaces.css'
 
 const navItems = [
   { to: '/', label: 'Overview', icon: 'home', end: true },
@@ -18,7 +19,7 @@ const navItems = [
 ]
 
 export default function Header() {
-  const { location, setLocation, loading, error, setCoordinates } = useLocation()
+  const { location, setLocation, loading, error, setCoordinates, savedLocations, saveCurrentLocation, forgetSavedLocation, selectSavedLocation, isCurrentSaved } = useLocation()
   const { weather, refreshing, refresh, error: weatherError } = useWeather()
   const [query, setQuery] = useState(location || '')
   const [installPrompt, setInstallPrompt] = useState(null)
@@ -26,6 +27,7 @@ export default function Header() {
   const [isIOS, setIsIOS] = useState(false)
   const [installed, setInstalled] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
+  const [savedOpen, setSavedOpen] = useState(false)
 
   useEffect(() => {
     const ua = window.navigator.userAgent || ''
@@ -73,6 +75,7 @@ export default function Header() {
       </nav>
       <div className="header-tools">
         <button className="icon-button search-toggle" type="button" onClick={() => setSearchOpen(value => !value)} aria-label="Search location" title="Search location"><WeatherDeskIcon name="search" size={18} /></button>
+        <button className="icon-button saved-places-toggle" type="button" onClick={() => setSavedOpen(value => !value)} aria-expanded={savedOpen} aria-label="Saved places" title="Saved places"><WeatherDeskIcon name="bookmark" size={18} /></button>
         <button className="icon-button" type="button" onClick={locate} aria-label="Use my location" title="Use my location"><WeatherDeskIcon name="location" size={18} /></button>
         <button className="icon-button" type="button" onClick={refresh} disabled={refreshing} aria-label="Refresh weather data" title="Refresh weather data"><WeatherDeskIcon name={refreshing ? 'clock' : 'refresh'} size={18} /></button>
         {!installed && <button className="install-app-button" type="button" onClick={install}>{installPrompt ? 'Install app' : <><WeatherDeskIcon name="download" size={14} /> Install</>}</button>}
@@ -85,6 +88,22 @@ export default function Header() {
       </form>
     </div>
     {error && <div className="location-error" role="status"><strong>Location lookup:</strong> {error}</div>}
+    {savedOpen && <div className="saved-places-panel" role="dialog" aria-label="Saved places">
+      <div className="saved-places-head"><strong>Saved places</strong><button type="button" className="saved-close" onClick={() => setSavedOpen(false)} aria-label="Close saved places"><WeatherDeskIcon name="close" size={16} /></button></div>
+      {savedLocations.length === 0
+        ? <p className="saved-empty">No saved places yet. Bookmark the location you are viewing to switch back to it in one click.</p>
+        : <ul>{savedLocations.map(item => <li key={item.key}>
+            <button type="button" className="saved-pick" onClick={() => { selectSavedLocation(item); setSavedOpen(false) }}>
+              <WeatherDeskIcon name="location" size={14} />
+              <span><strong>{item.name}</strong><small>{item.coordinates.lat.toFixed(3)}, {item.coordinates.lon.toFixed(3)}</small></span>
+            </button>
+            <button type="button" className="saved-remove" onClick={() => forgetSavedLocation(item.key)} aria-label={`Remove ${item.name}`} title={`Remove ${item.name}`}><WeatherDeskIcon name="close" size={13} /></button>
+          </li>)}</ul>}
+      <button type="button" className="saved-add" onClick={saveCurrentLocation} disabled={isCurrentSaved}>
+        <WeatherDeskIcon name={isCurrentSaved ? 'check' : 'bookmark'} size={14} />
+        {isCurrentSaved ? 'Current location is saved' : 'Save current location'}
+      </button>
+    </div>}
     {showIOSHelp && <div className="install-help" role="dialog" aria-label="Add Weather Forecaster to Home Screen"><button type="button" className="install-help-close" onClick={() => setShowIOSHelp(false)} aria-label="Close instructions"><WeatherDeskIcon name="close" size={18} /></button><strong>{isIOS ? 'Add Weather Forecaster to your iPhone/iPad' : 'Install Weather Forecaster'}</strong><p>{isIOS ? <>In Safari, tap <b>Share</b> and choose <b>Add to Home Screen</b>.</> : <>Open your browser menu and choose <b>Install app</b> or <b>Add to Home Screen</b>, if available.</>}</p><small>Installation requires HTTPS when hosted publicly.</small></div>}
   </>
 }

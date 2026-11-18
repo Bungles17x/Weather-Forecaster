@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { resolveLocation } from '../services/weatherData'
+import { SAVED_LOCATIONS_KEY, addSavedLocation, hasSavedLocation, normalizeSavedLocations, removeSavedLocation } from '../services/savedLocations'
 
 const LocationContext = createContext()
 const DEFAULT_LOCATION = 'Washington, District of Columbia'
@@ -11,6 +12,7 @@ export const LocationProvider = ({ children }) => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [ready, setReady] = useState(false)
+  const [savedLocations, setSavedLocations] = useState([])
 
   useEffect(() => {
     try {
@@ -23,6 +25,8 @@ export const LocationProvider = ({ children }) => {
           setCoordinatesState({ lat: Number(parsed.lat), lon: Number(parsed.lon) })
         }
       }
+      const savedPlaces = localStorage.getItem(SAVED_LOCATIONS_KEY)
+      if (savedPlaces) setSavedLocations(normalizeSavedLocations(JSON.parse(savedPlaces)))
     } catch (storageError) {
       console.warn('Saved location could not be restored.', storageError)
     } finally {
@@ -42,6 +46,30 @@ export const LocationProvider = ({ children }) => {
       // The app remains usable if private browsing blocks local storage.
       console.info('Location preferences were not saved on this device.')
     }
+  }
+
+  const persistSavedLocations = next => {
+    setSavedLocations(next)
+    try {
+      localStorage.setItem(SAVED_LOCATIONS_KEY, JSON.stringify(next))
+    } catch (storageError) {
+      console.info('Saved places were not stored on this device.')
+    }
+  }
+
+  // Bookmarking re-uses the location already on screen, so saving a place never
+  // costs a geocoding request.
+  const saveCurrentLocation = () => {
+    persistSavedLocations(addSavedLocation(savedLocations, { name: location, coordinates }))
+  }
+
+  const forgetSavedLocation = key => {
+    persistSavedLocations(removeSavedLocation(savedLocations, key))
+  }
+
+  const selectSavedLocation = saved => {
+    if (!saved?.coordinates) return
+    persistLocation(saved.name, saved.coordinates)
   }
 
   const handleLocationChange = async newLocation => {
@@ -90,7 +118,17 @@ export const LocationProvider = ({ children }) => {
     catch { return [] }
   }
 
-  return <LocationContext.Provider value={{ location, coordinates, loading, error, ready, setLocation: handleLocationChange, setCoordinates: handleCoordinatesChange, getLocationHistory }}>
+  return <LocationContext.Provider value={{
+    location, coordinates, loading, error, ready,
+    setLocation: handleLocationChange,
+    setCoordinates: handleCoordinatesChange,
+    getLocationHistory,
+    savedLocations,
+    saveCurrentLocation,
+    forgetSavedLocation,
+    selectSavedLocation,
+    isCurrentSaved: hasSavedLocation(savedLocations, coordinates)
+  }}>
     {children}
   </LocationContext.Provider>
 }

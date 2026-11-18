@@ -59,13 +59,17 @@ try {
   }
 }
 
-// Dismiss the boot splash once React has mounted.
+// Dismiss the boot splash once React has mounted. A background or low-power tab
+// can throttle requestAnimationFrame indefinitely, and the splash covers the whole
+// window, so a timer dismisses it even when no frame is delivered.
 const bootSplash = document.getElementById('boot-splash')
 if (bootSplash) {
-  requestAnimationFrame(() => requestAnimationFrame(() => {
+  const dismissSplash = () => {
     bootSplash.classList.add('boot-splash-out')
     window.setTimeout(() => bootSplash.remove(), 600)
-  }))
+  }
+  requestAnimationFrame(() => requestAnimationFrame(dismissSplash))
+  window.setTimeout(dismissSplash, 1500)
 }
 
 // Console test hooks — e.g. window.__weatherForecaster.testError()

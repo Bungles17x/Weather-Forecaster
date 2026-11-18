@@ -45,6 +45,7 @@ export default function ErrorHistoryPage() {
   const [statistics, setStatistics] = useState(null)
   const [selectedSeverity, setSelectedSeverity] = useState('all')
   const [selectedCategory, setSelectedCategory] = useState('all')
+  const [selectedStatus, setSelectedStatus] = useState('all')
   const [emailEnabled, setEmailEnabled] = useState(errorManager.isEmailOptedIn())
   const [copyFeedback, setCopyFeedback] = useState({ id: null, state: 'idle' })
   const [copyAllState, setCopyAllState] = useState('idle')
@@ -74,6 +75,8 @@ export default function ErrorHistoryPage() {
   const filteredErrors = errorHistory.filter(error => {
     if (selectedSeverity !== 'all' && error.severity !== selectedSeverity) return false
     if (selectedCategory !== 'all' && error.category !== selectedCategory) return false
+    if (selectedStatus === 'open' && error.resolved) return false
+    if (selectedStatus === 'resolved' && !error.resolved) return false
     return true
   })
 
@@ -121,6 +124,14 @@ export default function ErrorHistoryPage() {
 
   const resolveError = (signature) => {
     errorManager.resolveError(signature)
+    setErrorGroups(errorManager.getErrorGroups())
+    setStatistics(errorManager.getStatistics())
+  }
+
+  // Removing is deliberate and local to this device's history.
+  const removeRecord = signature => {
+    errorManager.removeError(signature)
+    setErrorHistory(errorManager.getErrorHistory())
     setErrorGroups(errorManager.getErrorGroups())
     setStatistics(errorManager.getStatistics())
   }
@@ -217,6 +228,14 @@ export default function ErrorHistoryPage() {
               </select>
             </div>
             <div className="filter-group">
+              <label>Status</label>
+              <select value={selectedStatus} onChange={e => setSelectedStatus(e.target.value)} aria-label="Filter by resolution status">
+                <option value="all">All statuses</option>
+                <option value="open">Unresolved</option>
+                <option value="resolved">Resolved</option>
+              </select>
+            </div>
+            <div className="filter-group">
               <label>Category</label>
               <select value={selectedCategory} onChange={e => setSelectedCategory(e.target.value)}>
                 <option value="all">All Categories</option>
@@ -241,8 +260,10 @@ export default function ErrorHistoryPage() {
           {filteredErrors.length === 0 ? (
             <div className="empty-card">
               <WeatherDeskIcon name="check" size={48} />
-              <strong>No errors recorded</strong>
-              <p>The application is running smoothly. Errors will appear here as they occur.</p>
+              <strong>{errorHistory.length ? 'No errors match these filters' : 'No errors recorded'}</strong>
+              <p>{errorHistory.length
+                ? `${errorHistory.length} record${errorHistory.length === 1 ? '' : 's'} stored — widen or clear a filter to see them.`
+                : 'The application is running smoothly. Errors will appear here as they occur.'}</p>
             </div>
           ) : (
             <div className="error-list">
@@ -301,6 +322,9 @@ export default function ErrorHistoryPage() {
                         Mark as Resolved
                       </button>
                     )}
+                    <button className="remove-report-btn" onClick={() => removeRecord(error.signature)} title="Remove this record from the local history">
+                      <WeatherDeskIcon name="close" size={13} /> Remove
+                    </button>
                   </div>
                 </div>
               ))}

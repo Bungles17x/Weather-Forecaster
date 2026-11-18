@@ -1,8 +1,10 @@
 .notification-container {
   position: fixed;
-  top: 20px;
+  /* Anchored to the bottom corner so a toast can never cover the sticky header,
+     the location search or the map controls. */
+  bottom: 24px;
   right: 20px;
-  z-index: 2147483647;
+  z-index: 1100;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -199,7 +201,7 @@
 
 @media (max-width: 600px) {
   .notification-container {
-    top: 10px;
+    bottom: 104px;
     right: 10px;
     left: 10px;
     max-width: none;
