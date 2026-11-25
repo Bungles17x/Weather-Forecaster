@@ -1,4 +1,4 @@
-import{r as i,C as a,j as e,H as z,W as m,D as A,s as F,A as V}from"./index-C2IzPf56.js";function $(r,l,c){return[c>1?`${l+1} of ${c} · ${r.severity} · ${r.category}`:`${r.severity} · ${r.category}`,`code: ${r.id}`,`detected: ${r.timestamp}`,`last seen: ${r.lastSeen}`,`occurrences: ${r.count}`,`route: ${r.context?.route||r.context?.url||"unknown"}`,"",r.message,"",r.stack||"No stack trace captured."].join(`
+import{r as i,C as a,j as e,H as z,W as m,D as A,s as F,A as V}from"./index-BJDWECno.js";function $(r,l,c){return[c>1?`${l+1} of ${c} · ${r.severity} · ${r.category}`:`${r.severity} · ${r.category}`,`code: ${r.id}`,`detected: ${r.timestamp}`,`last seen: ${r.lastSeen}`,`occurrences: ${r.count}`,`route: ${r.context?.route||r.context?.url||"unknown"}`,"",r.message,"",r.stack||"No stack trace captured."].join(`
 `)}function _(r){const l=[`${F} error history report`,`version: ${V}`,`generated: ${new Date().toISOString()}`,`route: ${window.location.hash||"#/"}`,`url: ${window.location.href}`,`online: ${navigator.onLine?"yes":"no"}`,`records: ${r.length}`,""].join(`
 `);return r.length?[l,...r.map((c,d)=>$(c,d,r.length))].join(`
 

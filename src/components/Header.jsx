@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { useLocation } from '../contexts/LocationContext'
 import { useWeather } from '../contexts/WeatherContext'
@@ -28,6 +28,9 @@ export default function Header() {
   const [installed, setInstalled] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [savedOpen, setSavedOpen] = useState(false)
+  const savedPanelRef = useRef(null)
+  const savedToggleRef = useRef(null)
+  const restoreSavedFocusRef = useRef(false)
 
   useEffect(() => {
     const ua = window.navigator.userAgent || ''
@@ -40,6 +43,49 @@ export default function Header() {
     return () => { window.removeEventListener('beforeinstallprompt', onPrompt); window.removeEventListener('appinstalled', onInstalled) }
   }, [])
   useEffect(() => setQuery(location || ''), [location])
+
+  // The saved-places popover is a dialog: Escape closes it, a click outside it or
+  // on its bookmark toggle dismisses it, and Tab stays inside while it is open.
+  useEffect(() => {
+    if (!savedOpen) return
+    const panel = savedPanelRef.current
+    const toggle = savedToggleRef.current
+    const focusables = panel ? Array.from(panel.querySelectorAll('button:not([disabled])')) : []
+    if (focusables[0]) focusables[0].focus()
+
+    const onKeyDown = event => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        restoreSavedFocusRef.current = true
+        setSavedOpen(false)
+        return
+      }
+      if (event.key !== 'Tab' || focusables.length === 0) return
+      const first = focusables[0]
+      const last = focusables[focusables.length - 1]
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+    const onPointerDown = event => {
+      if (panel?.contains(event.target) || toggle?.contains(event.target)) return
+      setSavedOpen(false)
+    }
+    document.addEventListener('keydown', onKeyDown)
+    document.addEventListener('pointerdown', onPointerDown, true)
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      document.removeEventListener('pointerdown', onPointerDown, true)
+      if (restoreSavedFocusRef.current) {
+        restoreSavedFocusRef.current = false
+        toggle?.focus()
+      }
+    }
+  }, [savedOpen])
 
   const submit = async event => {
     event.preventDefault()
@@ -75,7 +121,7 @@ export default function Header() {
       </nav>
       <div className="header-tools">
         <button className="icon-button search-toggle" type="button" onClick={() => setSearchOpen(value => !value)} aria-label="Search location" title="Search location"><WeatherDeskIcon name="search" size={18} /></button>
-        <button className="icon-button saved-places-toggle" type="button" onClick={() => setSavedOpen(value => !value)} aria-expanded={savedOpen} aria-label="Saved places" title="Saved places"><WeatherDeskIcon name="bookmark" size={18} /></button>
+        <button className="icon-button saved-places-toggle" ref={savedToggleRef} type="button" onClick={() => setSavedOpen(value => !value)} aria-expanded={savedOpen} aria-haspopup="dialog" aria-label="Saved places" title="Saved places"><WeatherDeskIcon name="bookmark" size={18} /></button>
         <button className="icon-button" type="button" onClick={locate} aria-label="Use my location" title="Use my location"><WeatherDeskIcon name="location" size={18} /></button>
         <button className="icon-button" type="button" onClick={refresh} disabled={refreshing} aria-label="Refresh weather data" title="Refresh weather data"><WeatherDeskIcon name={refreshing ? 'clock' : 'refresh'} size={18} /></button>
         {!installed && <button className="install-app-button" type="button" onClick={install}>{installPrompt ? 'Install app' : <><WeatherDeskIcon name="download" size={14} /> Install</>}</button>}
@@ -88,8 +134,8 @@ export default function Header() {
       </form>
     </div>
     {error && <div className="location-error" role="status"><strong>Location lookup:</strong> {error}</div>}
-    {savedOpen && <div className="saved-places-panel" role="dialog" aria-label="Saved places">
-      <div className="saved-places-head"><strong>Saved places</strong><button type="button" className="saved-close" onClick={() => setSavedOpen(false)} aria-label="Close saved places"><WeatherDeskIcon name="close" size={16} /></button></div>
+    {savedOpen && <div className="saved-places-panel" role="dialog" aria-label="Saved places" ref={savedPanelRef}>
+      <div className="saved-places-head"><strong>Saved places</strong><button type="button" className="saved-close" onClick={() => { restoreSavedFocusRef.current = true; setSavedOpen(false) }} aria-label="Close saved places"><WeatherDeskIcon name="close" size={16} /></button></div>
       {savedLocations.length === 0
         ? <p className="saved-empty">No saved places yet. Bookmark the location you are viewing to switch back to it in one click.</p>
         : <ul>{savedLocations.map(item => <li key={item.key}>
